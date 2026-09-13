@@ -1,13 +1,9 @@
-// JMB Portal Firebase Web App configuration.
-// Replace ONLY the placeholder values below with the config from
-// Firebase Console -> Project settings -> Your apps -> Web app.
-// These web config values are intended for frontend use; NEVER paste
-// Firebase Admin SDK private keys or service-account JSON here.
-export const FIREBASE_CONFIG={
-  apiKey:'PASTE_API_KEY',
-  authDomain:'PASTE_PROJECT.firebaseapp.com',
-  projectId:'PASTE_PROJECT_ID',
-  storageBucket:'PASTE_PROJECT.firebasestorage.app',
-  messagingSenderId:'PASTE_SENDER_ID',
-  appId:'PASTE_APP_ID'
+export const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDT0FFll2NkMYiam0_Sbct5P52AqF_Cnpk",
+  authDomain: "jmb-hub.firebaseapp.com",
+  projectId: "jmb-hub",
+  storageBucket: "jmb-hub.firebasestorage.app",
+  messagingSenderId: "59308977494",
+  appId: "1:59308977494:web:f5149968e5ae94d5903af7",
+  measurementId: "G-ED3Z0XQY5T"
 };
