@@ -2,7 +2,7 @@ import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-
 import {getAuth} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import {getFirestore} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {getStorage} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js';
-import {FIREBASE_CONFIG} from '../config/firebase-config.js';
+import {FIREBASE_CONFIG} from '../config/firebase-config.js?v=2';
 
 const requiredKeys=['apiKey','authDomain','projectId','appId'];
 const hasValidConfig=requiredKeys.every(key=>{
