@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs>
+  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#111936"/><stop offset=".55" stop-color="#0a1025"/><stop offset="1" stop-color="#070912"/></linearGradient>
+  <radialGradient id="a"><stop offset="0" stop-color="#7c5cff" stop-opacity=".55"/><stop offset="1" stop-color="#7c5cff" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1200" height="630" fill="url(#g)"/>
+<circle cx="170" cy="100" r="320" fill="url(#a)"/><circle cx="1080" cy="560" r="340" fill="url(#a)"/>
+<rect x="70" y="70" width="1060" height="490" rx="42" fill="#ffffff" fill-opacity=".055" stroke="#ffffff" stroke-opacity=".12"/>
+<rect x="120" y="125" width="78" height="78" rx="22" fill="#7c5cff"/>
+<text x="159" y="181" text-anchor="middle" font-family="Arial,sans-serif" font-size="50" font-weight="800" fill="white">J</text>
+<text x="225" y="177" font-family="Arial,sans-serif" font-size="48" font-weight="800" fill="white">JMB HUB</text>
+<text x="125" y="285" font-family="Arial,sans-serif" font-size="62" font-weight="800" fill="white">Everything JMB.</text>
+<text x="125" y="355" font-family="Arial,sans-serif" font-size="62" font-weight="800" fill="#a991ff">One beautiful portal.</text>
+<text x="125" y="425" font-family="Arial,sans-serif" font-size="28" fill="#d5d8e8">Games · Tools · Minecraft · AI · Community</text>
+<text x="125" y="480" font-family="Arial,sans-serif" font-size="24" fill="#aeb5ce">www.jmbhost.qzz.io</text>
+</svg>
