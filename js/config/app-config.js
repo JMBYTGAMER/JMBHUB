@@ -13,4 +13,3 @@ export const APP_CONFIG={
     support:{enabled:true,message:'Support is open.'}
   }
 };
-.
