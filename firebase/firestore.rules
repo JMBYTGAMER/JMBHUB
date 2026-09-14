@@ -6,10 +6,23 @@ service cloud.firestore {
     function admin() { return signedIn() && (request.auth.token.admin == true || owner()); }
 
     function validScoreGame(game) {
-      return game in ['snake','click','reaction','target','game2048','tictactoe','memory','mole','color','guess'];
+      return game in ['meteor','click','reaction','target','game2048','tictactoe','memory','mole','color','guess','math','coin','flappy','stack'];
     }
     function maxScore(game) {
-      return game == 'snake' ? 10000 : game == 'click' ? 1000 : game == 'reaction' ? 1000 : game == 'target' ? 1000 : game == 'game2048' ? 100000 : game == 'tictactoe' ? 100 : game == 'memory' ? 200 : game == 'mole' ? 1000 : game == 'color' ? 1000 : 120;
+      return game == 'meteor' ? 2000
+        : game == 'click' ? 1000
+        : game == 'reaction' ? 1000
+        : game == 'target' ? 1000
+        : game == 'game2048' ? 100000
+        : game == 'tictactoe' ? 100
+        : game == 'memory' ? 200
+        : game == 'mole' ? 1000
+        : game == 'color' ? 1000
+        : game == 'guess' ? 120
+        : game == 'math' ? 1000
+        : game == 'coin' ? 1000
+        : game == 'flappy' ? 1000
+        : 1000;
     }
 
     match /leaderboards/{game}/scores/{scoreId} {
@@ -27,22 +40,10 @@ service cloud.firestore {
       allow delete: if signedIn() && (resource.data.uid == request.auth.uid || admin());
     }
 
-
-    function isOwner() { return signedIn() && request.auth.token.email == 'jobinmathewbiju@gmail.com'; }
-    function isStaff() { return signedIn() && (request.auth.token.admin == true || isOwner()); }
-
     match /globalChat/{messageId} {
       allow read: if signedIn();
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['uid','displayName','text','createdAt'])
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() <= 60
-        && request.resource.data.text is string
-        && request.resource.data.text.size() >= 1
-        && request.resource.data.text.size() <= 500;
-      allow update: if false;
-      allow delete: if isStaff();
+      allow create, update: if false;
+      allow delete: if admin();
     }
 
     match /tickets/{ticketId} {

@@ -3,7 +3,7 @@ import {onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.
 import {APP_CONFIG} from '../config/app-config.js';
 import {$,setText} from './ui.js';
 
-async function applyUser(u){
+export async function applyUser(u){
   setText('userName',u.displayName||u.email?.split('@')[0]||'JMB User');
   setText('userEmail',u.email||'');
   const av=$('#userAvatar');
@@ -18,11 +18,14 @@ async function applyUser(u){
 }
 
 export async function guard(){
-  if(!backendReady){
-    const here=encodeURIComponent(location.pathname.split('/').pop()||'dashboard.html');
-    location.replace(`login.html?next=${here}&reason=unavailable`);
-    return new Promise(()=>{});
-  }
-  return new Promise(resolve=>{onAuthStateChanged(auth,async u=>{if(!u){location.href='login.html';return}resolve(await applyUser(u)})});
+  if(!backendReady){location.replace(`login.html?next=${encodeURIComponent(location.pathname.split('/').pop()||'dashboard.html')}&reason=unavailable`);return new Promise(()=>{})}
+  return new Promise(resolve=>{onAuthStateChanged(auth,async u=>{if(!u){location.replace('login.html');return}resolve(await applyUser(u))})});
 }
-export async function logout(){if(backendReady)await signOut(auth);location.href='login.html'}
+
+export async function requireStaff(){
+  const u=await guard();
+  if(!(u.owner||u.admin)){location.replace('dashboard.html?access=denied');return new Promise(()=>{})}
+  return u;
+}
+
+export async function logout(){if(backendReady&&auth)await signOut(auth);location.href='login.html'}

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://firebasestorage.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data: https:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; upgrade-insecure-requests">
+  <meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://firebasestorage.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.cloudfunctions.net; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data: https:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; upgrade-insecure-requests">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#070912">
   <meta name="description" content="JMB HUB — a beautiful community portal for games, tools, Minecraft utilities, AI, global chat and support. Visit JMB HUB at jmbhost.qzz.io.">
@@ -17,7 +17,7 @@
   <meta name="twitter:card" content="summary">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"JMB HUB","alternateName":["JMBHUB","JMB Hub"],"url":"https://www.jmbhost.qzz.io/","description":"A community portal for games, tools, Minecraft utilities, AI, chat and support."}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"JMB HUB","alternateName":"JMBHUB","url":"https://www.jmbhost.qzz.io/","logo":"https://www.jmbhost.qzz.io/assets/icons/favicon.svg","sameAs":["https://discord.gg/gBPSvGqe44","https://www.youtube.com/@JMBYTGAMER"]}</script>
-  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml"><link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -33,7 +33,7 @@
         <h1>Everything JMB.<br><span class="gradient-text">One beautiful portal.</span></h1>
         <p class="lead">Games, creator tools, Minecraft utilities, JMB AI, support and more — designed for a fast, modern experience on phone or PC.</p>
         <div class="hero-actions"><a class="btn btn-primary" href="pages/login.html">Get Started <span>→</span></a><a class="btn btn-ghost" href="#features">Explore</a></div>
-        <div class="trust-row"><span>⚡ Fast & secure</span><span>🔥 Account ready</span><span>📱 Made for you</span></div>
+        <div class="trust-row"><span>⚡ Fast & secure</span><span>💬 Live community</span><span>🎮 Mobile games</span><span>📱 Phone ready</span></div>
       </div>
       <div class="hero-card glass">
         <div class="window-bar"><span></span><span></span><span></span><em>jmb://portal</em></div>
@@ -51,7 +51,7 @@
 <a class="feature-card glass feature-link" href="pages/login.html?next=ai.html"><span>🤖</span><h3>JMB AI</h3><p>Jump straight into your JMB AI service.</p><b>Open →</b></a>
 <a class="feature-card glass feature-link" href="pages/login.html?next=support.html"><span>🎫</span><h3>Support</h3><p>Create tickets and manage support requests.</p><b>Open →</b></a>
 <a class="feature-card glass feature-link" href="pages/login.html?next=chat.html"><span>💬</span><h3>Global Chat</h3><p>Talk with the JMB HUB community in real time.</p><b>Join chat →</b></a>
-        <article id="staffCard" class="feature-card glass staff-card hide"><span>🛡️</span><h3>Admin Panel</h3><p>Private controls for authorized staff.</p><a id="staffLink" class="btn btn-primary" href="pages/admin.html">Open Admin Panel →</a></article>
+        <article id="staffCard" class="feature-card glass staff-card hide"><span>🛡️</span><div class="staff-role" id="staffRole">STAFF</div><h3>Admin Panel</h3><p>Private controls for authorized staff.</p><a id="staffLink" class="btn btn-primary" href="pages/admin.html">Open Admin Panel →</a></article>
 </div>
     </section>
     <section class="cta container"><div class="cta-card glass"><div><div class="eyebrow">READY?</div><h2>Enter the JMBHUB.</h2><p>Your dashboard starts after login.</p></div><a class="btn btn-primary" href="pages/login.html">Get Started →</a></div></section>

@@ -14,3 +14,11 @@ Deploy the `functions/discordOAuth` function and configure its secrets from `fun
 
 ## Google Search
 The public homepage contains a canonical URL, sitemap, robots rules, Open Graph metadata and WebSite/Organization structured data for clearer indexing and site-name understanding. Search indexing and ranking are controlled by search engines; after deployment, submit the sitemap and inspect the homepage in Google Search Console.
+
+
+## Production setup
+- Deploy Firestore rules and Storage rules before launch.
+- Configure Discord OAuth secrets only with Firebase Secret Manager.
+- Deploy the Functions in `functions/index.js` for trusted Global Chat and staff role management.
+- Google/Email authentication is handled by the Firebase client SDK; provider settings and authorized domains must be configured in the Firebase Console.
+- The admin route is guarded in the UI and the underlying data is protected by Firestore rules.

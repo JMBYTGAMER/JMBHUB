@@ -1,10 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /pages/admin.html
-Disallow: /pages/dashboard.html
-Disallow: /pages/profile.html
-Disallow: /pages/chat.html
-Disallow: /functions/
-Disallow: /firebase/
-
+Disallow: /pages/
 Sitemap: https://www.jmbhost.qzz.io/sitemap.xml
