@@ -1,27 +1,23 @@
 <!doctype html>
 <html lang="en">
-  <h1>JMB Hub</h1>
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://firebasestorage.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data: https:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; upgrade-insecure-requests">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-
   <meta name="theme-color" content="#070912">
-
-  <title>JMB Hub — Games, Tools, Minecraft & AI</title>
-
-  <meta
-    name="description"
-    content="JMB Hub is the official JMB digital hub for games, creator tools, Minecraft utilities, JMB AI, support and more."
-  >
-
-  <meta name="robots" content="index, follow">
-
-  <meta name="author" content="JMB Hub">
-
-  <link rel="canonical" href="https://YOUR-DOMAIN.com/">
-
+  <meta name="description" content="JMB HUB — a beautiful community portal for games, tools, Minecraft utilities, AI, global chat and support. Visit JMB HUB at jmbhost.qzz.io.">
+  <title>JMB HUB — Games, Tools, Minecraft, AI & Community</title>
+  <link rel="canonical" href="https://www.jmbhost.qzz.io/">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="keywords" content="JMB HUB, JMBHUB, JMB, games, global chat, Minecraft tools, JMB AI, support">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="JMB HUB — Games, Tools, Minecraft, AI & Community">
+  <meta property="og:description" content="Games, tools, Minecraft utilities, JMB AI, global chat and support in one beautiful portal.">
+  <meta property="og:url" content="https://www.jmbhost.qzz.io/">
+  <meta property="og:site_name" content="JMB HUB">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"JMB HUB","alternateName":["JMBHUB","JMB Hub"],"url":"https://www.jmbhost.qzz.io/","description":"A community portal for games, tools, Minecraft utilities, AI, chat and support."}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"JMB HUB","alternateName":"JMBHUB","url":"https://www.jmbhost.qzz.io/","logo":"https://www.jmbhost.qzz.io/assets/icons/favicon.svg","sameAs":["https://discord.gg/gBPSvGqe44","https://www.youtube.com/@JMBYTGAMER"]}</script>
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
-
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -33,7 +29,7 @@
   <main>
     <section class="hero container">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="pulse"></span> JMB DIGITAL HUB</div>
+        <div class="eyebrow"><span class="pulse"></span> JMB HUB · COMMUNITY PORTAL</div>
         <h1>Everything JMB.<br><span class="gradient-text">One beautiful portal.</span></h1>
         <p class="lead">Games, creator tools, Minecraft utilities, JMB AI, support and more — designed for a fast, modern experience on phone or PC.</p>
         <div class="hero-actions"><a class="btn btn-primary" href="pages/login.html">Get Started <span>→</span></a><a class="btn btn-ghost" href="#features">Explore</a></div>
@@ -54,12 +50,13 @@
 <a class="feature-card glass feature-link" href="pages/login.html?next=minecraft.html"><span>⛏️</span><h3>Minecraft Area</h3><p>Item, enchantment and kit command generators.</p><b>Open →</b></a>
 <a class="feature-card glass feature-link" href="pages/login.html?next=ai.html"><span>🤖</span><h3>JMB AI</h3><p>Jump straight into your JMB AI service.</p><b>Open →</b></a>
 <a class="feature-card glass feature-link" href="pages/login.html?next=support.html"><span>🎫</span><h3>Support</h3><p>Create tickets and manage support requests.</p><b>Open →</b></a>
-<a class="feature-card glass feature-link" href="pages/login.html?next=admin.html"><span>⚙️</span><h3>Owner Controls</h3><p>Manage service states and portal messaging.</p><b>Open →</b></a>
+<a class="feature-card glass feature-link" href="pages/login.html?next=chat.html"><span>💬</span><h3>Global Chat</h3><p>Talk with the JMB HUB community in real time.</p><b>Join chat →</b></a>
+        <article id="staffCard" class="feature-card glass staff-card hide"><span>🛡️</span><h3>Admin Panel</h3><p>Private controls for authorized staff.</p><a id="staffLink" class="btn btn-primary" href="pages/admin.html">Open Admin Panel →</a></article>
 </div>
     </section>
     <section class="cta container"><div class="cta-card glass"><div><div class="eyebrow">READY?</div><h2>Enter the JMBHUB.</h2><p>Your dashboard starts after login.</p></div><a class="btn btn-primary" href="pages/login.html">Get Started →</a></div></section>
   </main>
   <footer class="container footer"><span>© <span id="year"></span> JMBHUB</span><span>Built for JMBHUB</span></footer>
-  <script>document.getElementById('year').textContent=new Date().getFullYear()</script>
+  <script type="module" src="js/home/home-page.js"></script>
 </body>
 </html>

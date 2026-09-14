@@ -4,7 +4,7 @@ export const APP_CONFIG={
   DISCORD_URL:'https://discord.gg/gBPSvGqe44',
   YOUTUBE_URL:'https://www.youtube.com/@JMBYTGAMER',
   AI_URL:'https://ai.jmbhost.qzz.io',
-  DISCORD_OAUTH_URL:'',
+  DISCORD_OAUTH_URL:'https://us-central1-jmb-hub.cloudfunctions.net/discordOAuth',
   SERVICES:{
     games:{enabled:true,message:'Games are online.'},
     area:{enabled:true,message:'Tools are online.'},

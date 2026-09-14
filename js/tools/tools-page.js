@@ -60,7 +60,7 @@ files.onchange=()=>{
 async function shareFile(index){
   const file=files.files[index];
   if(!file)return;
-  if(!backendReady||user.demo||!storage||!db){toast('Online file sharing is temporarily unavailable.');return}
+  if(!backendReady||user.demo||!storage||!db){toast('File sharing is temporarily unavailable.');return}
   try{
     const path=`users/${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
     const snap=await uploadBytes(storageRef(storage,path),file,{contentType:file.type||'application/octet-stream'});
