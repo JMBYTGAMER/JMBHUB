@@ -1,10 +1,9 @@
-import {auth,backendReady,backendError} from '../core/firebase.js?v=21';
+import {auth,backendReady,backendError} from '../core/firebase.js?v=22';
 import {APP_CONFIG} from '../config/app-config.js';
 import {$,toast} from '../core/ui.js';
-import {GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,signInWithEmailAndPassword,createUserWithEmailAndPassword,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence,signInWithCustomToken,browserPopupRedirectResolver} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-import {httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
+import {GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence,signInWithCustomToken,browserPopupRedirectResolver} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 
-const modeBtn=$('#modeBtn'),modeText=$('#modeText'),submit=$('#submitBtn'),submitText=$('#submitText'),error=$('#authError'),email=$('#email'),password=$('#password'),confirm=$('#confirmPassword'),confirmWrap=$('#confirmWrap'),forgot=$('#forgotBtn'),remember=$('#remember'),resetModal=$('#resetModal'),resetStatus=$('#resetStatus'),resetTimer=$('#resetTimer'),resetClose=$('#resetClose');
+const modeBtn=$('#modeBtn'),modeText=$('#modeText'),submit=$('#submitBtn'),submitText=$('#submitText'),error=$('#authError'),email=$('#email'),password=$('#password'),confirm=$('#confirmPassword'),confirmWrap=$('#confirmWrap'),forgot=$('#forgotBtn'),remember=$('#remember');
 let signup=false;
 const params=new URLSearchParams(location.search);
 const nextPage=params.get('next');
@@ -27,7 +26,7 @@ function setMode(v){signup=v;confirmWrap.classList.toggle('hide',!signup);forgot
 modeBtn.onclick=()=>setMode(!signup);
 if(reason==='unavailable')showError('Sign-in service is temporarily unavailable. Please try again later.');
 
-async function consumeGoogleRedirect(){if(!backendReady)return;try{const result=await getRedirectResult(auth,browserPopupRedirectResolver);if(result?.user)afterAuth()}catch(e){if(e?.code)showError(friendly(e))}}
+async function consumeGoogleRedirect(){if(!backendReady)return;try{const result=await getRedirectResult(auth);if(result?.user)afterAuth()}catch(e){if(e?.code)showError(friendly(e))}}
 consumeGoogleRedirect();
 
 async function consumeDiscordToken(){const hash=location.hash.startsWith('#')?location.hash.slice(1):'';const token=new URLSearchParams(hash).get('jmb_token');if(!token||!backendReady)return;if(token.length>6000){history.replaceState({},'',location.pathname);showError('That sign-in link is invalid.');return}try{await setPersistence(auth,browserLocalPersistence);await signInWithCustomToken(auth,token);history.replaceState({},'',location.pathname);afterAuth()}catch(e){history.replaceState({},'',location.pathname);showError(friendly(e))}}
@@ -63,11 +62,11 @@ async function startGoogleSignIn(){
     // Use popup first on every device, including mobile. If the browser
     // blocks the popup, fall back to the redirect flow.
     if(label)label.textContent=isMobile()?'Opening Google…':'Opening Google…';
-    const result=await signInWithPopup(auth,provider,browserPopupRedirectResolver);
+    const result=await signInWithPopup(auth,provider);
     if(result?.user)afterAuth();
   }catch(e){
     const code=e?.code||'';
-    console.error('[JMBHUB] Google authentication failed:',code,e);
+    console.error('[JMBHUB] Google authentication failed:',{code,message:e?.message,name:e?.name,host:location.hostname,origin:location.origin});
 
     const redirectable=[
       'auth/popup-blocked',
@@ -79,7 +78,7 @@ async function startGoogleSignIn(){
     if(redirectable.includes(code)){
       try{
         if(label)label.textContent='Redirecting to Google…';
-        await signInWithRedirect(auth,provider,browserPopupRedirectResolver);
+        await signInWithRedirect(auth,provider);
         return;
       }catch(redirectError){
         console.error('[JMBHUB] Google redirect authentication failed:',redirectError);
@@ -97,32 +96,15 @@ async function startGoogleSignIn(){
 }
 googleBtn.onclick=startGoogleSignIn;
 $('#discordBtn').onclick=()=>{clearError();if(!APP_CONFIG.DISCORD_OAUTH_URL)return showError('This sign-in option is temporarily unavailable.');location.href=APP_CONFIG.DISCORD_OAUTH_URL};
-let resetInterval=null;
-function openResetModal(requestId){
-  if(!resetModal)return;
-  resetModal.classList.remove('hide');
-  resetModal.setAttribute('aria-hidden','false');
-  resetStatus.textContent='Check your email for the 6-digit code and the “Verify now” button.';
-  let left=300;
-  const tick=()=>{const m=Math.floor(left/60),sec=String(left%60).padStart(2,'0');resetTimer.textContent=`Expires in ${m}:${sec}`;if(left<=0){clearInterval(resetInterval);resetStatus.textContent='This reset request has expired. Close this window and request a new code.';return}left--};
-  clearInterval(resetInterval);tick();resetInterval=setInterval(tick,1000);
-  sessionStorage.setItem('jmb_reset_request',requestId);
-}
-function closeResetModal(){if(!resetModal)return;resetModal.classList.add('hide');resetModal.setAttribute('aria-hidden','true');clearInterval(resetInterval)}
-resetClose?.addEventListener('click',closeResetModal);
-$('#resetEmailClose')?.addEventListener('click',closeResetModal);
-resetModal?.addEventListener('click',e=>{if(e.target===resetModal)closeResetModal()});
 forgot.onclick=async()=>{
   clearError();
-  if(!backendReady||!functions)return showError('Password recovery is temporarily unavailable. Please try again later.');
+  if(!backendReady)return showError('Password recovery is temporarily unavailable. Please try again later.');
   const e=email.value.trim().toLowerCase();
   if(!e)return showError('Enter your email address first.');
   forgot.disabled=true;
   try{
-    const result=await httpsCallable(functions,'requestPasswordReset')({email:e});
-    const requestId=result?.data?.requestId;
-    if(requestId)openResetModal(requestId);
-    toast('If that account exists, a reset email is on its way.','good');
-  }catch(err){console.error('[JMBHUB] Password reset request failed:',err);showError(err?.message?.replace('FirebaseError: ','')||'We could not send the reset email. Please try again.')}finally{forgot.disabled=false}
+    await sendPasswordResetEmail(auth,e,{url:new URL('login.html?reset=1',location.href).href,handleCodeInApp:false});
+    toast('Reset instructions sent. Check your email inbox.','good');
+  }catch(err){showError(friendly(err))}finally{forgot.disabled=false}
 };
 $('#authForm').onsubmit=async ev=>{ev.preventDefault();clearError();const e=email.value.trim(),p=password.value;if(!e||!p)return showError('Enter your email and password.');if(signup&&p!==confirm.value)return showError('Your passwords do not match.');if(signup&&p.length<8)return showError('Use at least 8 characters for your password.');if(!backendReady)return showError('Sign-in is temporarily unavailable.');busy(true);try{await persistence();if(signup)await createUserWithEmailAndPassword(auth,e,p);else await signInWithEmailAndPassword(auth,e,p);afterAuth()}catch(err){showError(friendly(err))}finally{busy(false)}};

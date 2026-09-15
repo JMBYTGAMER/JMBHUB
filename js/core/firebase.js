@@ -25,7 +25,7 @@ if(configValid){
     auth=initializeAuth(app,{
       persistence:[indexedDBLocalPersistence,browserLocalPersistence,browserSessionPersistence],
       popupRedirectResolver:browserPopupRedirectResolver
-      });
+    });
     backendReady=!!auth;
     try{db=getFirestore(app)}catch(error){console.warn('[JMBHUB] Optional database service unavailable.',error)}
     try{storage=getStorage(app)}catch(error){console.warn('[JMBHUB] Optional storage service unavailable.',error)}

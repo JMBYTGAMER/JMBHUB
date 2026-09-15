@@ -32,39 +32,3 @@ Use these values when prompted:
 Never commit the Client Secret or state secret.
 
 The endpoint validates OAuth state, exchanges the code server-side, retrieves the Discord account, creates a Firebase custom token, and sends the token in the URL fragment rather than the HTTP query string.
-
-## Password reset email service
-
-JMBHUB now has a custom 5-minute password recovery flow. It sends a 6-digit OTP plus a **Verify now** link and keeps the reset request server-side.
-
-The mailer uses SMTP. Set these Firebase Secret Manager values before deploying the functions:
-
-```bash
-firebase functions:secrets:set SMTP_HOST
-firebase functions:secrets:set SMTP_PORT
-firebase functions:secrets:set SMTP_USER
-firebase functions:secrets:set SMTP_PASS
-firebase functions:secrets:set RESET_FROM_EMAIL
-firebase functions:secrets:set RESET_FRONTEND_URL
-```
-
-For Gmail SMTP, typical values are:
-
-```text
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_USER=<the email account that sends JMBHUB mail>
-SMTP_PASS=<that account's app password>
-RESET_FROM_EMAIL=<the sender address>
-RESET_FRONTEND_URL=https://www.jmbhost.qzz.io
-```
-
-Do not put an email password or app password in frontend files or commit it to Git. Firebase Secret Manager keeps these values out of the public website.
-
-Then deploy:
-
-```bash
-firebase deploy --only functions,firestore:rules,auth
-```
-
-The reset request expires after 5 minutes, allows a maximum of five verification attempts, and is deleted after a successful password change.

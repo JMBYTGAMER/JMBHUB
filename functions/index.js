@@ -5,7 +5,6 @@ const {initializeApp}=require('firebase-admin/app');
 const {getAuth}=require('firebase-admin/auth');
 const {getFirestore,FieldValue}=require('firebase-admin/firestore');
 const {discordOAuthHandler}=require('./discord-oauth');
-const {requestPasswordReset,verifyPasswordReset,completePasswordReset}=require('./password-reset');
 initializeApp();
 const DISCORD_CLIENT_ID=defineSecret('DISCORD_CLIENT_ID');
 const DISCORD_CLIENT_SECRET=defineSecret('DISCORD_CLIENT_SECRET');
@@ -37,7 +36,3 @@ exports.setAdminRole=onCall({region:'us-central1'},async request=>{
   await getAuth().setCustomUserClaims(target.uid,claims);
   return {email,admin};
 });
-
-exports.requestPasswordReset=requestPasswordReset;
-exports.verifyPasswordReset=verifyPasswordReset;
-exports.completePasswordReset=completePasswordReset;
