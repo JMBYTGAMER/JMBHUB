@@ -24,6 +24,7 @@ if(configValid){
     // across mobile browsers while retaining local/session persistence support.
     auth=initializeAuth(app,{
       persistence:[indexedDBLocalPersistence,browserLocalPersistence,browserSessionPersistence],
+      popupRedirectResolver:browserPopupRedirectResolver
       });
     backendReady=!!auth;
     try{db=getFirestore(app)}catch(error){console.warn('[JMBHUB] Optional database service unavailable.',error)}

@@ -12,7 +12,11 @@
     "providers": {
       "emailPassword": true,
       "googleSignIn": {
-        "oAuthBrandDisplayName": "JMBHUB"
+        "oAuthBrandDisplayName": "JMBHUB",
+        "authorizedRedirectUris": [
+          "https://jmb-hub.firebaseapp.com/__/auth/handler",
+          "https://jmb-hub.web.app/__/auth/handler"
+        ]
       }
     }
   }
