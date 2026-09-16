@@ -32,3 +32,44 @@ Use these values when prompted:
 Never commit the Client Secret or state secret.
 
 The endpoint validates OAuth state, exchanges the code server-side, retrieves the Discord account, creates a Firebase custom token, and sends the token in the URL fragment rather than the HTTP query string.
+
+## JMBHUB Password Reset (5-minute OTP + Verify Now)
+
+The custom password recovery flow uses the `requestPasswordReset`, `verifyPasswordReset`, and `completePasswordReset` functions. It sends a six-digit OTP plus a Verify now link. The reset token expires after 5 minutes.
+
+Configure these Firebase Functions secrets before deploying:
+
+```bash
+firebase functions:secrets:set SMTP_HOST
+firebase functions:secrets:set SMTP_PORT
+firebase functions:secrets:set SMTP_USER
+firebase functions:secrets:set SMTP_PASS
+firebase functions:secrets:set RESET_FROM_EMAIL
+firebase functions:secrets:set RESET_FRONTEND_URL
+```
+
+For Gmail SMTP, use `smtp.gmail.com`, port `465`, your sender address, and a Gmail App Password. Never put an email password or App Password in frontend files.
+
+## Discord
+
+Configure:
+
+```bash
+firebase functions:secrets:set DISCORD_CLIENT_ID
+firebase functions:secrets:set DISCORD_CLIENT_SECRET
+firebase functions:secrets:set DISCORD_REDIRECT_URI
+firebase functions:secrets:set DISCORD_STATE_SECRET
+firebase functions:secrets:set JMB_FRONTEND_URL
+```
+
+Set the Discord OAuth redirect URI to:
+`https://us-central1-jmb-hub.cloudfunctions.net/discordOAuth`
+
+Set `JMB_FRONTEND_URL` to:
+`https://www.jmbhost.qzz.io`
+
+Deploy all backend pieces with:
+
+```bash
+firebase deploy --only functions,firestore:rules
+```
