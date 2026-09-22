@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="JMB logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b67ff"/>
+      <stop offset="1" stop-color="#496cff"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dfe4ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="122" height="122" rx="34" fill="#0b0e19"/>
+  <rect x="8" y="8" width="112" height="112" rx="30" fill="url(#bg)"/>
+  <path d="M39 29h15v43c0 12-6 18-18 18-5 0-10-1-14-4l7-12c2 1 4 2 6 2 3 0 4-2 4-6V29z" fill="url(#shine)"/>
+  <path d="M61 29h17l7 22 7-22h17v61H95V52l-7 22h-7l-7-22v38H61V29z" fill="url(#shine)"/>
+</svg>
