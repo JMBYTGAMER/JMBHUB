@@ -1,11 +1,10 @@
-// JMBHUB Firebase Web App configuration.
-// These browser-side values are safe to ship with a Firebase web app.
-export const FIREBASE_CONFIG={
-  apiKey:'AIzaSyDT0FFll2NkMYiam0_Sbct5P52AqF_cnpk',
-  authDomain:'jmb-hub.firebaseapp.com',
-  projectId:'jmb-hub',
-  storageBucket:'jmb-hub.firebasestorage.app',
-  messagingSenderId:'59308977494',
-  appId:'1:59308977494:web:f5149968e5ae94d5903af7',
-  measurementId:'G-ED3Z0XQY5T'
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDT0FFll2NkMYiam0_Sbct5P52AqF_Cnpk",
+  authDomain: "jmb-hub.firebaseapp.com",
+  projectId: "jmb-hub",
+  storageBucket: "jmb-hub.firebasestorage.app",
+  messagingSenderId: "59308977494",
+  appId: "1:59308977494:web:f5149968e5ae94d5903af7",
+  measurementId: "G-ED3Z0XQY5T"
 };
