@@ -4,8 +4,9 @@ import {db,backendReady} from '../core/firebase.js';
 import {doc,setDoc} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {toast} from '../core/ui.js';
 const u=await guard();
+if(!u.owner){location.replace('dashboard.html');throw new Error('Owner access denied');}
 const gate=document.querySelector('#ownerGate');
-if(u.owner){gate.textContent='Owner account recognized: '+u.email;gate.className='notice online'}else{gate.textContent='Owner access requires the configured owner account. This UI check is not a security boundary.';gate.className='notice danger'}
+gate.textContent='Owner account recognized';gate.className='notice online';
 const saved=JSON.parse(localStorage.getItem('jmb-service-settings')||'{}');
 const base=APP_CONFIG.SERVICES;
 document.querySelectorAll('.service-select').forEach(x=>{if(saved[x.dataset.key]?.enabled===false)x.value='off'});
