@@ -4,7 +4,8 @@
 .feature-link:hover{transform:translateY(-4px)}
 .feature-link b{display:inline-block;margin-top:10px;font-size:.9rem}
 
-.brand-logo{width:44px;height:44px;border-radius:13px;object-fit:cover;box-shadow:0 8px 28px rgba(80,90,255,.35)}
-.logo-glow{position:absolute;right:20px;top:58px;width:92px;height:92px;border-radius:25px;overflow:hidden;box-shadow:0 0 45px rgba(0,212,255,.22);animation:logoFloat 4s ease-in-out infinite}.logo-glow img{width:100%;height:100%;object-fit:cover}.hero-card{position:relative}.logo-glow+ .window-bar{margin-top:80px}
-@keyframes logoFloat{50%{transform:translateY(-8px) rotate(2deg)}}
-@media(max-width:560px){.brand-logo{width:38px;height:38px}.logo-glow{width:66px;height:66px;right:12px;top:50px}.logo-glow+ .window-bar{margin-top:60px}}
+/* JMBHUB brand logo */
+.brand-mark{overflow:hidden;flex:0 0 auto}
+.brand-mark img{width:100%;height:100%;display:block;object-fit:cover}
+.page-brand{margin-bottom:18px;width:max-content}
+.page-brand .brand-mark{width:46px;height:46px}
