@@ -5,54 +5,14 @@ service cloud.firestore {
     function owner() { return signedIn() && request.auth.token.email == 'jobinmathewbiju@gmail.com'; }
     function admin() { return signedIn() && (request.auth.token.admin == true || owner()); }
 
-    function validScoreGame(game) {
-      return game in ['meteor','click','reaction','target','game2048','tictactoe','memory','mole','color','guess','math','coin','flappy','stack'];
-    }
-    function maxScore(game) {
-      return game == 'meteor' ? 2000
-        : game == 'click' ? 1000
-        : game == 'reaction' ? 1000
-        : game == 'target' ? 1000
-        : game == 'game2048' ? 100000
-        : game == 'tictactoe' ? 100
-        : game == 'memory' ? 200
-        : game == 'mole' ? 1000
-        : game == 'color' ? 1000
-        : game == 'guess' ? 120
-        : game == 'math' ? 1000
-        : game == 'coin' ? 1000
-        : game == 'flappy' ? 1000
-        : 1000;
-    }
-
     match /leaderboards/{game}/scores/{scoreId} {
       allow read: if true;
-      allow create: if signedIn()
-        && validScoreGame(game)
-        && request.resource.data.keys().hasOnly(['uid','player','score','createdAt'])
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.player is string
-        && request.resource.data.player.size() <= 40
-        && request.resource.data.score is number
-        && request.resource.data.score >= 0
-        && request.resource.data.score <= maxScore(game);
-      allow update: if false;
-      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || admin());
-    }
-
-    match /globalChat/{messageId} {
-      allow read: if signedIn();
-      allow create, update: if false;
-      allow delete: if admin();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
     match /tickets/{ticketId} {
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['uid','email','subject','message','status','createdAt','updatedAt','replies'])
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.subject is string && request.resource.data.subject.size() <= 120
-        && request.resource.data.message is string && request.resource.data.message.size() <= 5000
-        && request.resource.data.status == 'open';
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow read: if signedIn() && (resource.data.uid == request.auth.uid || admin());
       allow update: if signedIn() && (resource.data.uid == request.auth.uid || admin());
       allow delete: if admin();
@@ -60,9 +20,7 @@ service cloud.firestore {
 
     match /settings/{docId} {
       allow read: if true;
-      allow write: if admin();
+      allow write: if owner();
     }
-
-    match /{document=**} { allow read, write: if false; }
   }
 }
