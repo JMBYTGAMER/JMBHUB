@@ -1,1 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.jmbhost.qzz.io/</loc></url><url><loc>https://www.jmbhost.qzz.io/pages/games.html</loc></url><url><loc>https://www.jmbhost.qzz.io/pages/minecraft.html</loc></url><url><loc>https://www.jmbhost.qzz.io/pages/jmb-area.html</loc></url><url><loc>https://www.jmbhost.qzz.io/pages/about.html</loc></url></urlset>
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.jmbhost.qzz.io/</loc><lastmod>2026-09-23</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.jmbhost.qzz.io/pages/games.html</loc><lastmod>2026-09-23</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.jmbhost.qzz.io/pages/minecraft.html</loc><lastmod>2026-09-23</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.jmbhost.qzz.io/pages/jmb-area.html</loc><lastmod>2026-09-23</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.jmbhost.qzz.io/pages/about.html</loc><lastmod>2026-09-23</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>
