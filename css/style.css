@@ -6,9 +6,9 @@
 
 /* JMBHUB brand logo */
 .brand-mark{overflow:hidden;flex:0 0 auto}
-.brand-mark img{width:100%;height:100%;display:block;object-fit:cover}
+.brand-mark img{width:100%;height:100%;display:block;object-fit:contain;border-radius:inherit}
 .page-brand{margin-bottom:18px;width:max-content}
 .page-brand .brand-mark{width:46px;height:46px}
 
 /* JMB HUB portal preview logo */
-.avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:inherit}
+.avatar{overflow:hidden;padding:4px}.avatar img{width:100%;height:100%;display:block;object-fit:contain;border-radius:9px}
