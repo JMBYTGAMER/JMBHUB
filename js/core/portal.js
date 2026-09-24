@@ -31,6 +31,7 @@ function makeNav(){
   const close=()=>{drawer.classList.remove('open');backdrop.classList.remove('open');document.body.classList.remove('menu-open')};
   const open=()=>{drawer.classList.add('open');backdrop.classList.add('open');document.body.classList.add('menu-open')};
   backdrop.onclick=close;
+  document.querySelectorAll('.sidebar [data-menu-logout]').forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();try{const m=await import('./auth-guard.js');await m.logout()}catch{location.href='login.html'}}));
   drawer.querySelector('[data-menu-logout]')?.addEventListener('click',async e=>{
     e.preventDefault();
     try{const m=await import('./auth-guard.js');await m.logout()}catch{location.href='login.html'}
