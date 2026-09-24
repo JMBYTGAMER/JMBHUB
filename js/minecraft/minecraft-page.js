@@ -21,7 +21,15 @@ const tools=[
  ['setblock','🧱','SetBlock','Place a block at coordinates.'],
  ['scoreboard','📊','Scoreboard','Create common scoreboard commands.'],
  ['worldborder','🌐','World Border','Create border size and center commands.'],
- ['locate','🧭','Locate Helper','Generate structure locate commands.']
+ ['locate','🧭','Locate Helper','Generate structure locate commands.'],
+ ['advancement','🏆','Advancement Helper','Build advancement grant/revoke commands.'],
+ ['clear','🧹','Clear Inventory','Generate safe clear commands.'],
+ ['kick','🚪','Kick Helper','Build a kick command with a reason.'],
+ ['ban','🔨','Ban Helper','Build a ban command with a reason.'],
+ ['whitelist','📋','Whitelist Helper','Generate whitelist commands.'],
+ ['spawnpoint','🛏️','Spawnpoint','Set a player spawn point.'],
+ ['setworldspawn','🌍','World Spawn','Set the world spawn position.'],
+ ['difficulty','⚔️','Difficulty','Generate difficulty commands.']
 ];
 function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="mc-choice" data-mc="${id}"><div class="mc-art">${i}</div><h3>${n}</h3><p>${d}</p></button>`).join('');library.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>open(b.dataset.mc))}
 function head(id){const x=tools.find(a=>a[0]===id);document.querySelector('#mcTitle').textContent=x[2];document.querySelector('#mcDesc').textContent=x[3];library.querySelectorAll('.mc-choice').forEach(b=>b.classList.toggle('active',b.dataset.mc===id))}
@@ -51,7 +59,16 @@ function scoreboard(){panel('<div class="form-grid"><div class="field"><label>Ob
 function worldborder(){panel('<div class="form-grid"><div class="field"><label>Size</label><input id="ws" type="number" value="1000"></div><div class="field"><label>X</label><input id="wx" value="0"></div><div class="field"><label>Z</label><input id="wz" value="0"></div></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/worldborder set '+document.querySelector('#ws').value+'\n/worldborder center '+document.querySelector('#wx').value+' '+document.querySelector('#wz').value)}
 function locate(){panel('<div class="field"><label>Structure</label><input id="ls" value="minecraft:village"></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/locate structure '+document.querySelector('#ls').value)}
 
-const mcExtended={item,kit,enchant,potion,teleport,effect,gamerule,time,summon,fill,give,clone,title,tellraw,particle,execute,setblock,scoreboard,worldborder,locate};
+function simpleCommand(label,cmd){panel('<div class="field"><label>'+label+'</label><input id="simpleValue" value="@p"></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output(cmd.replaceAll('{v}',document.querySelector('#simpleValue').value||'@p'))}
+function advancement(){panel('<div class="form-grid"><div class="field"><label>Player</label><input id="ap" value="@p"></div><div class="field"><label>Advancement</label><input id="aa" value="minecraft:story/mine_stone"></div><div class="field"><label>Action</label><select id="ax"><option>grant</option><option>revoke</option></select></div></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/advancement '+document.querySelector('#ax').value+' '+document.querySelector('#ap').value+' only '+document.querySelector('#aa').value)}
+function clear(){simpleCommand('Player','/clear {v}')}
+function kick(){panel('<div class="form-grid"><div class="field"><label>Player</label><input id="kv" value="@p"></div><div class="field"><label>Reason</label><input id="kr" value="Please follow the server rules"></div></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/kick '+document.querySelector('#kv').value+' '+document.querySelector('#kr').value)}
+function ban(){panel('<div class="form-grid"><div class="field"><label>Player</label><input id="bv" value="PlayerName"></div><div class="field"><label>Reason</label><input id="br" value="Rule violation"></div></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/ban '+document.querySelector('#bv').value+' '+document.querySelector('#br').value)}
+function whitelist(){simpleCommand('Player','/whitelist add {v}')}
+function spawnpoint(){panel('<div class="form-grid"><div class="field"><label>Player</label><input id="sv" value="@p"></div><div class="field"><label>Position</label><input id="spv" value="~ ~ ~"></div></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/spawnpoint '+document.querySelector('#sv').value+' '+document.querySelector('#spv').value)}
+function setworldspawn(){panel('<div class="field"><label>Position</label><input id="swv" value="~ ~ ~"></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/setworldspawn '+document.querySelector('#swv').value)}
+function difficulty(){panel('<div class="field"><label>Difficulty</label><select id="dv"><option>peaceful</option><option>easy</option><option>normal</option><option>hard</option></select></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/difficulty '+document.querySelector('#dv').value)}
+const mcExtended={item,kit,enchant,potion,teleport,effect,gamerule,time,summon,fill,give,clone,title,tellraw,particle,execute,setblock,scoreboard,worldborder,locate,advancement,clear,kick,ban,whitelist,spawnpoint,setworldspawn,difficulty};
 function renderExtended(){library.innerHTML=tools.map(([id,i,n,d])=>'<button class="mc-choice" data-mc="'+id+'"><div class="mc-art">'+i+'</div><h3>'+n+'</h3><p>'+d+'</p><span class="pill">Open →</span></button>').join('');library.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>openExtended(b.dataset.mc))}
 function openExtended(id){head(id);mcExtended[id]();}
 await guard();renderExtended();openExtended('item');
