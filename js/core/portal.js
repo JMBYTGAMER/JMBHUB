@@ -10,6 +10,7 @@ const links=[
 ];
 function currentPage(){return location.pathname.split('/').pop()||'index.html'}
 function makeNav(){
+  if(currentPage()==='index.html')return;
   let drawer=document.querySelector('.jmb-mobile-menu');
   let backdrop=document.querySelector('.jmb-drawer-backdrop');
   if(!drawer){
