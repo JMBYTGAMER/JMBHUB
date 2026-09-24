@@ -378,41 +378,76 @@ async function loadUsers(){
     return;
   }
 
-  if(!app){
-    rows.innerHTML='<tr><td colspan="6" class="empty">Firebase app unavailable.</td></tr>';
-    return;
+  /* First try the secure server-side Auth directory. It needs Cloud Functions. */
+  if(app){
+    try{
+      if(!functionsModule){
+        functionsModule = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
+      }
+      const fn = functionsModule.getFunctions(app,'asia-south1');
+      const call = functionsModule.httpsCallable(fn,'listUsers');
+      const res = await call({});
+      const users = res.data?.users || [];
+      renderUsers(users);
+      return;
+    }catch(e){
+      /* Functions are optional on Spark. Fall back to the secure Firestore profile directory. */
+      console.info('[JMBHUB] Auth user list unavailable; using profile directory.',e?.message||e);
+    }
   }
 
   try{
-    if(!functionsModule){
-      functionsModule = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
-    }
-    const fn = functionsModule.getFunctions(app,'asia-south1');
-    const call = functionsModule.httpsCallable(fn,'listUsers');
-    const res = await call({});
-    const users = res.data?.users || [];
-
-    setText('#userCount',String(users.length));
-    rows.innerHTML = users.length
-      ? users.map(x => `<tr>
-          <td>${esc(x.email || '—')}</td>
-          <td>${esc(x.displayName || '—')}</td>
-          <td>${x.emailVerified ? '✓' : '—'}</td>
-          <td>${esc(x.lastSignInAt ? new Date(x.lastSignInAt).toLocaleString() : '—')}</td>
-          <td><span class="pill">${x.admin ? 'Admin' : 'Member'}</span></td>
-          <td>${x.uid === user.uid
-            ? '<span class="pill">Owner</span>'
-            : `<button class="btn btn-ghost role-btn" data-uid="${esc(x.uid)}" data-role="${x.admin?'member':'admin'}">${x.admin?'Remove admin':'Make admin'}</button>`}
-        </tr>`).join('')
-      : '<tr><td colspan="6" class="empty">No accounts returned.</td></tr>';
-
-    $$('.role-btn').forEach(button => {
-      button.addEventListener('click', () => setRole(button.dataset.uid,button.dataset.role));
+    const snap=await getDocs(query(collection(db,'profiles'),orderBy('lastSeenAt','desc'),limit(200)));
+    const users=snap.docs.map(d=>{
+      const x=d.data();
+      return {
+        uid:d.id,
+        email:x.email||'',
+        displayName:x.displayName||'',
+        photoURL:x.photoURL||'',
+        emailVerified:Boolean(x.emailVerified),
+        lastSignInAt:x.lastSeenAt?.toDate?.()?.toISOString?.()||'',
+        admin:false
+      };
     });
+    setText('#userCount',String(users.length));
+    if(!users.length){
+      rows.innerHTML='<tr><td colspan="6" class="empty">No portal profiles yet. Users appear here after they sign in.</td></tr>';
+      return;
+    }
+    rows.innerHTML=users.map(x=>`<tr>
+      <td>${esc(x.email||'—')}</td>
+      <td>${esc(x.displayName||'—')}</td>
+      <td>${x.emailVerified?'✓':'—'}</td>
+      <td>${esc(x.lastSignInAt?new Date(x.lastSignInAt).toLocaleString():'—')}</td>
+      <td><span class="pill">${x.uid===user.uid?'Owner':'Member'}</span></td>
+      <td><span class="pill">Server role controls unavailable</span></td>
+    </tr>`).join('');
   }catch(e){
-    rows.innerHTML = `<tr><td colspan="6" class="empty">User management is unavailable until the Cloud Functions are deployed. ${errorText(e)}</td></tr>`;
+    rows.innerHTML=`<tr><td colspan="6" class="empty">Could not load the account directory: ${errorText(e)}</td></tr>`;
     setText('#userCount','—');
   }
+}
+
+function renderUsers(users){
+  const rows=$('#userRows');
+  setText('#userCount',String(users.length));
+  rows.innerHTML=users.length
+    ? users.map(x=>`<tr>
+        <td>${esc(x.email||'—')}</td>
+        <td>${esc(x.displayName||'—')}</td>
+        <td>${x.emailVerified?'✓':'—'}</td>
+        <td>${esc(x.lastSignInAt?new Date(x.lastSignInAt).toLocaleString():'—')}</td>
+        <td><span class="pill">${x.uid===user.uid?'Owner':(x.admin?'Admin':'Member')}</span></td>
+        <td>${x.uid===user.uid
+          ? '<span class="pill">Owner</span>'
+          : `<button class="btn btn-ghost role-btn" data-uid="${esc(x.uid)}" data-role="${x.admin?'member':'admin'}">${x.admin?'Remove admin':'Make admin'}</button>`}
+      </tr>`).join('')
+    : '<tr><td colspan="6" class="empty">No accounts returned.</td></tr>';
+
+  $$('.role-btn').forEach(button=>{
+    button.addEventListener('click',()=>setRole(button.dataset.uid,button.dataset.role));
+  });
 }
 
 async function setRole(uid,role){
