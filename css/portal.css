@@ -81,3 +81,15 @@
  .dashboard-user-card{padding:10px}
  .card{border-radius:17px}
 }
+
+/* Admin control center */
+.admin-section,.admin-list,.admin-tabs{position:relative}
+.admin-tabs{padding:6px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.025)}
+.admin-tabs .btn{min-height:42px}
+.admin-list .card{background:rgba(255,255,255,.035)}
+#ownerGate.online{border-color:rgba(53,230,162,.25);background:rgba(53,230,162,.06)}
+#adminServices .card{transition:transform .18s ease,border-color .18s ease}
+#adminServices .card:hover{transform:translateY(-3px);border-color:rgba(124,92,255,.3)}
+#adminModal .modal{background:linear-gradient(145deg,#10162a,#0b0f1d);border-color:rgba(124,92,255,.25)}
+#adminTicketRows .btn{min-width:72px}
+@media(max-width:700px){.admin-tabs{overflow:auto;flex-wrap:nowrap!important}.admin-tabs .btn{white-space:nowrap}.table th,.table td{padding:10px 8px}.modal{padding:17px}}
