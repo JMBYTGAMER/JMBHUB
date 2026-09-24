@@ -31,7 +31,7 @@ const tools=[
  ['setworldspawn','🌍','World Spawn','Set the world spawn position.'],
  ['difficulty','⚔️','Difficulty','Generate difficulty commands.']
 ];
-function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="mc-choice" data-mc="${id}"><div class="mc-art">${i}</div><h3>${n}</h3><p>${d}</p></button>`).join('');library.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>open(b.dataset.mc))}
+function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="mc-choice" data-mc="${id}"><div class="mc-art">${i}</div><h3>${n}</h3><p>${d}</p><span class="pill">Open →</span></button>`).join('');library.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>open(b.dataset.mc))}
 function head(id){const x=tools.find(a=>a[0]===id);document.querySelector('#mcTitle').textContent=x[2];document.querySelector('#mcDesc').textContent=x[3];library.querySelectorAll('.mc-choice').forEach(b=>b.classList.toggle('active',b.dataset.mc===id))}
 function panel(x){stage.innerHTML='<div class="mc-panel">'+x+'</div>'}
 function output(text){const o=document.querySelector('#mcOutput');o.value=text;document.querySelector('#mcCopy').onclick=()=>navigator.clipboard?.writeText(o.value).then(()=>toast('Command copied','good'))}
