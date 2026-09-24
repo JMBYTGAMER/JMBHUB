@@ -17,7 +17,7 @@ function makeNav(){
     backdrop=document.createElement('div');backdrop.className='jmb-drawer-backdrop';document.body.append(backdrop);
     drawer=document.createElement('aside');drawer.className='jmb-mobile-menu';drawer.setAttribute('aria-label','JMBHUB navigation');
     drawer.innerHTML='<div class="menu-title">JMBHUB • PORTAL</div>'+links.map(([i,n,u])=>'<a href="'+u+'" data-nav="'+u+'"><span class="menu-icon">'+i+'</span><span>'+n+'</span></a>').join('')+
-      '<div class="menu-title" style="margin-top:22px">ACCOUNT</div><a href="#" data-menu-logout><span class="menu-icon">↪</span><span>Logout</span></a>';
+      '<div class="menu-title" style="margin-top:22px">MANAGE</div><a href="admin.html" data-admin-only class="hide"><span class="menu-icon">⚙️</span><span>Admin Console</span></a><a href="#" data-menu-logout><span class="menu-icon">↪</span><span>Logout</span></a>';
     document.body.append(drawer);
   }
   const active=currentPage();
