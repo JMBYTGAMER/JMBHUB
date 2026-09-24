@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dashboard — JMBHUB</title><link rel="icon" href="../assets/icons/favicon.png">
 <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/app.css"><link rel="stylesheet" href="../css/portal.css">
 </head>
@@ -14,35 +14,35 @@
 <div class="side-section"><div class="side-label">ACCOUNT</div><a class="nav-link" href="profile.html"><span>◉</span><span>Profile</span></a><a class="nav-link" data-admin-only href="admin.html"><span>⚙️</span><span>Admin Console</span></a><a class="nav-link" href="#" data-logout><span>↪</span><span>Logout</span></a></div>
 </aside>
 <main class="main"><section class="page">
-<div class="dashboard-hero"><div class="dashboard-hero-content"><div><div class="dashboard-kicker">JMBHUB • PORTAL</div><h1>Welcome back 👋</h1><p>Your games, tools, Minecraft utilities, AI and support — all connected in one workspace.</p></div><div class="dashboard-user-card"><div class="user-avatar" id="userAvatar">J</div><div><b id="userName">JMB User</b><small id="userEmail" class="muted">Loading…</small></div><span class="status-dot"></span></div></div></div>
+<div class="dashboard-hero"><div class="dashboard-hero-content"><div><div class="dashboard-kicker">JMBHUB • PERSONAL WORKSPACE</div><h1>Your JMB world, all in one place.</h1><p>Games, tools, Minecraft, AI, support and community — jump anywhere in one tap.</p><div class="actions"><a class="btn btn-primary" href="games.html">🎮 Start Playing</a><a class="btn btn-ghost" href="jmb-area.html">🧰 Explore Tools</a></div></div>
+<div class="dashboard-user-card"><div class="user-avatar" id="userAvatar">J</div><div><b id="userName">JMB User</b><small id="userEmail" class="muted">Loading…</small></div><span class="status-dot"></span></div></div></div>
 
 <div class="quick-grid">
-<a class="quick-link" href="games.html"><span class="qicon">🎮</span><span>Play Games</span></a>
-<a class="quick-link" href="jmb-area.html"><span class="qicon">🧰</span><span>Open Tools</span></a>
+<a class="quick-link" href="dashboard.html"><span class="qicon">⌂</span><span>Dashboard</span></a>
+<a class="quick-link" href="games.html"><span class="qicon">🎮</span><span>Games</span></a>
+<a class="quick-link" href="jmb-area.html"><span class="qicon">🧰</span><span>JMB Area</span></a>
 <a class="quick-link" href="minecraft.html"><span class="qicon">⛏️</span><span>Minecraft</span></a>
-<a class="quick-link" href="ai.html"><span class="qicon">🤖</span><span>JMB AI</span></a>
-<a class="quick-link" href="support.html"><span class="qicon">🎫</span><span>Get Support</span></a>
+<a class="quick-link" href="support.html"><span class="qicon">🎫</span><span>Support</span></a>
 </div>
 
-<div class="grid grid-4">
-<div class="card stat"><div><span>Access</span><strong>Active</strong></div><span class="online">●</span></div>
-<div class="card stat"><div><span>Portal mode</span><strong>Live</strong></div><span>24/7</span></div>
-<div class="card stat"><div><span>Services</span><strong id="firebaseState">Ready</strong></div><span>Connected</span></div>
-<div class="card stat"><div><span>Local time</span><strong data-now>…</strong></div><span>JMBHUB</span></div>
+<div class="grid grid-4 dashboard-stat-grid">
+<div class="card stat"><div><span>ACCOUNT</span><strong>Active</strong></div><span class="online">●</span></div>
+<div class="card stat"><div><span>PORTAL</span><strong>Live</strong></div><span>24/7</span></div>
+<div class="card stat"><div><span>SERVICES</span><strong id="firebaseState">Ready</strong></div><span>Connected</span></div>
+<div class="card stat"><div><span>LOCAL TIME</span><strong data-now>…</strong></div><span>JMBHUB</span></div>
 </div>
 
-<div style="height:18px"></div>
-<div class="section-title"><div><div class="eyebrow">YOUR SERVICES</div><h2 style="margin:6px 0">Everything in one place</h2></div></div>
+<div class="section-title" style="margin-top:28px"><div><div class="eyebrow">YOUR HUB</div><h2 style="margin:6px 0">Choose what you want to do</h2><p class="muted">Every module has its own workspace and mobile-friendly controls.</p></div></div>
 <div id="serviceGrid" class="grid grid-3"></div>
 
 <div class="dashboard-lower">
-<div class="card dashboard-panel suggestion-box">
-<div><div class="eyebrow">SUGGESTION BOX</div><h3>Help shape JMBHUB</h3><p class="muted">Have an idea for a game, tool or feature? Send it directly to the team.</p></div>
-<textarea id="suggestionText" class="tool-area" maxlength="500" placeholder="Your idea..."></textarea>
-<div class="actions"><button class="btn btn-primary" id="sendSuggestion">Send suggestion →</button><span id="suggestionStatus" class="notice hide"></span></div>
+<div class="card dashboard-panel suggestion-box"><div><div class="eyebrow">SUGGESTION BOX</div><h3>Make JMBHUB better 💡</h3><p class="muted">Have an idea for a game, tool, Minecraft feature or new page? Send it directly to the team.</p></div>
+<textarea id="suggestionText" class="tool-area" maxlength="500" placeholder="Tell us what you want to see next…"></textarea>
+<div class="actions"><button class="btn btn-primary" id="sendSuggestion">Send suggestion →</button><span id="suggestionStatus" class="notice hide"></span></div></div>
+<div class="card dashboard-panel"><div class="eyebrow">COMMUNITY</div><h3>Stay connected</h3><p class="muted">Join JMB Community for updates, events and support.</p><a id="discordLink" class="btn btn-primary" target="_blank" rel="noopener">Open Discord ↗</a><div style="height:16px"></div><div class="eyebrow">CREATOR</div><h3>JMB YT GAMER</h3><p class="muted">Watch videos, updates and new JMB projects.</p><a id="youtubeLink" class="btn btn-ghost" target="_blank" rel="noopener">Open YouTube ↗</a></div>
 </div>
-<div class="card dashboard-panel"><div class="eyebrow">COMMUNITY</div><h3>Stay connected</h3><p class="muted">Join the JMB Community for updates, events and support.</p><a id="discordLink" class="btn btn-primary" target="_blank" rel="noopener">Open Discord ↗</a><div style="height:12px"></div><div class="eyebrow">YOUTUBE</div><h3>JMB YT GAMER</h3><p class="muted">Watch the latest videos and updates.</p><a id="youtubeLink" class="btn btn-ghost" target="_blank" rel="noopener">Open YouTube ↗</a></div>
-</div>
+
+<div class="card" style="margin-top:14px"><div class="section-title"><div><div class="eyebrow">SYSTEM</div><h3>JMBHUB is modular</h3><p class="muted">New games, tools and services can be added without rebuilding the whole portal.</p></div><span class="pill">● Online</span></div></div>
 </section></main></div>
 <script type="module" src="../js/core/portal.js"></script><script type="module" src="../js/app.js"></script>
 </body></html>
