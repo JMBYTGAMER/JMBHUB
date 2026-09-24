@@ -53,26 +53,31 @@ function makeNav(){
 function particles(){
   if(document.getElementById('jmbParticleCanvas'))return;
   const c=document.createElement('canvas');c.id='jmbParticleCanvas';document.body.prepend(c);
-  const ctx=c.getContext('2d');let w=innerWidth,h=innerHeight,dpr=Math.min(devicePixelRatio||1,2),px=-9999,py=-9999,power=0,lastMove=0;
-  const pts=[];
-  function resize(){w=innerWidth;h=innerHeight;dpr=Math.min(devicePixelRatio||1,2);c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);const count=Math.min(105,Math.max(38,Math.floor(w*h/14500)));while(pts.length<count)pts.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.7+.6});if(pts.length>count)pts.length=count}
-  function attract(x,y){px=x;py=y;power=1}
+  const ctx=c.getContext('2d');let w=innerWidth,h=innerHeight,dpr=1,px=-9999,py=-9999,power=0,lastMove=0;const pts=[];
+  function resize(){
+    w=innerWidth;h=innerHeight;dpr=Math.min(devicePixelRatio||1,2);
+    c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
+    const count=Math.min(95,Math.max(32,Math.floor(w*h/17000)));
+    while(pts.length<count)pts.push({x:20+Math.random()*Math.max(1,w-40),y:20+Math.random()*Math.max(1,h-40),vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.6+.55});
+    pts.length=Math.min(pts.length,count);
+  }
+  function attract(x,y){px=Math.max(18,Math.min(w-18,x));py=Math.max(18,Math.min(h-18,y));power=1}
   addEventListener('resize',resize,{passive:true});
   addEventListener('pointerdown',e=>attract(e.clientX,e.clientY),{passive:true});
   addEventListener('touchstart',e=>{const t=e.touches[0];if(t)attract(t.clientX,t.clientY)},{passive:true});
-  addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&Date.now()-lastMove>70){lastMove=Date.now();px=e.clientX;py=e.clientY;power=Math.max(power,.12)}},{passive:true});
+  addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&Date.now()-lastMove>90){lastMove=Date.now();px=e.clientX;py=e.clientY;power=Math.max(power,.08)}},{passive:true});
   resize();
   function frame(){
     ctx.clearRect(0,0,w,h);
-    for(let i=0;i<pts.length;i++){
-      const p=pts[i];
-      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy)||1,force=Math.max(0,1-dist/430)*.9*power;p.vx+=dx/dist*force*.06;p.vy+=dy/dist*force*.06}
-      p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;
-      if(p.x<-20)p.x=w+20;if(p.x>w+20)p.x=-20;if(p.y<-20)p.y=h+20;if(p.y>h+20)p.y=-20;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(142,128,255,.78)';ctx.fill();
-      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy);if(dist<125){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(px,py);ctx.strokeStyle='rgba(100,215,255,'+(0.12*(1-dist/125)*power)+')';ctx.stroke()}}
+    for(const p of pts){
+      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy)||1,force=Math.max(0,1-dist/360)*.75*power;p.vx+=dx/dist*force*.045;p.vy+=dy/dist*force*.045}
+      p.vx*=.987;p.vy*=.987;p.x+=p.vx;p.y+=p.vy;
+      if(p.x<8){p.x=8;p.vx=Math.abs(p.vx)*.8} if(p.x>w-8){p.x=w-8;p.vx=-Math.abs(p.vx)*.8}
+      if(p.y<8){p.y=8;p.vy=Math.abs(p.vy)*.8} if(p.y>h-8){p.y=h-8;p.vy=-Math.abs(p.vy)*.8}
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(142,128,255,.72)';ctx.fill();
+      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy);if(dist<105){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(px,py);ctx.strokeStyle='rgba(100,215,255,'+(0.1*(1-dist/105)*power)+')';ctx.stroke()}}
     }
-    if(power>0){power*=.955;if(power<.02)power=0;ctx.beginPath();ctx.arc(px,py,12+20*power,0,Math.PI*2);ctx.strokeStyle='rgba(124,92,255,'+.32*power+')';ctx.stroke()}
+    if(power>0){power*=.955;if(power<.02)power=0;ctx.beginPath();ctx.arc(px,py,12+20*power,0,Math.PI*2);ctx.strokeStyle='rgba(124,92,255,'+.28*power+')';ctx.stroke()}
     requestAnimationFrame(frame);
   }
   frame();
