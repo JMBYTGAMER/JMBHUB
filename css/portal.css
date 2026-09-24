@@ -38,3 +38,46 @@
 @media(max-width:430px){.quick-grid{grid-template-columns:1fr 1fr;gap:8px}.quick-link{padding:11px;font-size:13px}.quick-link .qicon{font-size:19px}.jmb-mobile-menu{width:92vw}}
 
 .admin-list{display:grid;gap:10px}.admin-section{min-height:260px}.menu-open{overflow:hidden}.status-dot{flex:0 0 auto}
+
+
+/* ===== JMBHUB 2026 visual system ===== */
+.app-body{background:
+ radial-gradient(900px 500px at 15% -10%,rgba(124,92,255,.12),transparent 60%),
+ radial-gradient(800px 500px at 100% 20%,rgba(0,198,234,.08),transparent 60%),
+ #070912;overflow-x:hidden}
+.app-body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.8),transparent 90%)}
+.jmb-mobile-menu{border-radius:22px 0 0 22px}
+.mobile-menu-btn{box-shadow:0 8px 28px rgba(0,0,0,.24);font-size:22px}
+.dashboard-hero{padding:34px;min-height:250px;background:
+ radial-gradient(circle at 82% 22%,rgba(0,198,234,.18),transparent 22%),
+ radial-gradient(circle at 62% 100%,rgba(124,92,255,.18),transparent 35%),
+ linear-gradient(135deg,rgba(124,92,255,.16),rgba(255,255,255,.025) 58%,rgba(0,198,234,.07));}
+.dashboard-hero:after{content:"JMB";position:absolute;right:24px;bottom:-35px;font-size:180px;font-weight:1000;letter-spacing:-12px;color:rgba(255,255,255,.018);pointer-events:none}
+.dashboard-hero-content{z-index:1}
+.dashboard-hero h1{max-width:760px}
+.quick-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+.quick-link{min-height:72px;justify-content:flex-start;position:relative;overflow:hidden}
+.quick-link:after{content:"";position:absolute;width:80px;height:80px;right:-35px;bottom:-45px;border-radius:50%;background:rgba(124,92,255,.16);filter:blur(8px)}
+.dashboard-stat-grid{margin-top:14px}
+.service-card{position:relative;overflow:hidden}
+.service-card:before{content:"";position:absolute;inset:auto -40px -55px auto;width:130px;height:130px;border-radius:50%;background:rgba(124,92,255,.09);filter:blur(20px);pointer-events:none}
+.service-card .service-art{transition:transform .2s ease,box-shadow .2s ease}
+.service-card:hover .service-art{transform:scale(1.06) rotate(-2deg);box-shadow:0 12px 30px rgba(124,92,255,.16)}
+.dashboard-lower{margin-top:18px}
+.dashboard-panel{background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.018))}
+.suggestion-box{position:relative;overflow:hidden}
+.suggestion-box:after{content:"💡";position:absolute;right:24px;top:20px;font-size:54px;opacity:.12}
+.page{position:relative}
+.page-head h1{font-weight:950}
+.section-title h2,.section-title h3{font-weight:850}
+@media(max-width:1000px){.quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){
+ .page{padding:16px 12px 28px}
+ .dashboard-hero{padding:23px;min-height:0}
+ .dashboard-hero:after{font-size:100px;right:8px;bottom:-15px}
+ .dashboard-hero h1{font-size:clamp(31px,10vw,42px);letter-spacing:-1.8px}
+ .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .quick-link{min-height:64px}
+ .dashboard-user-card{padding:10px}
+ .card{border-radius:17px}
+}
