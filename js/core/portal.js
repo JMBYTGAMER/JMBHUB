@@ -21,6 +21,12 @@ function makeNav(){
     document.body.append(drawer);
   }
   const active=currentPage();
+  const sidebar=document.querySelector('.sidebar');
+  if(sidebar && !sidebar.querySelector('[data-global-account]')){
+    const section=document.createElement('div');section.className='side-section';section.setAttribute('data-global-account','');
+    section.innerHTML='<div class="side-label">ACCOUNT</div><a class="nav-link" href="profile.html"><span>◉</span><span>Profile</span></a><a class="nav-link" data-admin-only href="admin.html"><span>⚙️</span><span>Admin Console</span></a><a class="nav-link" href="#" data-menu-logout><span>↪</span><span>Logout</span></a>';
+    sidebar.append(section);
+  }
   drawer.querySelectorAll('[data-nav]').forEach(a=>{if(a.getAttribute('data-nav')===active)a.classList.add('active')});
   const close=()=>{drawer.classList.remove('open');backdrop.classList.remove('open');document.body.classList.remove('menu-open')};
   const open=()=>{drawer.classList.add('open');backdrop.classList.add('open');document.body.classList.add('menu-open')};
