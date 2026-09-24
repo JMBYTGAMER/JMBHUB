@@ -93,3 +93,7 @@
 #adminModal .modal{background:linear-gradient(145deg,#10162a,#0b0f1d);border-color:rgba(124,92,255,.25)}
 #adminTicketRows .btn{min-width:72px}
 @media(max-width:700px){.admin-tabs{overflow:auto;flex-wrap:nowrap!important}.admin-tabs .btn{white-space:nowrap}.table th,.table td{padding:10px 8px}.modal{padding:17px}}
+
+
+/* JMBHUB admin control center */
+.admin-tabs{padding:7px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.025);position:sticky;top:12px;z-index:8;backdrop-filter:blur(14px)}.admin-tabs .btn{min-height:43px}.admin-section{position:relative;overflow:hidden}.admin-section:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,92,255,.035),transparent 45%);pointer-events:none}.log-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.log-toolbar .tool-input{max-width:260px;background:#0d1120;color:#fff;border:1px solid var(--line);border-radius:12px;padding:11px}.replay-box{margin:14px 0;padding:12px;border:1px solid var(--line);border-radius:18px;background:#080c16}.replay-box canvas{width:100%;height:auto;display:block;border-radius:12px;background:#090d18}.admin-list .card{background:rgba(255,255,255,.035)}#adminUsers .table,#adminLogs .table{min-width:760px}#adminServices .card,#adminSecurity{border-color:rgba(124,92,255,.18)}#adminSecurity .notice{height:100%;display:flex;align-items:center}@media(max-width:700px){.admin-tabs{position:sticky;top:8px;overflow:auto;flex-wrap:nowrap!important}.admin-tabs .btn{white-space:nowrap}.replay-box{padding:8px}}
