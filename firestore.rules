@@ -1,18 +1,48 @@
-rules_version='2'
-
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function owner() {
+      return signedIn() && request.auth.token.email == 'jobinmathewbiju@gmail.com';
+    }
+    function admin() {
+      return signedIn() && (request.auth.token.admin == true || request.auth.token.role == 'admin' || owner());
+    }
+
+    match /settings/{docId} {
+      allow read: if signedIn();
+      allow write: if owner();
+    }
+
+    match /tickets/{ticketId} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if admin() || (signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid);
+      allow delete: if admin();
+    }
+
+    match /suggestions/{suggestionId} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if admin();
+      allow delete: if owner();
+    }
+
+    match /leaderboards/{game}/scores/{scoreId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.score is number;
+      allow update, delete: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /globalChat/{messageId} {
+      allow read: if signedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if admin();
+    }
+
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 10, 22);
+      allow read, write: if false;
     }
   }
 }
