@@ -9,7 +9,6 @@ if(!u.admin){location.replace('dashboard.html');throw new Error('Admin access de
 const gate=document.querySelector('#ownerGate');gate.textContent=u.owner?'Owner access recognized — full console enabled.':'Admin access recognized — support console enabled.';gate.className='notice online';
 document.querySelector('#adminRole').textContent=u.owner?'Owner':'Admin';
 document.querySelector('[data-owner-tab]')?.classList.toggle('hide',!u.owner);
-const ownerTab=document.querySelector('[data-tab="services]');
 if(!u.owner)document.querySelector('#adminServices').classList.add('hide');
 
 async function loadTickets(){
