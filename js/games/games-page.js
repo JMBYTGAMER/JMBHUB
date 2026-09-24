@@ -2,6 +2,7 @@ import {guard} from '../core/auth-guard.js';
 import {db,backendReady} from '../core/firebase.js';
 import {collection,query,orderBy,limit,getDocs,addDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {$,toast} from '../core/ui.js';
+import {openWorkspace} from '../core/workspace-window.js';
 
 let user,current='snake',sessionScore=0;
 const stage=$('#gameStage'),library=$('#gameLibrary');
@@ -121,5 +122,5 @@ function jmbDash(){
 }
 function guesscolor(){const target={r:Math.floor(Math.random()*256),g:Math.floor(Math.random()*256),b:Math.floor(Math.random()*256)};stage.innerHTML='<div class="game-view"><h2 class="game-title">🌈 Color Guess</h2><div id="guessColorBox" class="result-box" style="height:180px"></div><p class="muted">Enter RGB values.</p><div class="form-grid"><input id="gr" class="tool-input" type="number" min="0" max="255" placeholder="R"><input id="gg" class="tool-input" type="number" min="0" max="255" placeholder="G"><input id="gb" class="tool-input" type="number" min="0" max="255" placeholder="B"></div><button class="btn btn-primary" id="colorGuessBtn">Guess</button><p id="colorGuessMsg"></p></div>';$('#guessColorBox').style.background='rgb('+target.r+','+target.g+','+target.b+')';$('#colorGuessBtn').onclick=()=>{const d=Math.abs(Number($('#gr').value)-target.r)+Math.abs(Number($('#gg').value)-target.g)+Math.abs(Number($('#gb').value)-target.b);const score=Math.max(1,100-Math.floor(d/8));$('#colorGuessMsg').textContent='Score: '+score+'/100';saveScore('guesscolor',score)}}
 const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
-function switchGame(name){current=name;setHeader(name);loadBoard(name);stage.innerHTML='';render[name]()}
-(async()=>{user=await guard();renderLibrary();switchGame('snake')})();
+function switchGame(name){current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
+(async()=>{user=await guard();renderLibrary();})();
