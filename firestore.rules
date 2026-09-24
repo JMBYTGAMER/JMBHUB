@@ -6,7 +6,7 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email == 'jobinmathewbiju@gmail.com';
     }
     function admin() {
-      return signedIn() && (request.auth.token.admin == true || request.auth.token.role == 'admin' || owner());
+      return signedIn() && (request.auth.token.get('admin', false) == true || request.auth.token.get('role', '') == 'admin' || owner());
     }
 
     match /settings/{docId} {
