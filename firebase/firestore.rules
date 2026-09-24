@@ -44,6 +44,25 @@ service cloud.firestore {
       allow create, update: if false;
       allow delete: if admin();
     }
+
+    /* Minimal account directory used by the admin console.
+       Users can maintain only their own basic profile fields.
+       Admins can read profiles; role/admin claims remain server-controlled. */
+    match /profiles/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasOnly([
+          'uid','email','displayName','photoURL','emailVerified','lastSeenAt'
+        ]);
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'uid','email','displayName','photoURL','emailVerified','lastSeenAt'
+        ]);
+      allow delete: if owner();
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }
