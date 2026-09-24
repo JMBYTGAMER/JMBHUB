@@ -16,7 +16,7 @@ async function applyUser(u){
  return {...u,owner,admin,claims};
 }
 export function guard(){
- if(!backendReady){location.replace('../pages/login.html');return new Promise(()=>{})}
+ if(!backendReady){location.replace('login.html');return new Promise(()=>{})}
  return new Promise(resolve=>onAuthStateChanged(auth,async u=>{if(!u){location.href='login.html';return}resolve(await applyUser(u))}));
 }
 export async function logout(){if(backendReady&&auth?.currentUser)await signOut(auth);localStorage.removeItem('jmb-demo-user');location.href='login.html'}
