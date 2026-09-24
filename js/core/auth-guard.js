@@ -5,7 +5,7 @@ import {$,setText} from './ui.js';
 
 async function applyUser(u){
  let claims={};
- try{claims=(await u.getIdTokenResult()).claims||{}}catch{}
+ try{claims=(await u.getIdTokenResult(true)).claims||{}}catch{}
  const owner=u.email?.toLowerCase()===APP_CONFIG.OWNER_EMAIL.toLowerCase();
  const admin=Boolean(claims.admin===true||claims.role==='admin'||owner);
  setText('userName',u.displayName||u.email?.split('@')[0]||'JMB User');
