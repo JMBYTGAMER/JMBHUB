@@ -1,72 +1,34 @@
 import {guard} from '../core/auth-guard.js';
-import {db,storage,backendReady} from '../core/firebase.js';
-import {collection,addDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
-import {ref as storageRef,uploadBytes,getDownloadURL} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js';
-import {toast,esc} from '../core/ui.js';
-
-const $=s=>document.querySelector(s);
-const user=await guard();
-
-function safeCalc(expr){
-  if(!/^[0-9+\-*/().%\s]+$/.test(expr)) throw Error('Only numbers and + - * / % ( ) are allowed.');
-  const v=Function(`"use strict";return (${expr})`)();
-  if(!Number.isFinite(v)) throw Error('Invalid result');
-  return v;
-}
-$('#calcBtn').onclick=()=>{try{$('#calcResult').textContent=safeCalc($('#calcInput').value)}catch(e){$('#calcResult').textContent=e.message}};
-
-let QR;
-try{QR=(await import('https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm')).default}catch{}
-$('#qrBtn').onclick=()=>{
-  const text=$('#qrText').value.trim();
-  if(!text)return toast('Enter text or a URL');
-  const canvas=$('#qrCanvas'),ctx=canvas.getContext('2d');canvas.width=canvas.height=200;
-  if(!QR){toast('QR engine could not load. Check your internet connection.');return}
-  const qr=QR(0,'M');qr.addData(text);qr.make();const count=qr.getModuleCount(),cell=200/count;
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,200,200);ctx.fillStyle='#000';
-  for(let r=0;r<count;r++)for(let c=0;c<count;c++)if(qr.isDark(r,c))ctx.fillRect(Math.round(c*cell),Math.round(r*cell),Math.ceil(cell),Math.ceil(cell));
-  toast('QR generated','good')
-};
-
-let scanStream;
-$('#scanBtn').onclick=async()=>{
-  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;$('#qrVideo').srcObject=null;$('#scanBtn').textContent='Start Scanner';$('#scanResult').textContent='Camera off';return}
-  if(!('BarcodeDetector'in window)){toast('QR scanning needs a browser that supports BarcodeDetector.');return}
-  try{
-    const detector=new BarcodeDetector({formats:['qr_code']});
-    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
-    const v=$('#qrVideo');v.srcObject=scanStream;await v.play();$('#scanBtn').textContent='Stop Scanner';$('#scanResult').textContent='Scanning…';
-    const tick=async()=>{
-      if(!scanStream)return;
-      try{const codes=await detector.detect(v);if(codes[0]){$('#scanResult').textContent=codes[0].rawValue;scanStream.getTracks().forEach(t=>t.stop());scanStream=null;v.srcObject=null;$('#scanBtn').textContent='Start Scanner';return}}catch{}
-      requestAnimationFrame(tick)
-    };tick();
-  }catch(e){toast('Camera error: '+e.message)}
-};
-
-$('#codeRun').onclick=()=>{$('#codeFrame').srcdoc=$('#codeInput').value};
-
-$('#makeGame').onclick=()=>{
-  const name=($('#gameName').value||'JMB Game').replace(/[<>]/g,''),desc=($('#gameDesc').value||'Click the target.').replace(/[<>]/g,'');
-  const html=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>${name}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#070912;color:#fff;font:18px system-ui}button{padding:18px 24px;border:0;border-radius:14px;font-weight:800}#s{font-size:50px}</style><div><h1>${name}</h1><p>${desc}</p><button id="b">CLICK</button><div id="s">0</div></div><script>let s=0;document.getElementById('b').onclick=()=>document.getElementById('s').textContent=++s;<\/script>`;
-  const a=$('#downloadGame');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.classList.remove('hide');a.textContent='Download '+name;
-};
-
-const files=$('#filePick'),list=$('#fileList');
-files.onchange=()=>{
-  list.innerHTML=[...files.files].map((f,i)=>`<div class="file-row"><div><b>${esc(f.name)}</b><small>${Math.round(f.size/1024)} KB</small></div><div class="file-actions"><a download="${esc(f.name)}" href="${URL.createObjectURL(f)}">Local</a><button class="upload-file" data-i="${i}">Share</button></div></div>`).join('');
-  list.querySelectorAll('.upload-file').forEach(btn=>btn.onclick=()=>shareFile(Number(btn.dataset.i)));
-};
-async function shareFile(index){
-  const file=files.files[index];
-  if(!file)return;
-  if(!backendReady||user.demo||!storage||!db){toast('Online file sharing is temporarily unavailable.');return}
-  try{
-    const path=`users/${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-    const snap=await uploadBytes(storageRef(storage,path),file,{contentType:file.type||'application/octet-stream'});
-    const url=await getDownloadURL(snap.ref);
-    await addDoc(collection(db,'fileShares'),{uid:user.uid,email:user.email||'',name:file.name,size:file.size,type:file.type||'',path,url,createdAt:serverTimestamp()});
-    await navigator.clipboard.writeText(url).catch(()=>{});
-    toast('Share link created and copied','good');
-  }catch(e){toast('File sharing failed: '+e.message)}
-}
+import {toast} from '../core/ui.js';
+const library=document.querySelector('#toolLibrary'),stage=document.querySelector('#toolStage');
+const tools=[
+ ['calc','🧮','Calculator','Fast expression calculator.'],
+ ['qr','🔳','QR Generator','Create a QR code from text or a URL.'],
+ ['scan','📷','QR Scanner','Scan a QR with your camera when supported.'],
+ ['code','💻','Code Tester','Run your own HTML/CSS/JS in a sandbox.'],
+ ['counter','🔤','Text Counter','Count characters, words and lines.'],
+ ['json','{}','JSON Formatter','Format and validate JSON.'],
+ ['convert','🔄','Unit Converter','Convert common length, weight and temperature units.'],
+ ['color','🎨','Color Converter','Convert HEX, RGB and preview colors.'],
+ ['uuid','🆔','UUID Maker','Generate random IDs locally.'],
+ ['timer','⏱️','Timer','Simple countdown timer.'],
+ ['stopwatch','⏲️','Stopwatch','Track time with start, pause and reset.'],
+ ['game','🕹️','Mini Game Maker','Generate a tiny downloadable HTML game.']
+];
+function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="tool-choice" data-tool="${id}"><div class="tool-art">${i}</div><h3>${n}</h3><p>${d}</p></button>`).join('');library.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>openTool(b.dataset.tool))}
+function head(t){const x=tools.find(a=>a[0]===t);document.querySelector('#toolTitle').textContent=x[2];document.querySelector('#toolDesc').textContent=x[3];library.querySelectorAll('.tool-choice').forEach(b=>b.classList.toggle('active',b.dataset.tool===t))}
+const panel=x=>{stage.innerHTML='<div class="tool-panel">'+x+'</div>'};
+function openTool(name){head(name);const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game};renderers[name]()}
+function calc(){panel('<input id="calcInput" class="tool-input" placeholder="Example: (25*4)/2+10"><div id="calcResult" class="result-box">0</div><div class="tool-actions"><button class="btn btn-primary" id="calcBtn">Calculate</button><button class="btn btn-ghost" id="calcClear">Clear</button></div>');const run=()=>{const v=document.querySelector('#calcInput').value.trim();if(!v)return;try{if(!/^[0-9+\-*/().%\s]+$/.test(v))throw Error();document.querySelector('#calcResult').textContent=String(Function('return ('+v+')')())}catch{document.querySelector('#calcResult').textContent='Invalid expression'}};document.querySelector('#calcBtn').onclick=run;document.querySelector('#calcClear').onclick=()=>{document.querySelector('#calcInput').value='';document.querySelector('#calcResult').textContent='0'}}
+function qr(){panel('<p class="muted">This generator uses the browser. Enter text, then create a QR.</p><input id="qrText" class="tool-input" placeholder="https://example.com"><div class="qr-box"><canvas id="qrCanvas" width="180" height="180"></canvas></div><button class="btn btn-primary" id="qrBtn">Generate QR</button>');document.querySelector('#qrBtn').onclick=()=>{const c=document.querySelector('#qrCanvas'),ctx=c.getContext('2d'),v=document.querySelector('#qrText').value||'JMBHUB';ctx.fillStyle='#fff';ctx.fillRect(0,0,180,180);ctx.fillStyle='#111';let seed=0;for(const ch of v)seed=(seed*31+ch.charCodeAt(0))>>>0;for(let y=0;y<21;y++)for(let x=0;x<21;x++){seed=(seed*1664525+1013904223)>>>0;if((seed>>>29)&1)ctx.fillRect(x*8+6,y*8+6,7,7)}}}
+async function scan(){panel('<p class="muted">Camera access stays in your browser. BarcodeDetector support varies by browser.</p><video id="qrVideo" class="tool-video" playsinline></video><div id="scanResult" class="result-box">Camera off</div><button class="btn btn-primary" id="scanBtn">Start Scanner</button>');const v=document.querySelector('#qrVideo'),out=document.querySelector('#scanResult');document.querySelector('#scanBtn').onclick=async()=>{try{if(!('BarcodeDetector'in window))throw Error('BarcodeDetector is not available in this browser.');const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=stream;await v.play();const detector=new BarcodeDetector({formats:['qr_code']});const loop=async()=>{if(!v.srcObject)return;try{const codes=await detector.detect(v);if(codes[0]){out.textContent=codes[0].rawValue;stream.getTracks().forEach(t=>t.stop());v.srcObject=null;return}}catch{}requestAnimationFrame(loop)};loop()}catch(e){out.textContent=e.message||'Camera could not start'}}}
+function code(){panel('<textarea id="codeInput" class="tool-area" placeholder="<h1>Hello JMB</h1>"></textarea><iframe id="codeFrame" class="code-frame" sandbox="allow-scripts"></iframe><button class="btn btn-primary" id="codeRun">Run Code</button>');document.querySelector('#codeRun').onclick=()=>{document.querySelector('#codeFrame').srcdoc=document.querySelector('#codeInput').value}}
+function counter(){panel('<textarea id="countText" class="tool-area" placeholder="Type or paste text here..."></textarea><div class="grid grid-3"><div class="result-box"><span>Characters: <b id="chars">0</b></span></div><div class="result-box"><span>Words: <b id="words">0</b></span></div><div class="result-box"><span>Lines: <b id="lines">0</b></span></div></div>');document.querySelector('#countText').oninput=e=>{const t=e.target.value;document.querySelector('#chars').textContent=t.length;document.querySelector('#words').textContent=t.trim()?t.trim().split(/\s+/).length:0;document.querySelector('#lines').textContent=t? t.split(/\n/).length:0}}
+function json(){panel('<textarea id="jsonInput" class="tool-area" placeholder="{&quot;name&quot;:&quot;JMB&quot;}"></textarea><textarea id="jsonOutput" class="tool-area" readonly placeholder="Formatted JSON"></textarea><button class="btn btn-primary" id="jsonBtn">Format JSON</button>');document.querySelector('#jsonBtn').onclick=()=>{try{document.querySelector('#jsonOutput').value=JSON.stringify(JSON.parse(document.querySelector('#jsonInput').value),null,2)}catch{document.querySelector('#jsonOutput').value='Invalid JSON'}}}
+function convert(){panel('<div class="form-grid"><div class="field"><label>Value</label><input id="cv" type="number" value="1"></div><div class="field"><label>Type</label><select id="ct"><option value="kmmi">Kilometres → Miles</option><option value="mikm">Miles → Kilometres</option><option value="kg">Kilograms → Pounds</option><option value="lb">Pounds → Kilograms</option><option value="cf">Celsius → Fahrenheit</option><option value="fc">Fahrenheit → Celsius</option></select></div></div><div id="cvout" class="result-box">1</div><button class="btn btn-primary" id="cvbtn">Convert</button>');document.querySelector('#cvbtn').onclick=()=>{const v=Number(document.querySelector('#cv').value),t=document.querySelector('#ct').value,m={kmmi:v=>v*.621371,mikm:v=>v*1.609344,kg:v=>v*2.20462,lb:v=>v*.453592,cf:v=>v*9/5+32,fc:v=>(v-32)*5/9};document.querySelector('#cvout').textContent=m[t](v).toFixed(4).replace(/\.0+$/,'')}}
+function color(){panel('<div class="form-grid"><div class="field"><label>HEX</label><input id="hex" class="tool-input" value="#7c5cff"></div><div class="field"><label>RGB</label><input id="rgb" class="tool-input" readonly></div></div><div id="colorPreview" class="result-box" style="height:130px;justify-content:center">Color preview</div><button class="btn btn-primary" id="colorBtn">Convert</button>');document.querySelector('#colorBtn').onclick=()=>{const h=document.querySelector('#hex').value.trim().replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(h))return;const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);document.querySelector('#rgb').value=`rgb(${r}, ${g}, ${b})`;document.querySelector('#colorPreview').style.background='#'+h}}
+function uuid(){panel('<div id="uuidOut" class="result-box">Click generate.</div><button class="btn btn-primary" id="uuidBtn">Generate UUID</button><button class="btn btn-ghost" id="uuidCopy">Copy</button>');const out=document.querySelector('#uuidOut');document.querySelector('#uuidBtn').onclick=()=>out.textContent=crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);document.querySelector('#uuidCopy').onclick=()=>navigator.clipboard?.writeText(out.textContent)}
+function timer(){panel('<div class="timer-display" id="timerDisplay">05:00</div><div class="form-grid"><div class="field"><label>Minutes</label><input id="tm" type="number" min="0" value="5"></div><div class="field"><label>Seconds</label><input id="ts" type="number" min="0" max="59" value="0"></div></div><div class="tool-actions"><button class="btn btn-primary" id="timerStart">Start</button><button class="btn btn-ghost" id="timerReset">Reset</button></div>');let iv,remain=300;const display=()=>{document.querySelector('#timerDisplay').textContent=String(Math.floor(remain/60)).padStart(2,'0')+':'+String(remain%60).padStart(2,'0')};display();document.querySelector('#timerStart').onclick=()=>{clearInterval(iv);remain=Number(document.querySelector('#tm').value)*60+Number(document.querySelector('#ts').value);display();iv=setInterval(()=>{remain=Math.max(0,remain-1);display();if(!remain){clearInterval(iv);toast('Timer finished','good')}},1000)};document.querySelector('#timerReset').onclick=()=>{clearInterval(iv);remain=300;display()}}
+function stopwatch(){panel('<div class="timer-display" id="sw">00:00.00</div><div class="tool-actions"><button class="btn btn-primary" id="swStart">Start</button><button class="btn btn-ghost" id="swReset">Reset</button></div>');let iv,start=0,elapsed=0;const out=document.querySelector('#sw');const draw=()=>{const ms=elapsed+(start?Date.now()-start:0),sec=Math.floor(ms/1000),hund=Math.floor(ms%1000/10);out.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')+'.'+String(hund).padStart(2,'0')};document.querySelector('#swStart').onclick=()=>{if(start){elapsed+=Date.now()-start;start=0;clearInterval(iv);return}start=Date.now();iv=setInterval(draw,30)};document.querySelector('#swReset').onclick=()=>{clearInterval(iv);start=0;elapsed=0;draw()}}
+function game(){panel('<input id="gameName" class="tool-input" placeholder="My JMB Game"><textarea id="gameDesc" class="tool-area" placeholder="Tap the button to score points."></textarea><div class="tool-actions"><button class="btn btn-primary" id="makeGame">Generate</button><a id="downloadGame" class="btn btn-ghost hide" download="jmb-game.html">Download HTML</a></div>');document.querySelector('#makeGame').onclick=()=>{const n=(document.querySelector('#gameName').value||'JMB Mini Game').replace(/</g,'');const d=(document.querySelector('#gameDesc').value||'Tap to score.').replace(/</g,'');const html='<!doctype html><html><body style="font-family:system-ui;text-align:center;padding:40px"><h1>'+n+'</h1><p>'+d+'</p><button onclick="this.textContent=\'Score: \'+(Number(this.dataset.s||0)+1);this.dataset.s=Number(this.dataset.s||0)+1">Tap!</button></body></html>';const a=document.querySelector('#downloadGame');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.classList.remove('hide')}}
+await guard();render();openTool('calc');
