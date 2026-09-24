@@ -1,3 +1,6 @@
+import {auth} from './firebase.js';
+import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
+import {initTelemetry} from './telemetry.js';
 /* Shared JMBHUB portal behavior */
 const links=[
   ['⌂','Dashboard','dashboard.html'],
@@ -83,6 +86,7 @@ function particles(){
   frame();
 }
 makeNav();particles();
+if(auth)onAuthStateChanged(auth,u=>{if(u)initTelemetry(u)});
 
 /* Remove accidental literal escaped-newline text left by old page builds. */
 function cleanupEscapedNewlines(){
