@@ -9,8 +9,9 @@ function owner(auth){return auth?.token?.email?.toLowerCase()==='jobinmathewbiju
 function admin(auth){return owner(auth)||auth?.token?.admin===true||auth?.token?.role==='admin'}
 exports.listUsers=onCall(async request=>{
  if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
- const result=await getAuth().listUsers(1000);
- return {users:result.users.map(u=>({uid:u.uid,email:u.email||'',displayName:u.displayName||'',photoURL:u.photoURL||'',disabled:u.disabled,emailVerified:u.emailVerified,createdAt:u.metadata.creationTime||'',lastSignInAt:u.metadata.lastSignInTime||'',providerIds:u.providerData.map(p=>p.providerId),role:u.customClaims?.role||'',admin:u.customClaims?.admin===true}))};
+ let users=[],token;
+ do { const result=await getAuth().listUsers(1000,token); users=users.concat(result.users); token=result.pageToken; } while(token);
+ return {users:users.map(u=>({uid:u.uid,email:u.email||'',displayName:u.displayName||'',photoURL:u.photoURL||'',disabled:u.disabled,emailVerified:u.emailVerified,createdAt:u.metadata.creationTime||'',lastSignInAt:u.metadata.lastSignInTime||'',providerIds:u.providerData.map(p=>p.providerId),role:u.customClaims?.role||'',admin:u.customClaims?.admin===true}))};
 });
 exports.setUserRole=onCall(async request=>{
  if(!owner(request.auth))throw new HttpsError('permission-denied','Owner access required.');
