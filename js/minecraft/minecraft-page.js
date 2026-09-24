@@ -52,5 +52,6 @@ function worldborder(){panel('<div class="form-grid"><div class="field"><label>S
 function locate(){panel('<div class="field"><label>Structure</label><input id="ls" value="minecraft:village"></div>'+common());document.querySelector('#mcGenerate').onclick=()=>output('/locate structure '+document.querySelector('#ls').value)}
 
 const mcExtended={item,kit,enchant,potion,teleport,effect,gamerule,time,summon,fill,give,clone,title,tellraw,particle,execute,setblock,scoreboard,worldborder,locate};
+function renderExtended(){library.innerHTML=tools.map(([id,i,n,d])=>'<button class="mc-choice" data-mc="'+id+'"><div class="mc-art">'+i+'</div><h3>'+n+'</h3><p>'+d+'</p><span class="pill">Open →</span></button>').join('');library.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>openExtended(b.dataset.mc))}
 function openExtended(id){head(id);mcExtended[id]();}
-await guard();render=(()=>{const old=render;return function(){library.innerHTML=tools.map(([id,i,n,d])=>'<button class="mc-choice" data-mc="'+id+'"><div class="mc-art">'+i+'</div><h3>'+n+'</h3><p>'+d+'</p><span class="pill">Open →</span></button>').join('');library.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>openExtended(b.dataset.mc))}})();render();openExtended('item');
+await guard();renderExtended();openExtended('item');
