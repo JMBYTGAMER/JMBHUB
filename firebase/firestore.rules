@@ -3,24 +3,39 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function owner() { return signedIn() && request.auth.token.email == 'jobinmathewbiju@gmail.com'; }
-    function admin() { return signedIn() && (request.auth.token.admin == true || owner()); }
-
-    match /leaderboards/{game}/scores/{scoreId} {
-      allow read: if true;
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if signedIn() && resource.data.uid == request.auth.uid;
+    function admin() {
+      return signedIn() && (
+        request.auth.token.admin == true ||
+        request.auth.token.get('role', '') == 'admin' ||
+        owner()
+      );
     }
-
+    match /leaderboards/{game}/scores/{scoreId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
     match /tickets/{ticketId} {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if signedIn() && (resource.data.uid == request.auth.uid || admin());
-      allow update: if signedIn() && (resource.data.uid == request.auth.uid || admin());
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if admin() || (signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid);
       allow delete: if admin();
     }
-
+    match /suggestions/{suggestionId} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if admin();
+      allow delete: if owner();
+    }
     match /settings/{docId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if owner();
     }
+    match /globalChat/{messageId} {
+      allow read: if signedIn();
+      allow create, update: if false;
+      allow delete: if admin();
+    }
+    match /{document=**} { allow read, write: if false; }
   }
 }
