@@ -6,9 +6,9 @@ import {$,esc,toast} from './core/ui.js';
 
 const defaults=APP_CONFIG.SERVICES;
 const cards=[
- ['games','🎮','JMB Games','Play 16+ mini-games, chase scores and climb the leaderboard.','games.html'],
- ['area','🧰','JMB Area','Calculator, QR, JSON, code, converters, timers and more.','jmb-area.html'],
- ['minecraft','⛏️','Minecraft Area','Command builders, kits, effects, gamerules and more.','minecraft.html'],
+ ['games','🎮','JMB Games','Play 28+ mini-games, chase scores and climb the leaderboard.','games.html'],
+ ['area','🧰','JMB Area','Calculator, QR, code, developer tools, converters and more.','jmb-area.html'],
+ ['minecraft','⛏️','Minecraft Area','Command builders, kits, effects, gamerules, chat and world tools.','minecraft.html'],
  ['ai','🤖','JMB AI','Open your JMB AI service in one click.','ai.html'],
  ['support','🎫','Support','Create and track support tickets.','support.html']
 ];
