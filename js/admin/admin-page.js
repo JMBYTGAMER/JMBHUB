@@ -511,10 +511,16 @@ async function loadServices(){
     select.value=item?.enabled === false ? 'off' : 'on';
   });
 
-  $$('.service-message').forEach(input=>{
+  $('.service-message').forEach(input=>{
     const item=cachedServices[input.dataset.key];
     if(item?.message) input.value=item.message;
   });
+  try{
+    const portalSnap=await getDoc(doc(db,'settings','portal'));
+    const m=portalSnap.exists()?portalSnap.data().maintenance:null;
+    if($('#maintenanceEnabled')) $('#maintenanceEnabled').value=m?.enabled?'on':'off';
+    if($('#maintenanceMessage')&&m?.message) $('#maintenanceMessage').value=m.message;
+  }catch{}
 }
 
 async function saveServices(){
@@ -531,8 +537,13 @@ async function saveServices(){
   });
 
   try{
+    const maintenance={
+      enabled:$('#maintenanceEnabled')?.value==='on',
+      message:($('#maintenanceMessage')?.value||'JMBHUB is temporarily in full maintenance mode. Please check back soon.').trim().slice(0,180)
+    };
     await setDoc(doc(db,'settings','portal'),{
       services,
+      maintenance,
       updatedBy:user.uid,
       updatedAt:serverTimestamp()
     },{merge:true});
