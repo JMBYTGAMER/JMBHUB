@@ -4,7 +4,7 @@ const progressEl=document.querySelector('#gdProgress'),scoreEl=document.querySel
 let running=false,raf=0,player,obstacles=[],distance=0,score=0,speed=5,beat=0;
 function reset(){distance=0;score=0;speed=5;player={x:120,y:335,w:30,h:30,vy:0,ground:true,rot:0};obstacles=[];let x=520;for(let i=0;i<45;i++){x+=170+Math.random()*190;obstacles.push({x,h:28+Math.random()*58,w:28});if(i%7===4)obstacles.push({x:x+100,h:20,w:28})}}
 function jump(){if(!running)return;if(player.ground){player.vy=-13;player.ground=false;JMBMusic.jump()}}
-function collide(a,b){return a.x<a.x+a.w&&a.x+b.w>b.x&&a.y+a.h>b.y&&a.y<b.y+b.h}
+function collide(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function draw(){
  ctx.clearRect(0,0,c.width,c.height);
  const g=ctx.createLinearGradient(0,0,0,c.height);g.addColorStop(0,'#111a38');g.addColorStop(1,'#070a14');ctx.fillStyle=g;ctx.fillRect(0,0,c.width,c.height);
