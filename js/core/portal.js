@@ -1,6 +1,8 @@
-import {auth} from './firebase.js';
+import {auth,db} from './firebase.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import {initTelemetry} from './telemetry.js';
+import './sound.js';
+import {doc,getDoc} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 /* Shared JMBHUB portal behavior */
 const links=[
   ['⌂','Dashboard','dashboard.html'],
@@ -85,7 +87,22 @@ function particles(){
   }
   frame();
 }
-makeNav();particles();
+async function applyMaintenance(){
+  if(location.pathname.endsWith('/admin.html')||location.pathname.endsWith('admin.html'))return;
+  if(!db)return;
+  try{
+    const snap=await getDoc(doc(db,'settings','portal'));
+    const m=snap.exists()?snap.data().maintenance:null;
+    if(!m?.enabled)return;
+    const box=document.createElement('div');
+    box.className='jmb-maintenance-screen';
+    box.innerHTML='<div class="jmb-maintenance-card"><div class="jmb-maintenance-icon">🛠️</div><div class="eyebrow">JMBHUB MAINTENANCE</div><h1>We’ll be right back</h1><p></p><div class="jmb-maintenance-bar"><span></span></div><small>Admin Console remains available.</small><a class="btn btn-ghost" href="admin.html">Open Admin Console</a></div>';
+    box.querySelector('p').textContent=m.message||'JMBHUB is temporarily in full maintenance mode. Please check back soon.';
+    document.body.append(box);
+    document.body.classList.add('jmb-maintenance-active');
+  }catch{}
+}
+makeNav();particles();applyMaintenance();
 if(auth)onAuthStateChanged(auth,u=>{if(u)initTelemetry(u)});
 
 /* Remove accidental literal escaped-newline text left by old page builds. */
