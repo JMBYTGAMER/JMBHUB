@@ -12,3 +12,6 @@
 
 /* JMB HUB portal preview logo */
 .avatar{overflow:hidden;padding:4px}.avatar img{width:100%;height:100%;display:block;object-fit:contain;border-radius:9px}
+
+/* Global maintenance screen */
+.jmb-maintenance-screen{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 20% 10%,rgba(124,92,255,.2),transparent 35%),radial-gradient(circle at 85% 20%,rgba(0,198,234,.13),transparent 32%),rgba(4,7,15,.97);backdrop-filter:blur(18px)}.jmb-maintenance-card{width:min(620px,100%);text-align:center;padding:42px 28px;border:1px solid rgba(124,92,255,.3);border-radius:30px;background:linear-gradient(180deg,rgba(21,27,49,.96),rgba(8,12,24,.98));box-shadow:0 30px 110px rgba(0,0,0,.55)}.jmb-maintenance-icon{font-size:58px}.jmb-maintenance-card h1{margin:8px 0;font-size:clamp(30px,6vw,50px)}.jmb-maintenance-card p{opacity:.72;line-height:1.7}.jmb-maintenance-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;margin:24px 0}.jmb-maintenance-bar span{display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7c5cff,#00c6ea);animation:jmbMaint 1.7s ease-in-out infinite alternate}@keyframes jmbMaint{to{width:88%;transform:translateX(12%)}}.jmb-maintenance-card small{display:block;opacity:.6}
