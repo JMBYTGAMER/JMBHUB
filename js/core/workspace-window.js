@@ -1,9 +1,10 @@
 let active=null;
-let previousParent=null;
-let previousNext=null;
+let movedStage=null;
+let originalParent=null;
+let originalNext=null;
+let originalShell=null;
 
-function ensure(stage){
-  if(active) return active;
+function createOverlay(){
   const overlay=document.createElement('div');
   overlay.className='jmb-workspace-overlay';
   overlay.innerHTML=`
@@ -19,41 +20,50 @@ function ensure(stage){
       <div class="jmb-workspace-body"></div>
     </section>`;
   document.body.append(overlay);
-
-  const body=overlay.querySelector('.jmb-workspace-body');
-  previousParent=stage.parentNode;
-  previousNext=stage.nextSibling;
-  body.append(stage);
-
-  const originalShell=previousParent?.closest?.('.game-panel,.tool-workspace,.mc-workspace');
-  if(originalShell) originalShell.classList.add('jmb-workspace-placeholder');
-
-  const close=()=>{
-    overlay.classList.remove('open');
-    document.body.classList.remove('jmb-window-open');
-    active=null;
-  };
-  overlay.querySelectorAll('[data-window-close]').forEach(x=>x.addEventListener('click',close));
-  overlay._close=close;
-  active=overlay;
   return overlay;
+}
+
+function restore(){
+  if(!movedStage||!originalParent)return;
+  if(originalNext&&originalNext.parentNode===originalParent)originalParent.insertBefore(movedStage,originalNext);
+  else originalParent.appendChild(movedStage);
+  originalShell?.classList.remove('jmb-workspace-placeholder');
+  movedStage=null;originalParent=null;originalNext=null;originalShell=null;
+}
+
+function close(){
+  if(!active)return;
+  active.classList.remove('open');
+  document.body.classList.remove('jmb-window-open');
+  active._onClose?.();
+  restore();
+  active.remove();
+  active=null;
 }
 
 export function openWorkspace(stage,{title='Workspace',description='',onClose}={}){
-  const overlay=ensure(stage);
+  close();
+  movedStage=stage;
+  originalParent=stage.parentNode;
+  originalNext=stage.nextSibling;
+  originalShell=originalParent?.closest?.('.game-panel,.tool-workspace,.mc-workspace');
+  originalShell?.classList.add('jmb-workspace-placeholder');
+
+  const overlay=createOverlay();
+  const body=overlay.querySelector('.jmb-workspace-body');
+  body.append(stage);
   overlay.querySelector('#jmbWorkspaceTitle').textContent=title;
   overlay.querySelector('#jmbWorkspaceDesc').textContent=description||'Use the workspace below, then close it to return to JMBHUB.';
-  overlay.classList.add('open');
-  document.body.classList.add('jmb-window-open');
+  overlay._onClose=onClose;
+  overlay._close=close;
+  overlay.querySelectorAll('[data-window-close]').forEach(x=>x.addEventListener('click',close));
+  active=overlay;
   requestAnimationFrame(()=>overlay.querySelector('.jmb-workspace-close')?.focus());
-  if(onClose) overlay._onClose=onClose;
   return overlay;
 }
 
-export function closeWorkspace(){
-  active?._close?.();
-}
+export function closeWorkspace(){close()}
 
 addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&active?.classList.contains('open')) active._close?.();
+  if(e.key==='Escape'&&active?.classList.contains('open')){e.preventDefault();close();}
 });
