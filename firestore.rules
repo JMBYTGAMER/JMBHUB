@@ -41,6 +41,27 @@ service cloud.firestore {
       allow delete: if admin();
     }
 
+    // JMB Coins: users may only read their own wallet/history.
+    // All balance mutations happen in trusted Cloud Functions.
+    match /wallets/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /coinTransactions/{txId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /coinPurchases/{purchaseId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /coinGameClaims/{claimId} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
