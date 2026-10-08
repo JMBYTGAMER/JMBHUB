@@ -14,6 +14,17 @@ service cloud.firestore {
       allow write: if owner();
     }
 
+    match /profiles/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email;
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email;
+      allow delete: if owner();
+    }
+
     match /tickets/{ticketId} {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
@@ -41,21 +52,32 @@ service cloud.firestore {
       allow delete: if admin();
     }
 
-    // JMB Coins: users may only read their own wallet/history.
-    // All balance mutations happen in trusted Cloud Functions.
+    // FREE Spark-plan JMB Coins mode.
+    // Users can read their wallet and spend coins, but cannot increase their balance.
+    // Owner/admin can grant coins. This avoids Cloud Functions and billing.
     match /wallets/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
-      allow create, update, delete: if false;
+      allow create: if admin() && request.resource.data.uid == uid && request.resource.data.balance is number && request.resource.data.balance >= 0;
+      allow update: if admin()
+        || (signedIn() && request.auth.uid == uid
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.balance is number
+          && request.resource.data.balance >= 0
+          && request.resource.data.balance <= resource.data.balance);
+      allow delete: if owner();
     }
 
     match /coinTransactions/{txId} {
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
-      allow create, update, delete: if false;
+      allow create: if admin()
+        || (signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.amount is number && request.resource.data.amount <= 0);
+      allow update, delete: if admin();
     }
 
     match /coinPurchases/{purchaseId} {
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
-      allow create, update, delete: if false;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.price is number && request.resource.data.price > 0;
+      allow update, delete: if admin();
     }
 
     match /coinGameClaims/{claimId} {
