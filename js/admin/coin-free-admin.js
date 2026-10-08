@@ -1,5 +1,5 @@
 import {auth,db} from '../core/firebase.js';
-import {doc,getDoc,runTransaction,collection,query,where,getDocs,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {doc,getDoc,runTransaction,collection,query,where,getDocs,limit,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
 const button=document.getElementById('giveCoins');
 if(button){
