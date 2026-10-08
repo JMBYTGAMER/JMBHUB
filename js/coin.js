@@ -19,16 +19,10 @@ function mount(u){
     balance.textContent=money(snap.exists()?snap.data().balance:0);
   },()=>{balance.textContent='—'});
 }
-export async function rewardGame(gameId,score){
-  try{
-    const {app}=await import('./core/firebase.js');
-    if(!app)return null;
-    const {getFunctions,httpsCallable}=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
-    const f=getFunctions(app,'asia-south1');
-    const res=await httpsCallable(f,'awardGameCoins')({gameId,score});
-    return res.data;
-  }catch{return null}
-}
+
+// Spark/free mode intentionally does not award persistent coins from games.
+// Allowing a browser-only game result to increase a wallet would let users mint coins.
+export async function rewardGame(){return null}
 
 export function startGlobalCoin(){
   if(!auth)return;
