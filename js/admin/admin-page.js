@@ -74,6 +74,7 @@ function bindUI(){
   $('#logFilter')?.addEventListener('change', renderLogs);
   $('#saveTelemetry')?.addEventListener('click', saveTelemetry);
   $('#save')?.addEventListener('click', saveServices);
+  $('#giveCoins')?.addEventListener('click', giveCoins);
 
   $$('.admin-tab').forEach(button => {
     button.addEventListener('click', async () => {
@@ -94,7 +95,8 @@ function bindUI(){
         logs:'#adminLogs',
         users:'#adminUsers',
         services:'#adminServices',
-        security:'#adminSecurity'
+        security:'#adminSecurity',
+        coins:'#adminCoins'
       };
       showSection(map[tab]);
 
@@ -463,6 +465,27 @@ async function setRole(uid,role){
   }catch(e){
     toast('Could not change role: ' + (e?.message || 'Cloud Functions are not deployed.'));
   }
+}
+
+async function giveCoins(){
+  if(!user?.admin||!app){toast('Coin admin controls are unavailable.');return}
+  const email=$('#coinTargetEmail')?.value.trim();
+  const amount=Number($('#coinGrantAmount')?.value);
+  const reason=($('#coinGrantReason')?.value||'Admin reward').trim();
+  const status=$('#coinGrantStatus');
+  const button=$('#giveCoins');
+  if(!email||!email.includes('@')){toast('Enter the user account email.');return}
+  if(!Number.isFinite(amount)||amount<=0){toast('Enter a positive coin amount.');return}
+  button.disabled=true;
+  try{
+    if(!functionsModule)functionsModule=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
+    const fnc=functionsModule.getFunctions(app,'asia-south1');
+    const res=await functionsModule.httpsCallable(fnc,'adminGiveCoins')({email,amount,reason});
+    if(status){status.textContent=`Added ${res.data?.amount||amount} coins. New balance: ${res.data?.balance??'—'}`;status.classList.remove('hide')}
+    toast('JMB Coins granted successfully','good');
+    $('#coinGrantAmount').value='';
+  }catch(e){toast('Could not give coins: '+(e?.message||'Cloud Functions are not deployed.'))}
+  finally{button.disabled=false}
 }
 
 async function loadTelemetry(){
