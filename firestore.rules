@@ -57,7 +57,7 @@ service cloud.firestore {
     // Owner/admin can grant coins. This avoids Cloud Functions and billing.
     match /wallets/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
-      allow create: if admin() && request.resource.data.uid == uid && request.resource.data.balance is number && request.resource.data.balance >= 0;
+      allow create: if (admin() && request.resource.data.uid == uid && request.resource.data.balance is number && request.resource.data.balance >= 0) || (signedIn() && request.auth.uid == uid && request.resource.data.uid == uid && request.resource.data.balance == 0);
       allow update: if admin()
         || (signedIn() && request.auth.uid == uid
           && request.resource.data.uid == resource.data.uid
