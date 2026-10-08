@@ -12,6 +12,7 @@ const links=[
   ['⛏️','Minecraft','minecraft.html'],
   ['🤖','JMB AI','ai.html'],
   ['🎫','Support','support.html'],
+  ['🪙','JMB Coins','coins.html'],
   ['◉','Profile','profile.html']
 ];
 function currentPage(){return location.pathname.split('/').pop()||'index.html'}
