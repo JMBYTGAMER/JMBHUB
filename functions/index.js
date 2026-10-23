@@ -184,7 +184,7 @@ exports.listMyAdCampaigns = onCall(async request => {
 exports.listPendingAds = onCall(async request => {
   if (!admin(request.auth)) throw new HttpsError('permission-denied','Admin access required.');
   const snap = await db.collection('adCampaigns').where('status','==','pending').get();
-  return {campaigns:snap.docs.map(d=>({id:d.id,...d.data(),createdAt:d.data().createdAt?.toDate?.()?.toISOString?.()||''}))};
+  return {campaigns:snap.docs.map(d=>{const x=d.data();return {id:d.id,uid:x.uid,title:x.title,description:x.description,targetUrl:x.targetUrl,placement:x.placement,budgetCoins:x.budgetCoins,status:x.status,createdAt:x.createdAt?.toDate?.()?.toISOString?.()||''};})};
 });
 
 exports.reviewAdCampaign = onCall(async request => {
