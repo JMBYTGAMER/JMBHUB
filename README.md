@@ -25,3 +25,19 @@ Google indexing and the exact site name shown in Google results cannot be forced
 
 ## Deploy
 Upload the contents to the ROOT of `JMBYTGAMER/JMBHUB`, keeping `.git` and any existing GitHub metadata. Keep `CNAME` as `www.jmbhost.qzz.io`.
+
+
+## JMB Coins, game rewards and Ad Network
+
+- Game score rewards are requested through the `awardGameCoins` callable function; clients cannot directly increase wallet balances.
+- The Ad Network uses `createAdCampaign`, `listMyAdCampaigns`, `listActiveAds`, `listPendingAds`, and `reviewAdCampaign` Cloud Functions.
+- Targeted ads reserve at least 100 JMB Coins; site-wide campaigns reserve at least 500. Pending campaigns are not shown until an admin approves them. Rejected campaigns are refunded by the server.
+- The advertising dashboard is `pages/ads.html`; sponsored placements are rendered by `js/ads/auto-render.js`.
+- Before the features can run live, deploy the updated Firestore rules and Cloud Functions from a trusted Firebase CLI session:
+
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only functions
+```
+
+JMB Coins currently have an in-site reference value only. Real-money or LTC checkout is not enabled by this change. Configure and test payment handling separately before accepting funds.
