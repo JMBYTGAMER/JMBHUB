@@ -134,3 +134,90 @@ exports.adminGiveCoins=onCall(async request=>{
  });
  return {ok:true,uid:target.uid,email:target.email||email,balance:result,amount};
 });
+
+
+// JMB Ad Network: all ad spending and refunds are handled server-side.
+const AD_PLACEMENTS = new Set(['games','minecraft','tools','support','dashboard']);
+const AD_MIN_TARGETED = 100;
+const AD_MIN_SITEWIDE = 500;
+const AD_DAYS = 30;
+const adRef = id => db.collection('adCampaigns').doc(id);
+const adClean = v => String(v || '').trim().slice(0, 90);
+const validHttpsUrl = value => {
+  try { const u = new URL(String(value)); return u.protocol === 'https:' && u.hostname.includes('.'); }
+  catch { return false; }
+};
+
+exports.createAdCampaign = onCall(async request => {
+  requireAuth(request.auth);
+  const uid = request.auth.uid;
+  const title = adClean(request.data?.title);
+  const description = String(request.data?.description || '').trim().slice(0, 220);
+  const targetUrl = String(request.data?.targetUrl || '').trim();
+  const placement = String(request.data?.placement || 'games');
+  const budget = cleanCoins(request.data?.budgetCoins);
+  if (title.length < 3) throw new HttpsError('invalid-argument','Enter an ad title with at least 3 characters.');
+  if (!description) throw new HttpsError('invalid-argument','Enter a short ad description.');
+  if (!validHttpsUrl(targetUrl)) throw new HttpsError('invalid-argument','Use a valid HTTPS destination link.');
+  if (!AD_PLACEMENTS.has(placement) && placement !== 'sitewide') throw new HttpsError('invalid-argument','Choose a supported ad area.');
+  const minimum = placement === 'sitewide' ? AD_MIN_SITEWIDE : AD_MIN_TARGETED;
+  if (!Number.isFinite(budget) || budget < minimum || budget > 1000000) throw new HttpsError('invalid-argument',`This campaign requires at least ${minimum} coins.`);
+  const wallet = walletRef(uid), campaign = db.collection('adCampaigns').doc(), tx = txRef();
+  const result = await db.runTransaction(async t => {
+    const snap = await t.get(wallet);
+    const balance = cleanCoins(snap.exists ? snap.data().balance || 0 : 0);
+    if (balance < budget) throw new HttpsError('failed-precondition',`You need ${budget} coins; your balance is ${balance}.`);
+    t.set(wallet,{uid,balance:cleanCoins(balance-budget),updatedAt:FieldValue.serverTimestamp()},{merge:true});
+    t.set(tx,{uid,amount:-budget,type:'ad_reservation',description:`Ad campaign reservation: ${title}`,createdAt:FieldValue.serverTimestamp()});
+    t.set(campaign,{uid,title,description,targetUrl,placement,budgetCoins:budget,status:'pending',createdAt:FieldValue.serverTimestamp(),expiresAt:new Date(Date.now()+AD_DAYS*86400000),reviewedAt:null});
+    return {id:campaign.id,balance:cleanCoins(balance-budget),status:'pending'};
+  });
+  return {ok:true,...result};
+});
+
+exports.listMyAdCampaigns = onCall(async request => {
+  requireAuth(request.auth);
+  const snap = await db.collection('adCampaigns').where('uid','==',request.auth.uid).get();
+  return {campaigns:snap.docs.map(d=>{const x=d.data();return {id:d.id,title:x.title,description:x.description,targetUrl:x.targetUrl,placement:x.placement,budgetCoins:x.budgetCoins,status:x.status,createdAt:x.createdAt?.toDate?.()?.toISOString?.()||'',expiresAt:x.expiresAt?.toDate?.()?.toISOString?.()||''};}).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))};
+});
+
+exports.listPendingAds = onCall(async request => {
+  if (!admin(request.auth)) throw new HttpsError('permission-denied','Admin access required.');
+  const snap = await db.collection('adCampaigns').where('status','==','pending').get();
+  return {campaigns:snap.docs.map(d=>({id:d.id,...d.data(),createdAt:d.data().createdAt?.toDate?.()?.toISOString?.()||''}))};
+});
+
+exports.reviewAdCampaign = onCall(async request => {
+  if (!admin(request.auth)) throw new HttpsError('permission-denied','Admin access required.');
+  const id = String(request.data?.id || '');
+  const decision = String(request.data?.decision || '');
+  if (!id || !['approve','reject'].includes(decision)) throw new HttpsError('invalid-argument','Invalid ad review request.');
+  const campaign = adRef(id), tx = txRef();
+  return db.runTransaction(async t => {
+    const snap = await t.get(campaign);
+    if (!snap.exists) throw new HttpsError('not-found','Campaign not found.');
+    const ad = snap.data();
+    if (ad.status !== 'pending') throw new HttpsError('failed-precondition','This campaign has already been reviewed.');
+    if (decision === 'reject') {
+      const wallet = walletRef(ad.uid), walletSnap = await t.get(wallet);
+      const balance = cleanCoins(walletSnap.exists ? walletSnap.data().balance || 0 : 0);
+      t.set(wallet,{uid:ad.uid,balance:cleanCoins(balance+Number(ad.budgetCoins||0)),updatedAt:FieldValue.serverTimestamp()},{merge:true});
+      t.set(tx,{uid:ad.uid,amount:cleanCoins(ad.budgetCoins||0),type:'ad_refund',description:`Refund for rejected ad: ${ad.title||'Campaign'}`,createdAt:FieldValue.serverTimestamp()});
+    }
+    t.update(campaign,{status:decision === 'approve' ? 'approved' : 'rejected',reviewedAt:FieldValue.serverTimestamp(),reviewedBy:request.auth.uid});
+    return {ok:true,status:decision === 'approve' ? 'approved' : 'rejected'};
+  });
+});
+
+exports.listActiveAds = onCall(async request => {
+  requireAuth(request.auth);
+  const placement = String(request.data?.placement || 'dashboard');
+  if (!AD_PLACEMENTS.has(placement) && placement !== 'sitewide') throw new HttpsError('invalid-argument','Unsupported placement.');
+  const snap = await db.collection('adCampaigns').where('status','==','approved').get();
+  const now = Date.now();
+  const ads = snap.docs.map(d=>({id:d.id,...d.data()})).filter(a=>
+    (!a.expiresAt?.toMillis || a.expiresAt.toMillis() > now) &&
+    (a.placement === 'sitewide' || a.placement === placement)
+  ).map(a=>({id:a.id,title:a.title,description:a.description,targetUrl:a.targetUrl,placement:a.placement}));
+  return {ads:ads.slice(0,3)};
+});
