@@ -84,6 +84,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Ad campaigns are created, charged, approved and refunded only by trusted Cloud Functions.
+    // Signed-in users may read their own campaigns; admins may review all campaigns.
+    match /adCampaigns/{campaignId} {
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
