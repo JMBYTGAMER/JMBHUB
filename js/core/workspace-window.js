@@ -58,6 +58,8 @@ export function openWorkspace(stage,{title='Workspace',description='',onClose}={
   overlay._close=close;
   overlay.querySelectorAll('[data-window-close]').forEach(x=>x.addEventListener('click',close));
   active=overlay;
+  overlay.classList.add('open');
+  document.body.classList.add('jmb-window-open');
   requestAnimationFrame(()=>overlay.querySelector('.jmb-workspace-close')?.focus());
   return overlay;
 }
