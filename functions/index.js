@@ -154,12 +154,14 @@ exports.createAdCampaign = onCall(async request => {
   const title = adClean(request.data?.title);
   const description = String(request.data?.description || '').trim().slice(0, 220);
   const targetUrl = String(request.data?.targetUrl || '').trim();
-  const placement = String(request.data?.placement || 'games');
+  const requestedPlacement = String(request.data?.placement || 'games');
   const budget = cleanCoins(request.data?.budgetCoins);
+  // Larger campaigns automatically become site-wide, as requested.
+  const placement = budget >= AD_MIN_SITEWIDE || requestedPlacement === 'sitewide' ? 'sitewide' : requestedPlacement;
   if (title.length < 3) throw new HttpsError('invalid-argument','Enter an ad title with at least 3 characters.');
   if (!description) throw new HttpsError('invalid-argument','Enter a short ad description.');
   if (!validHttpsUrl(targetUrl)) throw new HttpsError('invalid-argument','Use a valid HTTPS destination link.');
-  if (!AD_PLACEMENTS.has(placement) && placement !== 'sitewide') throw new HttpsError('invalid-argument','Choose a supported ad area.');
+  if ((!AD_PLACEMENTS.has(requestedPlacement) && requestedPlacement !== 'sitewide') || (!AD_PLACEMENTS.has(placement) && placement !== 'sitewide')) throw new HttpsError('invalid-argument','Choose a supported ad area.');
   const minimum = placement === 'sitewide' ? AD_MIN_SITEWIDE : AD_MIN_TARGETED;
   if (!Number.isFinite(budget) || budget < minimum || budget > 1000000) throw new HttpsError('invalid-argument',`This campaign requires at least ${minimum} coins.`);
   const wallet = walletRef(uid), campaign = db.collection('adCampaigns').doc(), tx = txRef();
