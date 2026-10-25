@@ -57,7 +57,6 @@ const STORE={
  supporter:{price:25,name:'JMB Supporter Badge',perk:'supporter'},
  'profile-glow':{price:50,name:'Profile Glow',perk:'profile-glow'},
  'name-highlight':{price:100,name:'Name Highlight',perk:'name-highlight'},
- 'ad-credit':{price:100,name:'Ad Credit',perk:'ad-credit',repeatable:true},
  'vip-dashboard':{price:250,name:'VIP Dashboard Theme',perk:'vip-dashboard'},
  'creator-pack':{price:500,name:'Creator Pack',perk:'creator-pack'}
 };
