@@ -52,36 +52,40 @@ service cloud.firestore {
       allow delete: if admin();
     }
 
-    // FREE Spark-plan JMB Coins mode.
-    // Users can read their wallet and spend coins, but cannot increase their balance.
-    // Owner/admin can grant coins. This avoids Cloud Functions and billing.
+    // Coin balances, purchases, rewards and the transaction ledger are server-managed.
     match /wallets/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
-      allow create: if (admin() && request.resource.data.uid == uid && request.resource.data.balance is number && request.resource.data.balance >= 0) || (signedIn() && request.auth.uid == uid && request.resource.data.uid == uid && request.resource.data.balance == 0);
-      allow update: if admin()
-        || (signedIn() && request.auth.uid == uid
-          && request.resource.data.uid == resource.data.uid
-          && request.resource.data.balance is number
-          && request.resource.data.balance >= 0
-          && request.resource.data.balance <= resource.data.balance);
-      allow delete: if owner();
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid && request.resource.data.balance == 0;
+      allow update, delete: if false;
     }
 
     match /coinTransactions/{txId} {
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
-      allow create: if admin()
-        || (signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.amount is number && request.resource.data.amount <= 0);
-      allow update, delete: if admin();
+      allow create, update, delete: if false;
     }
 
     match /coinPurchases/{purchaseId} {
-      allow read: if signedIn() && resource.data.uid == request.auth.uid;
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.price is number && request.resource.data.price > 0;
-      allow update, delete: if admin();
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
     }
 
     match /coinGameClaims/{claimId} {
       allow read, write: if false;
+    }
+
+    match /coinGameCooldowns/{uid} {
+      allow read, write: if false;
+    }
+
+    match /coinNotifications/{noticeId} {
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /userEntitlements/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create, update, delete: if false;
     }
 
     // Ad campaigns are created, charged, approved and refunded only by trusted Cloud Functions.

@@ -1,4 +1,8 @@
 import {JMBMusic} from '../core/sound.js';
+import {app} from '../core/firebase.js';
+import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
+const awardDashCoin=app?httpsCallable(getFunctions(app,'asia-south1'),'awardGameCoins'):null;
+let dashRewardBusy=false;
 const c=document.querySelector('#gdCanvas'),ctx=c.getContext('2d'),start=document.querySelector('#gdStart'),jumpBtn=document.querySelector('#gdJump'),pauseBtn=document.querySelector('#gdPause');
 const progressEl=document.querySelector('#gdProgress'),scoreEl=document.querySelector('#gdScore'),speedEl=document.querySelector('#gdSpeed');
 let running=false,paused=false,raf=0,player,obstacles=[],coins=[],particles=[],distance=0,score=0,speed=5,beat=0,levelEnd=7000,checkpoint=0,lastGround=0;
@@ -38,7 +42,7 @@ function frame(t){
  for(const q of particles){q.x+=q.vx;q.y+=q.vy;q.vy+=.08;q.life-=.025}particles=particles.filter(q=>q.life>0);
  for(const o of obstacles){const sx=o.x-distance;if(sx>-60&&sx<c.width+60){const box={x:sx,y:365-o.h,w:o.kind==='double'?60:o.w,h:o.h};if(collide(player,box)){fail();return}}}
  for(const q of coins){const sx=q.x-distance;if(!q.taken&&Math.hypot(player.x+15-sx,player.y+15-q.y)<24){q.taken=true;score+=50;addBurst(sx,q.y,14);JMBMusic.click?.()}}
- if(pct>=100){running=false;JMBMusic.win();addBurst(player.x+15,player.y+15,40);progressEl.textContent='100% • '+L.name;start.textContent=level<levels.length-1?'▶ Next Level':'🏆 Completed All Levels';pauseBtn.textContent='Ⅱ Pause';return}
+ if(pct>=100){running=false;JMBMusic.win();addBurst(player.x+15,player.y+15,40);progressEl.textContent='100% • '+L.name;start.textContent=level<levels.length-1?'▶ Next Level':'🏆 Completed All Levels';pauseBtn.textContent='Ⅱ Pause';if(awardDashCoin&&!dashRewardBusy){dashRewardBusy=true;awardDashCoin({gameId:'jmbdash',score:Math.max(1,score)}).then(r=>{if(r.data?.ok){toast('🏆 Level complete! +1 virtual JMB Coin');JMBMusic.win()}}).catch(e=>{if(!String(e.code||'').includes('resource-exhausted'))console.warn('JMB Dash reward unavailable:',e.message)}).finally(()=>{dashRewardBusy=false})}return}
  draw();raf=requestAnimationFrame(frame)
 }
 function begin(next=false){cancelAnimationFrame(raf);if(next&&level<levels.length-1)level++;reset();running=true;paused=false;start.textContent='RUNNING';pauseBtn.textContent='Ⅱ Pause';JMBMusic.start();draw();raf=requestAnimationFrame(frame)}

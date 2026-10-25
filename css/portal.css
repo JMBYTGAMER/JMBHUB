@@ -117,3 +117,34 @@
 /* Global JMB Coin balance — visible outside the mobile menu on every authenticated portal page. */
 .jmb-global-coin{position:fixed;right:18px;top:14px;z-index:9995;display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid rgba(255,215,80,.28);border-radius:999px;background:rgba(12,15,28,.88);backdrop-filter:blur(16px);box-shadow:0 10px 35px rgba(0,0,0,.28);color:#fff;text-decoration:none;font-weight:900;font-size:13px;transition:.18s ease}.jmb-global-coin:hover{transform:translateY(-2px);border-color:rgba(255,215,80,.55);box-shadow:0 14px 42px rgba(0,0,0,.35)}.jmb-global-coin-icon{font-size:18px}.jmb-global-coin-label{font-size:10px;letter-spacing:1px;color:#cbd2e8}
 @media(max-width:700px){.jmb-global-coin{top:8px;right:58px;padding:7px 9px;font-size:12px}.jmb-global-coin-label{display:none}}
+
+/* JMB economy + claimable reward inbox */
+.jmb-inbox-toggle{position:fixed;top:12px;right:104px;z-index:9997;display:flex;align-items:center;justify-content:center;gap:6px;min-width:44px;height:42px;padding:0 11px;border:1px solid rgba(184,196,255,.2);border-radius:14px;background:rgba(14,18,35,.94);color:#fff;font-size:18px;box-shadow:0 9px 30px rgba(0,0,0,.28);backdrop-filter:blur(18px);cursor:pointer;transition:.18s}
+.jmb-inbox-toggle:hover{transform:translateY(-2px);border-color:rgba(139,107,255,.5)}
+.jmb-inbox-count{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#ff648a;color:#fff;font-size:10px;font-weight:900}.jmb-inbox-count[hidden]{display:none}
+.jmb-inbox-panel{position:fixed;top:62px;right:14px;z-index:10000;width:min(400px,calc(100vw - 28px));max-height:min(78vh,650px);overflow:hidden;border:1px solid rgba(184,196,255,.2);border-radius:22px;background:linear-gradient(150deg,rgba(19,24,46,.98),rgba(7,10,21,.98));box-shadow:0 28px 100px rgba(0,0,0,.58);backdrop-filter:blur(24px);color:#f5f7ff}.jmb-inbox-panel[hidden]{display:none}
+.jmb-inbox-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px;border-bottom:1px solid rgba(184,196,255,.12)}.jmb-inbox-head b,.jmb-inbox-head small{display:block}.jmb-inbox-head small{font-size:11px;color:#aab3ce;margin-top:4px}.jmb-inbox-close{border:0;background:rgba(255,255,255,.07);border-radius:10px;color:white;font-size:22px;width:34px;height:34px;cursor:pointer}
+.jmb-inbox-list{padding:10px;overflow:auto;max-height:calc(min(78vh,650px) - 70px);display:grid;gap:9px}.jmb-inbox-empty{padding:28px 16px;text-align:center;color:#aab3ce}.jmb-inbox-empty span{font-size:30px;display:block}.jmb-inbox-empty b{display:block;color:#fff;margin:8px}.jmb-inbox-empty p{font-size:12px}
+.jmb-notice-card{display:grid;grid-template-columns:37px minmax(0,1fr);gap:10px;padding:13px;border:1px solid rgba(184,196,255,.13);border-radius:16px;background:rgba(255,255,255,.03)}.jmb-notice-card.is-gift{border-color:rgba(255,205,90,.3);background:linear-gradient(130deg,rgba(255,196,74,.08),rgba(124,92,255,.07))}.jmb-notice-card.collected{opacity:.75}.jmb-notice-icon{display:grid;place-items:center;width:37px;height:37px;border-radius:12px;background:rgba(139,107,255,.15);font-size:19px}.jmb-notice-body{min-width:0}.jmb-notice-body>b{font-size:13px}.jmb-notice-body p{font-size:12px;line-height:1.55;color:#bac3dc;margin:5px 0 8px;overflow-wrap:anywhere}.jmb-notice-body small{display:block;font-size:10px;color:#8690ad;margin-top:4px}.jmb-notice-amount{display:block;color:#ffdc72;margin:6px 0}.jmb-notice-status{color:#95a2c5!important}.jmb-collect-btn{margin-top:10px;width:100%;min-height:40px;padding:9px 12px}.jmb-collect-btn:disabled{opacity:.75}
+.jmb-sound-toggle{position:fixed!important;top:12px;right:158px;z-index:9997;min-height:42px;padding:8px 11px;background:rgba(14,18,35,.94)!important;border-color:rgba(184,196,255,.2)!important;box-shadow:0 9px 30px rgba(0,0,0,.24);font-size:12px;white-space:nowrap}
+.coin-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.coin-info-grid .card{border-radius:20px}.coin-info-grid .btn:disabled{opacity:.65;cursor:not-allowed}.jmb-perks-row{display:flex;gap:9px;flex-wrap:wrap}.jmb-perk-chip{display:inline-flex;align-items:center;padding:9px 12px;border-radius:99px;border:1px solid rgba(139,107,255,.25);background:rgba(124,92,255,.08);font-size:12px;font-weight:800}
+@media(max-width:560px){.jmb-inbox-toggle{right:101px;top:8px;min-width:40px;height:39px;padding:0 8px;font-size:16px}.jmb-sound-toggle{right:151px;top:8px;min-height:39px;padding:7px 9px;font-size:11px}.jmb-inbox-panel{top:55px;right:8px;width:calc(100vw - 16px)}.coin-info-grid{grid-template-columns:1fr}}
+
+/* Admin wallet controls and actually applied entitlements */
+.admin-wallet-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:14px}.admin-wallet-tools #coinAccountResult,.admin-wallet-tools #coinAdminToolStatus{grid-column:1/-1;overflow-wrap:anywhere}.admin-wallet-tools .actions{align-items:center;margin-top:0}.admin-wallet-tools .field{min-width:0}.admin-wallet-tools .table-wrap{max-width:100%}
+.jmb-perk-glow .dashboard-hero,.jmb-perk-glow .coin-hero,.jmb-perk-glow .profile-card{box-shadow:0 0 0 1px rgba(160,125,255,.26),0 0 42px rgba(124,92,255,.2),0 25px 80px rgba(0,0,0,.2)!important}
+.jmb-perk-vip .dashboard-hero{background:radial-gradient(circle at 90% 10%,rgba(255,210,94,.15),transparent 32%),radial-gradient(circle at 20% 90%,rgba(124,92,255,.19),transparent 35%),linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.02))!important;border-color:rgba(255,216,110,.3)!important}
+.jmb-perk-creator .dashboard-hero:after{background:radial-gradient(circle,rgba(0,212,255,.25),transparent 65%)!important}
+.jmb-perk-supporter .brand-mark{box-shadow:0 0 0 1px rgba(255,215,85,.28),0 8px 28px rgba(255,190,56,.17)!important}
+.jmb-perk-name{color:#ffd76b!important;text-shadow:0 0 14px rgba(255,215,100,.24)}
+@media(max-width:700px){.admin-wallet-tools{grid-template-columns:1fr}.admin-wallet-tools #coinAccountResult,.admin-wallet-tools #coinAdminToolStatus{grid-column:auto}}
+
+/* Keep the wallet, inbox and sound controls in separate touch targets. */
+.jmb-global-coin{right:18px!important}
+.jmb-inbox-toggle{right:130px!important}
+.jmb-sound-toggle{right:205px!important}
+@media(max-width:700px){
+ .jmb-global-coin{right:8px!important}
+ .jmb-inbox-toggle{right:98px!important}
+ .jmb-sound-toggle{right:151px!important}
+}
