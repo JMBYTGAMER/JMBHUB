@@ -13,7 +13,6 @@ const items=[
  {id:'supporter',perk:'supporter',icon:'⭐',name:'JMB Supporter Badge',price:25,desc:'Unlock a supporter badge for your JMB profile.'},
  {id:'profile-glow',perk:'profile-glow',icon:'✨',name:'Profile Glow',price:50,desc:'Unlock a glowing profile style.'},
  {id:'name-highlight',perk:'name-highlight',icon:'🌟',name:'Name Highlight',price:100,desc:'Unlock a highlighted display-name style.'},
- {id:'ad-credit',perk:'ad-credit',icon:'📢',name:'Ad Credit',price:100,desc:'Adds one internal ad credit to your account.'},
  {id:'vip-dashboard',perk:'vip-dashboard',icon:'💎',name:'VIP Dashboard Theme',price:250,desc:'Unlock the premium dashboard theme.'},
  {id:'creator-pack',perk:'creator-pack',icon:'🚀',name:'Creator Pack',price:500,desc:'Unlock the creator profile pack.'}
 ];
