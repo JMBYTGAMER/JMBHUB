@@ -232,7 +232,7 @@ exports.adminSetUserPerk=onCall(async request=>{
 });
 
 // JMB Ad Network: all ad spending and refunds are handled server-side.
-const AD_PLACEMENTS = new Set(['games','minecraft','tools','support','dashboard']);
+const AD_PLACEMENTS = new Set(['games','minecraft','tools','support','dashboard','ai','coins','ads','profile','home']);
 const AD_MIN_TARGETED = 100;
 const AD_MIN_SITEWIDE = 10000;
 const AD_DAYS = 30;
