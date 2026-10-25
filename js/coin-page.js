@@ -7,7 +7,7 @@ const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:8});
 const call=name=>{if(!app)throw new Error('Coin services are not configured.');return httpsCallable(getFunctions(app,'asia-south1'),name)};
-let user=null,unsubWallet=null,unsubPerks=null,owned={},adCredits=0;
+let user=null,unsubWallet=null,unsubPerks=null,owned={};
 
 const items=[
  {id:'supporter',perk:'supporter',icon:'⭐',name:'JMB Supporter Badge',price:25,desc:'Unlock a supporter badge for your JMB profile.'},
@@ -22,7 +22,7 @@ function toast(message,kind=''){
 function renderStore(){
  const grid=$('#coinStore');if(!grid)return;
  grid.innerHTML=items.map(x=>{
-  const isOwned=x.perk!=='ad-credit'&&!!owned[x.perk];
+  const isOwned=!!owned[x.perk];
   return `<article class="card coin-item"><div class="service-art" style="font-size:40px">${x.icon}</div><h3>${x.name}</h3><p class="muted">${x.desc}</p><div class="price">🪙 ${x.price} coins</div><button class="btn ${isOwned?'btn-ghost':'btn-primary'} buy-item" data-id="${x.id}" ${isOwned?'disabled':''}>${isOwned?'✓ Owned':'Unlock item'}</button></article>`;
  }).join('');
  grid.querySelectorAll('.buy-item').forEach(b=>b.onclick=()=>buy(b));
@@ -38,7 +38,7 @@ async function loadTransactions(){
  const box=$('#coinTransactions');if(!box||!user)return;
  try{
   const r=await call('getCoinWallet')({});
-  owned=r.data.entitlements||{};adCredits=Number(r.data.adCredits||0);renderPerks();renderStore();
+  owned=r.data.entitlements||{};renderPerks();renderStore();
   const tx=r.data.transactions||[];
   box.innerHTML=tx.length?tx.map(x=>{
    const amount=Number(x.amount||0),time=x.createdAt?new Date(x.createdAt).toLocaleString():'';
@@ -54,7 +54,7 @@ async function buy(button){
   if(!user)throw new Error('Please sign in to use the store.');
   const r=await call('purchaseCoinItem')({itemId:item.id});
   if(!r.data?.ok)throw new Error('Purchase was not completed.');
-  owned=r.data.perks||owned;adCredits=Number(r.data.adCredits||adCredits);
+  owned=r.data.perks||owned;
   $('#coinBalance').textContent=money(r.data.balance);
   renderStore();renderPerks();
   window.JMBMusic?.win?.();
@@ -71,7 +71,7 @@ onAuthStateChanged(auth,u=>{
   $('#coinBalance').textContent=money(balance);
  },()=>{$('#coinStatus').textContent='Live wallet updates are unavailable; refresh to retry.'});
   unsubPerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
-   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();
+   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};renderPerks();renderStore();
   },()=>{});
  }
  loadTransactions();
