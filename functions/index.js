@@ -215,17 +215,16 @@ exports.adminSetUserPerk=onCall(async request=>{
  if(!ADMIN_PERKS.has(perk))throw new HttpsError('invalid-argument','Choose a supported JMBHUB perk.');
  let target;
  try{target=await getAuth().getUserByEmail(email)}catch{throw new HttpsError('not-found','No JMBHUB account was found for that email.');}
- const entRef=db.collection('userEntitlements').doc(target.uid);
+ const entRef=db.collection('userEntitlements').doc(target.uid),notice=db.collection('coinNotifications').doc();
  const result=await db.runTransaction(async t=>{
    const snap=await t.get(entRef);
    const data=snap.exists?snap.data():{};
    const perks={...(data.perks||{})};
    if(enabled)perks[perk]=true;else delete perks[perk];
    t.set(entRef,{uid:target.uid,perks,adCredits:Number(data.adCredits||0),updatedAt:FieldValue.serverTimestamp()},{merge:true});
+   t.set(notice,{uid:target.uid,email:target.email||email,title:enabled?'🎁 Special JMBHUB perk unlocked':'JMBHUB perk updated',message:`An admin ${enabled?'granted':'removed'} the ${perk} perk on your account.`,amount:0,status:'info',type:'perk_update',createdAt:FieldValue.serverTimestamp()});
    return perks;
  });
- const notice=db.collection('coinNotifications').doc();
- await notice.set({uid:target.uid,email:target.email||email,title:enabled?'🎁 Special JMBHUB perk unlocked':'JMBHUB perk updated',message:`An admin ${enabled?'granted':'removed'} the ${perk} perk on your account.`,amount:0,status:'info',type:'perk_update',createdAt:FieldValue.serverTimestamp()});
  return {ok:true,email:target.email||email,perk,enabled,perks:result};
 });
 
