@@ -177,18 +177,17 @@ exports.adminAdjustCoins=onCall(async request=>{
  if(!Number.isFinite(amount)||amount===0||Math.abs(amount)>1000000000)throw new HttpsError('invalid-argument','Enter a non-zero adjustment up to +/-1,000,000,000 coins.');
  let target;
  try{target=await getAuth().getUserByEmail(email)}catch{throw new HttpsError('not-found','No JMBHUB account was found for that email.');}
- const wallet=walletRef(target.uid),tx=txRef();
+ const wallet=walletRef(target.uid),tx=txRef(),notice=db.collection('coinNotifications').doc();
  const result=await db.runTransaction(async t=>{
    const snap=await t.get(wallet);
    const balance=cleanCoins(snap.exists?snap.data().balance||0:0);
-   const next=cleanCoins(balance+amount);
-   if(next<0)throw new HttpsError('failed-precondition',`Cannot remove coins; the current balance is only ${balance}.`);
-   t.set(wallet,{uid:target.uid,balance:next,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+   const nextBalance=cleanCoins(balance+amount);
+   if(nextBalance<0)throw new HttpsError('failed-precondition',`Cannot remove coins; the current balance is only ${balance}.`);
+   t.set(wallet,{uid:target.uid,balance:nextBalance,updatedAt:FieldValue.serverTimestamp()},{merge:true});
    t.set(tx,{uid:target.uid,amount,type:'admin_adjustment',description:reason,adminUid:request.auth.uid,adminEmail:request.auth.token.email||'',createdAt:FieldValue.serverTimestamp()});
-   return next;
+   t.set(notice,{uid:target.uid,email:target.email||email,title:'JMB Coin wallet updated',message:`${amount>0?'Added':'Removed'} ${Math.abs(amount)} JMB Coins: ${reason}`,amount:0,status:'info',type:'admin_adjustment',createdAt:FieldValue.serverTimestamp()});
+   return nextBalance;
  });
- const notice=db.collection('coinNotifications').doc();
- await notice.set({uid:target.uid,email:target.email||email,title:'JMB Coin wallet updated',message:`${amount>0?'Added':'Removed'} ${Math.abs(amount)} JMB Coins: ${reason}`,amount:0,status:'info',type:'admin_adjustment',createdAt:FieldValue.serverTimestamp()});
  return {ok:true,email:target.email||email,amount,balance:result};
 });
 
