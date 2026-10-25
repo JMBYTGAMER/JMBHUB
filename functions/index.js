@@ -106,19 +106,24 @@ exports.awardGameCoins=onCall(async request=>{
  if(!Number.isFinite(score)||score<=0||score>100000)throw new HttpsError('invalid-argument','Invalid game score.');
 
  const claim=db.collection('coinGameClaims').doc(`${uid}_${gameId}`);
+ const cooldown=db.collection('coinGameCooldowns').doc(uid);
  const wallet=walletRef(uid);
  const tx=txRef();
  const now=Date.now();
  const result=await db.runTransaction(async t=>{
    const claimSnap=await t.get(claim);
-   const last=claimSnap.exists?Number(claimSnap.data().lastAwardMs||0):0;
-   if(now-last<15000)throw new HttpsError('resource-exhausted','Please wait before earning another reward for this game.');
+   const cooldownSnap=await t.get(cooldown);
    const walletSnap=await t.get(wallet);
+   const last=claimSnap.exists?Number(claimSnap.data().lastAwardMs||0):0;
+   const globalLast=cooldownSnap.exists?Number(cooldownSnap.data().lastAwardMs||0):0;
+   if(now-last<15000||now-globalLast<15000)throw new HttpsError('resource-exhausted','Please wait 15 seconds before earning another game reward.');
    const balance=cleanCoins(walletSnap.exists?walletSnap.data().balance||0:0);
-   const reward=cleanCoins(0.00001+Math.min(1,score/10000)*0.00009);
+   // A completed, score-earning session gives one virtual JMB Coin (not cash).
+   const reward=1;
    const next=cleanCoins(balance+reward);
    t.set(wallet,{uid,balance:next,updatedAt:FieldValue.serverTimestamp()},{merge:true});
    t.set(claim,{uid,gameId,lastAwardMs:now,lastScore:score,lastReward:reward,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+   t.set(cooldown,{uid,lastAwardMs:now,lastGameId:gameId,updatedAt:FieldValue.serverTimestamp()},{merge:true});
    t.set(tx,{uid,amount:reward,type:'game_reward',gameId,score,description:`Game reward — ${gameId}`,createdAt:FieldValue.serverTimestamp()});
    return {reward,balance:next};
  });
