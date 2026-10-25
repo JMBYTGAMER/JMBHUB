@@ -134,24 +134,15 @@ exports.adminGiveCoins=onCall(async request=>{
  if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
  const email=String(request.data?.email||'').trim().toLowerCase();
  const amount=cleanCoins(request.data?.amount);
- const reason=String(request.data?.reason||'Admin reward').trim().slice(0,180)||'Admin reward';
+ const message=String(request.data?.reason||'A JMB HUB admin sent you a reward!').trim().slice(0,300)||'A JMB HUB admin sent you a reward!';
  if(!email||!email.includes('@'))throw new HttpsError('invalid-argument','Enter a valid account email.');
- if(!Number.isFinite(amount)||amount<=0||amount>1e15)throw new HttpsError('invalid-argument','Enter a positive coin amount.');
+ if(!Number.isFinite(amount)||amount<=0||amount>1000000000)throw new HttpsError('invalid-argument','Enter a positive coin amount up to 1,000,000,000.');
  let target;
  try{target=await getAuth().getUserByEmail(email)}catch{throw new HttpsError('not-found','No JMBHUB account was found for that email.');}
- const wallet=walletRef(target.uid);
- const tx=txRef();
- const result=await db.runTransaction(async t=>{
-   const snap=await t.get(wallet);
-   const balance=cleanCoins(snap.exists?snap.data().balance||0:0);
-   const next=cleanCoins(balance+amount);
-   t.set(wallet,{uid:target.uid,balance:next,updatedAt:FieldValue.serverTimestamp()},{merge:true});
-   t.set(tx,{uid:target.uid,amount,type:'admin_grant',description:reason,adminUid:request.auth.uid,adminEmail:request.auth.token.email||'',createdAt:FieldValue.serverTimestamp()});
-   return next;
- });
- return {ok:true,uid:target.uid,email:target.email||email,balance:result,amount};
+ const gift=db.collection('coinNotifications').doc();
+ await gift.set({uid:target.uid,email:target.email||email,title:'🪙 JMB Admin Reward',message,amount,status:'pending',type:'admin_gift',fromEmail:request.auth.token.email||'',createdAt:FieldValue.serverTimestamp()});
+ return {ok:true,giftId:gift.id,email:target.email||email,amount,status:'pending'};
 });
-
 
 // JMB Ad Network: all ad spending and refunds are handled server-side.
 const AD_PLACEMENTS = new Set(['games','minecraft','tools','support','dashboard']);
