@@ -37,4 +37,5 @@ q('#saveProfile').onclick=async()=>{const name=q('#editName').value.trim(),photo
 q('#resetPassword').onclick=async()=>{if(!u.email)return;q('#accountMsg').textContent='Sending password reset…';try{await sendPasswordResetEmail(auth,u.email);q('#accountMsg').textContent='✓ Password reset email sent.'}catch(e){q('#accountMsg').textContent='Could not send reset email: '+(e?.message||'Unknown error')}};
 q('#changeEmail').onclick=async()=>{const next=prompt('Enter your new email address:',u.email||'');if(!next||next===u.email)return;const password=prompt('For security, enter your current password:');if(!password)return;try{await reauthenticateWithCredential(auth.currentUser,EmailAuthProvider.credential(u.email,password));await updateEmail(auth.currentUser,next);q('#emailValue').textContent=next;q('#heroEmail').textContent=next;q('#accountMsg').textContent='✓ Email changed successfully.'}catch(e){q('#accountMsg').textContent='Could not change email: '+(e?.message||'You may need to sign in again.')}};
 q('#logout').onclick=logout;q('#soundPref').onclick=()=>JMBMusic.setEnabled(!JMBMusic.enabled);q('#soundPref').textContent=JMBMusic.enabled?'🔊 Sound ON':'🔇 Sound OFF';paint();
-</script></body></html>
+</script><script type="module" src="../js/ads/auto-render.js"></script>
+</body></html>
