@@ -39,23 +39,27 @@ exports.setUserRole=onCall(async request=>{
 exports.getCoinWallet=onCall(async request=>{
  requireAuth(request.auth);
  const uid=request.auth.uid;
- const snap=await walletRef(uid).get();
+ const [snap,txSnap,perkSnap]=await Promise.all([
+   walletRef(uid).get(),
+   db.collection('coinTransactions').where('uid','==',uid).orderBy('createdAt','desc').limit(30).get(),
+   db.collection('userEntitlements').doc(uid).get()
+ ]);
  const balance=cleanCoins(snap.exists?snap.data().balance||0:0);
- const txSnap=await db.collection('coinTransactions').where('uid','==',uid).orderBy('createdAt','desc').limit(30).get();
  const transactions=txSnap.docs.map(d=>{
    const x=d.data();
-   return {id:d.id,amount:cleanCoins(x.amount||0),description:x.description||'JMB Coin transaction',createdAt:x.createdAt?.toDate?.()?.toISOString?.()||''};
+   return {id:d.id,amount:cleanCoins(x.amount||0),type:x.type||'',description:x.description||'JMB Coin transaction',createdAt:x.createdAt?.toDate?.()?.toISOString?.()||''};
  });
- return {balance,transactions};
+ const ent=perkSnap.exists?perkSnap.data():{};
+ return {balance,transactions,entitlements:ent.perks||{},adCredits:Number(ent.adCredits||0)};
 });
 
 const STORE={
- supporter:{price:25,name:'JMB Supporter Badge'},
- 'profile-glow':{price:50,name:'Profile Glow'},
- 'name-highlight':{price:100,name:'Name Highlight'},
- 'ad-credit':{price:100,name:'Ad Credit'},
- 'vip-dashboard':{price:250,name:'VIP Dashboard Theme'},
- 'creator-pack':{price:500,name:'Creator Pack'}
+ supporter:{price:25,name:'JMB Supporter Badge',perk:'supporter'},
+ 'profile-glow':{price:50,name:'Profile Glow',perk:'profile-glow'},
+ 'name-highlight':{price:100,name:'Name Highlight',perk:'name-highlight'},
+ 'ad-credit':{price:100,name:'Ad Credit',perk:'ad-credit',repeatable:true},
+ 'vip-dashboard':{price:250,name:'VIP Dashboard Theme',perk:'vip-dashboard'},
+ 'creator-pack':{price:500,name:'Creator Pack',perk:'creator-pack'}
 };
 
 exports.purchaseCoinItem=onCall(async request=>{
@@ -65,19 +69,27 @@ exports.purchaseCoinItem=onCall(async request=>{
  const item=STORE[itemId];
  if(!item)throw new HttpsError('invalid-argument','That store item does not exist.');
  const wallet=walletRef(uid);
+ const entRef=db.collection('userEntitlements').doc(uid);
  const tx=txRef();
  const purchase=db.collection('coinPurchases').doc();
  const result=await db.runTransaction(async t=>{
    const snap=await t.get(wallet);
+   const entSnap=await t.get(entRef);
    const balance=cleanCoins(snap.exists?snap.data().balance||0:0);
+   const ent=entSnap.exists?entSnap.data():{};
+   const perks={...(ent.perks||{})};
+   if(item.perk!=='ad-credit'&&perks[item.perk])throw new HttpsError('already-exists','You already own this item.');
    if(balance<item.price)throw new HttpsError('failed-precondition',`You need ${item.price} coins, but only have ${balance}.`);
    const next=cleanCoins(balance-item.price);
+   let adCredits=Number(ent.adCredits||0);
+   if(item.perk==='ad-credit')adCredits+=1;else perks[item.perk]=true;
    t.set(wallet,{uid,balance:next,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+   t.set(entRef,{uid,perks,adCredits,updatedAt:FieldValue.serverTimestamp()},{merge:true});
    t.set(tx,{uid,amount:-item.price,type:'purchase',description:`Purchased ${item.name}`,createdAt:FieldValue.serverTimestamp()});
    t.set(purchase,{uid,itemId,price:item.price,name:item.name,createdAt:FieldValue.serverTimestamp()});
-   return next;
+   return {balance:next,perks,adCredits};
  });
- return {ok:true,balance:result};
+ return {ok:true,...result};
 });
 
 const SKILL_GAMES=new Set([
