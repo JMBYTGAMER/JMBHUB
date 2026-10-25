@@ -192,6 +192,45 @@ exports.adminAdjustCoins=onCall(async request=>{
  return {ok:true,email:target.email||email,amount,balance:result};
 });
 
+exports.adminGetCoinAccount=onCall(async request=>{
+ if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
+ const email=String(request.data?.email||'').trim().toLowerCase();
+ if(!email||!email.includes('@'))throw new HttpsError('invalid-argument','Enter a valid account email.');
+ let target;
+ try{target=await getAuth().getUserByEmail(email)}catch{throw new HttpsError('not-found','No JMBHUB account was found for that email.');}
+ const [walletSnap,perkSnap,txSnap]=await Promise.all([
+   walletRef(target.uid).get(),
+   db.collection('userEntitlements').doc(target.uid).get(),
+   db.collection('coinTransactions').where('uid','==',target.uid).orderBy('createdAt','desc').limit(15).get()
+ ]);
+ const ent=perkSnap.exists?perkSnap.data():{};
+ return {uid:target.uid,email:target.email||email,displayName:target.displayName||'',balance:cleanCoins(walletSnap.exists?walletSnap.data().balance||0:0),perks:ent.perks||{},adCredits:Number(ent.adCredits||0),transactions:txSnap.docs.map(d=>{const x=d.data();return {amount:cleanCoins(x.amount||0),description:x.description||x.type||'Transaction',type:x.type||'',createdAt:x.createdAt?.toDate?.()?.toISOString?.()||''}})};
+});
+
+const ADMIN_PERKS=new Set(['supporter','profile-glow','name-highlight','vip-dashboard','creator-pack']);
+exports.adminSetUserPerk=onCall(async request=>{
+ if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
+ const email=String(request.data?.email||'').trim().toLowerCase();
+ const perk=String(request.data?.perk||'');
+ const enabled=request.data?.enabled===true;
+ if(!email||!email.includes('@'))throw new HttpsError('invalid-argument','Enter a valid account email.');
+ if(!ADMIN_PERKS.has(perk))throw new HttpsError('invalid-argument','Choose a supported JMBHUB perk.');
+ let target;
+ try{target=await getAuth().getUserByEmail(email)}catch{throw new HttpsError('not-found','No JMBHUB account was found for that email.');}
+ const entRef=db.collection('userEntitlements').doc(target.uid);
+ const result=await db.runTransaction(async t=>{
+   const snap=await t.get(entRef);
+   const data=snap.exists?snap.data():{};
+   const perks={...(data.perks||{})};
+   if(enabled)perks[perk]=true;else delete perks[perk];
+   t.set(entRef,{uid:target.uid,perks,adCredits:Number(data.adCredits||0),updatedAt:FieldValue.serverTimestamp()},{merge:true});
+   return perks;
+ });
+ const notice=db.collection('coinNotifications').doc();
+ await notice.set({uid:target.uid,email:target.email||email,title:enabled?'🎁 Special JMBHUB perk unlocked':'JMBHUB perk updated',message:`An admin ${enabled?'granted':'removed'} the ${perk} perk on your account.`,amount:0,status:'info',type:'perk_update',createdAt:FieldValue.serverTimestamp()});
+ return {ok:true,email:target.email||email,perk,enabled,perks:result};
+});
+
 // JMB Ad Network: all ad spending and refunds are handled server-side.
 const AD_PLACEMENTS = new Set(['games','minecraft','tools','support','dashboard']);
 const AD_MIN_TARGETED = 100;
