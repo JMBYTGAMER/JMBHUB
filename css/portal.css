@@ -129,3 +129,12 @@
 .jmb-sound-toggle{position:fixed!important;top:12px;right:158px;z-index:9997;min-height:42px;padding:8px 11px;background:rgba(14,18,35,.94)!important;border-color:rgba(184,196,255,.2)!important;box-shadow:0 9px 30px rgba(0,0,0,.24);font-size:12px;white-space:nowrap}
 .coin-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.coin-info-grid .card{border-radius:20px}.coin-info-grid .btn:disabled{opacity:.65;cursor:not-allowed}.jmb-perks-row{display:flex;gap:9px;flex-wrap:wrap}.jmb-perk-chip{display:inline-flex;align-items:center;padding:9px 12px;border-radius:99px;border:1px solid rgba(139,107,255,.25);background:rgba(124,92,255,.08);font-size:12px;font-weight:800}
 @media(max-width:560px){.jmb-inbox-toggle{right:101px;top:8px;min-width:40px;height:39px;padding:0 8px;font-size:16px}.jmb-sound-toggle{right:151px;top:8px;min-height:39px;padding:7px 9px;font-size:11px}.jmb-inbox-panel{top:55px;right:8px;width:calc(100vw - 16px)}.coin-info-grid{grid-template-columns:1fr}}
+
+/* Admin wallet controls and actually applied entitlements */
+.admin-wallet-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:14px}.admin-wallet-tools #coinAccountResult,.admin-wallet-tools #coinAdminToolStatus{grid-column:1/-1;overflow-wrap:anywhere}.admin-wallet-tools .actions{align-items:center;margin-top:0}.admin-wallet-tools .field{min-width:0}.admin-wallet-tools .table-wrap{max-width:100%}
+.jmb-perk-glow .dashboard-hero,.jmb-perk-glow .coin-hero,.jmb-perk-glow .profile-card{box-shadow:0 0 0 1px rgba(160,125,255,.26),0 0 42px rgba(124,92,255,.2),0 25px 80px rgba(0,0,0,.2)!important}
+.jmb-perk-vip .dashboard-hero{background:radial-gradient(circle at 90% 10%,rgba(255,210,94,.15),transparent 32%),radial-gradient(circle at 20% 90%,rgba(124,92,255,.19),transparent 35%),linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.02))!important;border-color:rgba(255,216,110,.3)!important}
+.jmb-perk-creator .dashboard-hero:after{background:radial-gradient(circle,rgba(0,212,255,.25),transparent 65%)!important}
+.jmb-perk-supporter .brand-mark{box-shadow:0 0 0 1px rgba(255,215,85,.28),0 8px 28px rgba(255,190,56,.17)!important}
+.jmb-perk-name{color:#ffd76b!important;text-shadow:0 0 14px rgba(255,215,100,.24)}
+@media(max-width:700px){.admin-wallet-tools{grid-template-columns:1fr}.admin-wallet-tools #coinAccountResult,.admin-wallet-tools #coinAdminToolStatus{grid-column:auto}}
