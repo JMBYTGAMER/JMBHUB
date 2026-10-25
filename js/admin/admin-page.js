@@ -481,8 +481,9 @@ async function giveCoins(){
     if(!functionsModule)functionsModule=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
     const fnc=functionsModule.getFunctions(app,'asia-south1');
     const res=await functionsModule.httpsCallable(fnc,'adminGiveCoins')({email,amount,reason});
-    if(status){status.textContent=`Added ${res.data?.amount||amount} coins. New balance: ${res.data?.balance??'—'}`;status.classList.remove('hide')}
-    toast('JMB Coins granted successfully','good');
+    if(status){status.textContent=`Gift notification sent to ${res.data?.email||email}. They must open their inbox and collect ${res.data?.amount||amount} virtual JMB Coins.`;status.classList.remove('hide')}
+    window.JMBMusic?.notify?.();
+    toast('Reward notification sent','good');
     $('#coinGrantAmount').value='';
   }catch(e){toast('Could not give coins: '+(e?.message||'Cloud Functions are not deployed.'))}
   finally{button.disabled=false}
