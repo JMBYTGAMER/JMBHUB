@@ -20,8 +20,8 @@ function mount(u){
   },()=>{balance.textContent='—'});
 }
 
-// Spark/free mode intentionally does not award persistent coins from games.
-// Allowing a browser-only game result to increase a wallet would let users mint coins.
+// Legacy browser-only reward stub is intentionally disabled. Supported games request
+// rewards from the trusted awardGameCoins Cloud Function instead.
 export async function rewardGame(){return null}
 
 export function startGlobalCoin(){
