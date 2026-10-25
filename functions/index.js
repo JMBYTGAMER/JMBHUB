@@ -144,6 +144,30 @@ exports.adminGiveCoins=onCall(async request=>{
  return {ok:true,giftId:gift.id,email:target.email||email,amount,status:'pending'};
 });
 
+exports.claimCoinGift=onCall(async request=>{
+ requireAuth(request.auth);
+ const uid=request.auth.uid;
+ const id=String(request.data?.giftId||'');
+ if(!/^[A-Za-z0-9_-]{10,150}$/.test(id))throw new HttpsError('invalid-argument','Invalid reward notification.');
+ const giftRef=db.collection('coinNotifications').doc(id),wallet=walletRef(uid),tx=txRef();
+ return db.runTransaction(async t=>{
+   const giftSnap=await t.get(giftRef);
+   if(!giftSnap.exists)throw new HttpsError('not-found','This reward could not be found.');
+   const gift=giftSnap.data();
+   if(gift.uid!==uid)throw new HttpsError('permission-denied','This reward belongs to another account.');
+   if(gift.status!=='pending'||gift.type!=='admin_gift')throw new HttpsError('failed-precondition','This reward has already been collected or is unavailable.');
+   const amount=cleanCoins(gift.amount);
+   if(!Number.isFinite(amount)||amount<=0)throw new HttpsError('failed-precondition','This reward has an invalid amount.');
+   const walletSnap=await t.get(wallet);
+   const balance=cleanCoins(walletSnap.exists?walletSnap.data().balance||0:0);
+   const next=cleanCoins(balance+amount);
+   t.set(wallet,{uid,balance:next,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+   t.set(tx,{uid,amount,type:'admin_gift',description:gift.message||gift.title||'JMB admin reward',giftId:id,createdAt:FieldValue.serverTimestamp()});
+   t.update(giftRef,{status:'claimed',claimedAt:FieldValue.serverTimestamp()});
+   return {ok:true,amount,balance:next};
+ });
+});
+
 // JMB Ad Network: all ad spending and refunds are handled server-side.
 const AD_PLACEMENTS = new Set(['games','minecraft','tools','support','dashboard']);
 const AD_MIN_TARGETED = 100;
