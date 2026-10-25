@@ -138,3 +138,13 @@
 .jmb-perk-supporter .brand-mark{box-shadow:0 0 0 1px rgba(255,215,85,.28),0 8px 28px rgba(255,190,56,.17)!important}
 .jmb-perk-name{color:#ffd76b!important;text-shadow:0 0 14px rgba(255,215,100,.24)}
 @media(max-width:700px){.admin-wallet-tools{grid-template-columns:1fr}.admin-wallet-tools #coinAccountResult,.admin-wallet-tools #coinAdminToolStatus{grid-column:auto}}
+
+/* Keep the wallet, inbox and sound controls in separate touch targets. */
+.jmb-global-coin{right:18px!important}
+.jmb-inbox-toggle{right:130px!important}
+.jmb-sound-toggle{right:205px!important}
+@media(max-width:700px){
+ .jmb-global-coin{right:8px!important}
+ .jmb-inbox-toggle{right:98px!important}
+ .jmb-sound-toggle{right:151px!important}
+}
