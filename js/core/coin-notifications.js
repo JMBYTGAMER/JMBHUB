@@ -1,11 +1,11 @@
 import {auth,db,app} from './firebase.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-import {collection,query,where,limit,onSnapshot} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {collection,query,where,limit,onSnapshot,doc} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const coins=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:8});
-let notices=[],unsubscribe=null,initialized=false,seenPending=new Set(),firstSnapshot=true,user=null;
+let notices=[],unsubscribe=null,unsubscribePerks=null,initialized=false,seenPending=new Set(),firstSnapshot=true,user=null;
 
 function build(){
  if(initialized)return;
@@ -59,9 +59,18 @@ function render(){
  }).join('');
 }
 function subscribe(u){
- unsubscribe?.();unsubscribe=null;notices=[];seenPending=new Set();firstSnapshot=true;user=u||null;
+ unsubscribe?.();unsubscribe=null;unsubscribePerks?.();unsubscribePerks=null;notices=[];seenPending=new Set();firstSnapshot=true;user=u||null;
+ document.body.classList.remove('jmb-perk-glow','jmb-perk-vip','jmb-perk-creator','jmb-perk-supporter');
  if(!u||!db){document.getElementById('jmbInboxToggle')?.remove();document.getElementById('jmbInboxPanel')?.remove();initialized=false;return}
  build();
+ unsubscribePerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
+  const perks=snap.exists()?(snap.data().perks||{}):{};
+  document.body.classList.toggle('jmb-perk-glow',!!perks['profile-glow']);
+  document.body.classList.toggle('jmb-perk-vip',!!perks['vip-dashboard']);
+  document.body.classList.toggle('jmb-perk-creator',!!perks['creator-pack']);
+  document.body.classList.toggle('jmb-perk-supporter',!!perks.supporter);
+  document.querySelectorAll('#userName,.user-name,[data-user-name]').forEach(el=>el.classList.toggle('jmb-perk-name',!!perks['name-highlight']));
+ },()=>{});
  const q=query(collection(db,'coinNotifications'),where('uid','==',u.uid),limit(40));
  unsubscribe=onSnapshot(q,snap=>{
   const incoming=snap.docs.map(d=>({id:d.id,...d.data()}));
