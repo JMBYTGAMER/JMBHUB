@@ -27,12 +27,10 @@ function build(){
   claim.disabled=true;claim.textContent='Collecting…';
   try{
    const call=httpsCallable(getFunctions(app,'asia-south1'),'claimCoinGift');
-   const result=await call({giftId:id});
-   claim.textContent='✓ Collected';
-   claim.closest('.jmb-notice-card')?.classList.add('collected');
+   await call({giftId:id});
+   const notice=notices.find(n=>n.id===id);
+   if(notice)notice.status='claimed';
    window.JMBMusic?.win?.();
-   const status=claim.closest('.jmb-notice-card')?.querySelector('.jmb-notice-status');
-   if(status)status.textContent='Collected · balance updated';
    render();
   }catch(err){
    claim.disabled=false;claim.textContent='Collect reward';
