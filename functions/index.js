@@ -307,7 +307,6 @@ exports.reviewAdCampaign = onCall(async request => {
 });
 
 exports.listActiveAds = onCall(async request => {
-  requireAuth(request.auth);
   const placement = String(request.data?.placement || 'dashboard');
   if (!AD_PLACEMENTS.has(placement) && placement !== 'sitewide') throw new HttpsError('invalid-argument','Unsupported placement.');
   const snap = await db.collection('adCampaigns').where('status','==','approved').get();
