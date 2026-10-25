@@ -29,9 +29,11 @@ Upload the contents to the ROOT of `JMBYTGAMER/JMBHUB`, keeping `.git` and any e
 
 ## JMB Coins, game rewards and Ad Network
 
-- Game score rewards are requested through the `awardGameCoins` callable function; clients cannot directly increase wallet balances.
+- A completed supported, score-positive game session can earn 1 virtual JMB Coin, with server-side cooldown checks through `awardGameCoins`; clients cannot directly increase wallet balances.
+- Admin coin gifts arrive as inbox notifications and are only credited after the user presses **Collect reward**. Admins can inspect a wallet/transaction history, apply audited positive or negative adjustments, and grant or revoke supported profile/dashboard perks.
+- JMBHUB includes a sound toggle with interface effects, reward notification chimes, and optional synthesized game ambience. Users can switch sound off.
 - The Ad Network uses `createAdCampaign`, `listMyAdCampaigns`, `listActiveAds`, `listPendingAds`, and `reviewAdCampaign` Cloud Functions.
-- Targeted ads reserve at least 100 JMB Coins; site-wide campaigns reserve at least 500. Pending campaigns are not shown until an admin approves them. Rejected campaigns are refunded by the server.
+- Targeted ad campaigns reserve at least 100 virtual JMB Coins; site-wide campaigns reserve at least 10,000. Approved site-wide campaigns can be rendered on the public landing page and eligible portal pages that include the sponsored-placement module, for up to 30 days. Pending campaigns are not shown until an admin approves them. Rejected campaigns are refunded by the server.
 - The advertising dashboard is `pages/ads.html`; sponsored placements are rendered by `js/ads/auto-render.js`.
 - Before the features can run live, deploy the updated Firestore rules and Cloud Functions from a trusted Firebase CLI session:
 
@@ -40,4 +42,4 @@ firebase deploy --only firestore:rules
 firebase deploy --only functions
 ```
 
-JMB Coins currently have an in-site reference value only. Real-money or LTC checkout is not enabled by this change. Configure and test payment handling separately before accepting funds.
+JMB Coins are virtual in-site credits only; they are not rupees, cash, or withdrawable funds. UPI, LTC and other crypto top-ups—and the proposed $100 global-ad package checkout—are intentionally disabled until a suitable payment provider, server-side payment verification, and appropriate account/guardian arrangements are configured and tested. Do not accept manual payment proofs or mark a payment as paid based on a submitted form.
