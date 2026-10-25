@@ -139,7 +139,7 @@ exports.adminGiveCoins=onCall(async request=>{
 // JMB Ad Network: all ad spending and refunds are handled server-side.
 const AD_PLACEMENTS = new Set(['games','minecraft','tools','support','dashboard']);
 const AD_MIN_TARGETED = 100;
-const AD_MIN_SITEWIDE = 500;
+const AD_MIN_SITEWIDE = 10000;
 const AD_DAYS = 30;
 const adRef = id => db.collection('adCampaigns').doc(id);
 const adClean = v => String(v || '').trim().slice(0, 90);
