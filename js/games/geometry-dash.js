@@ -1,6 +1,6 @@
 import {JMBMusic} from '../core/sound.js';
 import {app} from '../core/firebase.js';
-import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
+import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js';
 const awardDashCoin=app?httpsCallable(getFunctions(app,'asia-south1'),'awardGameCoins'):null;
 let dashRewardBusy=false;
 const c=document.querySelector('#gdCanvas'),ctx=c.getContext('2d'),start=document.querySelector('#gdStart'),jumpBtn=document.querySelector('#gdJump'),pauseBtn=document.querySelector('#gdPause');

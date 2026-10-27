@@ -1,5 +1,5 @@
 import {db,backendReady} from './firebase.js';
-import {collection,addDoc,doc,getDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {collection,addDoc,doc,getDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
 let user=null,mode='normal',queue=[],timer=null,ready=false;
 const key='jmb-telemetry-mode';

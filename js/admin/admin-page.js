@@ -3,7 +3,7 @@ import {app,db,backendReady} from '../core/firebase.js';
 import {
   collection,getDocs,query,orderBy,limit,doc,updateDoc,serverTimestamp,
   arrayUnion,setDoc,getDoc
-} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 import {toast,esc} from '../core/ui.js';
 
 const $ = s => document.querySelector(s);
@@ -384,7 +384,7 @@ async function loadUsers(){
   if(app){
     try{
       if(!functionsModule){
-        functionsModule = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
+        functionsModule = await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js');
       }
       const fn = functionsModule.getFunctions(app,'asia-south1');
       const call = functionsModule.httpsCallable(fn,'listUsers');
@@ -456,7 +456,7 @@ async function setRole(uid,role){
   if(!owner || !app) return;
   try{
     if(!functionsModule){
-      functionsModule = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
+      functionsModule = await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js');
     }
     const fn=functionsModule.getFunctions(app,'asia-south1');
     await functionsModule.httpsCallable(fn,'setUserRole')({uid,role});
@@ -478,7 +478,7 @@ async function giveCoins(){
   if(!Number.isFinite(amount)||amount<=0){toast('Enter a positive coin amount.');return}
   button.disabled=true;
   try{
-    if(!functionsModule)functionsModule=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
+    if(!functionsModule)functionsModule=await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js');
     const fnc=functionsModule.getFunctions(app,'asia-south1');
     const res=await functionsModule.httpsCallable(fnc,'adminGiveCoins')({email,amount,reason});
     if(status){status.textContent=`Gift notification sent to ${res.data?.email||email}. They must open their inbox and collect ${res.data?.amount||amount} virtual JMB Coins.`;status.classList.remove('hide')}

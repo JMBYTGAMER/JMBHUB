@@ -1,14 +1,14 @@
 import {guard} from '../core/auth-guard.js';
 import {db,backendReady} from '../core/firebase.js';
-import {collection,query,orderBy,limit,getDocs,addDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {collection,query,orderBy,limit,getDocs,addDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 import {$,toast} from '../core/ui.js';
 import {openWorkspace} from '../core/workspace-window.js';
 import {JMBMusic} from '../core/sound.js';
 import {app} from '../core/firebase.js';
-import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
+import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js';
 const awardCoins = app ? httpsCallable(getFunctions(app,'asia-south1'),'awardGameCoins') : null;
 
-let user,current='snake',sessionScore=0;
+let user,current='snake',sessionScore=0,sessionPlayed=0,sessionWins=0;
 const stage=$('#gameStage'),library=$('#gameLibrary');
 const games=[
  ['snake','🐍','Snake','Classic snake with touch + arrow controls.'],
@@ -31,6 +31,7 @@ const games=[
  ['coinflip','🪙','Coin Flip','Pick heads or tails and test your luck.'],
  ['higher','📈','Higher or Lower','Guess whether the next number is higher.'],
  ['word','🔤','Word Scramble','Unscramble a short word as fast as you can.'],
+ ['wordle','🟩','Word Puzzle','Guess the hidden five-letter word in six tries.'],
  ['aim','🎯','Aim Trainer','Tap targets quickly and improve your reaction.'],
  ['simon','🟣','Simon Lights','Repeat the growing color sequence.'],
  ['pong','🏓','Mini Pong','Keep the ball alive with the mobile paddle.'],
@@ -45,12 +46,31 @@ const games=[
  ['dice','🎲','Dice Duel','Roll against the computer and collect wins.'],
  ['oddone','🔎','Odd One Out','Find the tile that is different.'],
  ['colormemory','🧠','Color Memory','Remember the highlighted tile and repeat it.'],
- ['safegrid','🛡️','Safe Grid','Cross the grid without hitting hidden traps.']
+ ['safegrid','🛡️','Safe Grid','Cross the grid without hitting hidden traps.'],
+ ['pattern','🧩','Pattern Sprint','Remember and repeat a growing sequence of glowing tiles.']
 ];
 function safe(v){return String(v).replace(/[<>]/g,'')}
 function renderLibrary(){library.innerHTML=games.map(([id,icon,title,desc])=>`<button class="game-card" data-game="${id}"><div class="game-art">${icon}</div><h3>${title}</h3><p>${desc}</p><span class="pill">Play →</span></button>`).join('');library.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>switchGame(b.dataset.game))}
 function setHeader(g){const x=games.find(a=>a[0]===g);$('#activeGameTitle').textContent=x[2];$('#activeGameDesc').textContent=x[3];$('#lbTitle').textContent=x[2];library.querySelectorAll('.game-card').forEach(b=>b.classList.toggle('active',b.dataset.game===g))}
-async function saveScore(game,score){score=Math.max(0,Math.floor(Number(score)||0));sessionScore+=score;$('#overallScore').textContent=sessionScore;if(!backendReady||user?.demo||score<=0)return;try{await addDoc(collection(db,'leaderboards',game,'scores'),{uid:user.uid,player:user.displayName||user.email?.split('@')[0]||'Player',score,createdAt:serverTimestamp()});await loadBoard(game);}catch(e){toast('Score could not be saved: '+e.message)}if(awardCoins){try{const r=await awardCoins({gameId:game,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}catch(e){if(!String(e.code||'').includes('resource-exhausted'))console.warn('JMB Coin reward unavailable:',e.message)}}}
+async function saveScore(game,score){
+ score=Number(score);
+ if(!Number.isFinite(score))return;
+ score=Math.max(0,Math.min(100000,Math.floor(score)));
+ sessionScore+=score;sessionPlayed++;if(score>0)sessionWins++;
+ const points=$('#overallPoints')||$('#overallScore'),played=$('#overallPlayed'),wins=$('#overallWins');
+ if(points)points.textContent=String(sessionScore);
+ if(played)played.textContent=String(sessionPlayed);
+ if(wins)wins.textContent=String(sessionWins);
+ if(!backendReady||user?.demo||score<=0)return;
+ try{
+  await addDoc(collection(db,'leaderboards',game,'scores'),{uid:user.uid,player:user.displayName||user.email?.split('@')[0]||'Player',score,createdAt:serverTimestamp()});
+  await loadBoard(game);
+ }catch(e){toast('Score could not be saved: '+(e?.message||'Connection unavailable.'))}
+ if(awardCoins){
+  try{const r=await awardCoins({gameId:game,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}
+  catch(e){if(!String(e.code||'').includes('resource-exhausted'))console.warn('JMB Coin reward unavailable:',e.message)}
+ }
+}
 async function loadBoard(game){if(!backendReady){$('#leaderboardBody').innerHTML='<tr><td colspan="3" class="empty">Online leaderboard is temporarily unavailable.</td></tr>';return}try{const snap=await getDocs(query(collection(db,'leaderboards',game,'scores'),orderBy('score','desc'),limit(20)));$('#leaderboardBody').innerHTML=snap.empty?'<tr><td colspan="3" class="empty">No scores yet.</td></tr>':snap.docs.map((d,i)=>{const x=d.data();return `<tr><td>${i+1}</td><td>${safe(x.player||'Player')}</td><td>${Number(x.score||0)}</td></tr>`}).join('')}catch{$('#leaderboardBody').innerHTML='<tr><td colspan="3" class="empty">Leaderboard unavailable right now.</td></tr>'}}
 
 function snake(){stage.innerHTML='<div class="game-view"><h2 class="game-title">🐍 Snake</h2><div class="score-readout">Score: <b id="snakeScore">0</b></div><canvas id="snakeCanvas" width="320" height="320" style="max-width:100%;border:1px solid var(--line);border-radius:18px;background:#090d17;margin:14px 0;touch-action:none"></canvas><div class="dpad"><button class="up" data-d="up">▲</button><button class="left" data-d="left">◀</button><button class="down" data-d="down">▼</button><button class="right" data-d="right">▶</button></div><button class="btn btn-primary" id="snakeStart">Start / Restart</button><p class="muted">Use the arrows, keyboard or swipe on the board.</p></div>';
@@ -125,6 +145,61 @@ function jmbDash(){
  reset();
 }
 function guesscolor(){const target={r:Math.floor(Math.random()*256),g:Math.floor(Math.random()*256),b:Math.floor(Math.random()*256)};stage.innerHTML='<div class="game-view"><h2 class="game-title">🌈 Color Guess</h2><div id="guessColorBox" class="result-box" style="height:180px"></div><p class="muted">Enter RGB values.</p><div class="form-grid"><input id="gr" class="tool-input" type="number" min="0" max="255" placeholder="R"><input id="gg" class="tool-input" type="number" min="0" max="255" placeholder="G"><input id="gb" class="tool-input" type="number" min="0" max="255" placeholder="B"></div><button class="btn btn-primary" id="colorGuessBtn">Guess</button><p id="colorGuessMsg"></p></div>';$('#guessColorBox').style.background='rgb('+target.r+','+target.g+','+target.b+')';$('#colorGuessBtn').onclick=()=>{const d=Math.abs(Number($('#gr').value)-target.r)+Math.abs(Number($('#gg').value)-target.g)+Math.abs(Number($('#gb').value)-target.b);const score=Math.max(1,100-Math.floor(d/8));$('#colorGuessMsg').textContent='Score: '+score+'/100';saveScore('guesscolor',score)}}
-const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
+
+function pattern(){
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🧩 Pattern Sprint</h2><p class="muted">Watch the sequence, then tap the tiles in the same order. Each round adds one step.</p><div class="big-number" id="patternRound">Round 1</div><div id="patternGrid" style="display:grid;grid-template-columns:repeat(2,minmax(90px,150px));gap:12px;justify-content:center;margin:18px auto"></div><p id="patternStatus" class="result-box" role="status">Press Start when ready.</p><button id="patternStart" class="btn btn-primary">Start game</button></div>';
+ const grid=$('#patternGrid'),status=$('#patternStatus'),roundOut=$('#patternRound');const colors=['#7c5cff','#00c6ea','#35e6a2','#ffb84d'];let seq=[],input=[],round=0,playing=false,watching=false,score=0;
+ grid.innerHTML=colors.map((c,i)=>'<button type="button" data-tile="'+i+'" aria-label="Tile '+(i+1)+'" style="height:110px;border:1px solid rgba(255,255,255,.2);border-radius:18px;background:'+c+';opacity:.45;touch-action:manipulation;font-size:28px;color:#fff">'+(i+1)+'</button>').join('');
+ const tiles=[...grid.querySelectorAll('[data-tile]')];
+ const flash=async i=>{tiles[i].style.opacity='1';tiles[i].style.transform='scale(1.04)';await new Promise(r=>setTimeout(r,360));tiles[i].style.opacity='.45';tiles[i].style.transform='';await new Promise(r=>setTimeout(r,140))};
+ async function show(){watching=true;status.textContent='Watch the sequence…';for(const n of seq)await flash(n);watching=false;input=[];status.textContent='Your turn — repeat the sequence.'}
+ function finish(win){playing=false;watching=false;status.textContent=win?'Sequence complete! Final score: '+score:'Not quite — final score: '+score;$('#patternStart').textContent='Play again';saveScore('pattern',score);if(win)JMBMusic.win();else JMBMusic.lose()}
+ tiles.forEach((b)=>b.addEventListener('click',async()=>{if(!playing||watching)return;const n=Number(b.dataset.tile);await flash(n);if(n!==seq[input.length])return finish(false);input.push(n);if(input.length===seq.length){score+=round*10;round++;roundOut.textContent='Round '+round;seq.push(Math.floor(Math.random()*4));await new Promise(r=>setTimeout(r,300));show()}}));
+ $('#patternStart').onclick=()=>{seq=[];input=[];round=1;score=0;playing=true;roundOut.textContent='Round 1';$('#patternStart').textContent='Restart';seq.push(Math.floor(Math.random()*4));show()};
+}
+
+
+function wordle(){
+ const answers=['apple','grape','chair','plane','stone','cloud','train','bread','flame','light','dream','piano','lemon','water','smart','zebra','tiger','mouse','world','pixel','block','frame','shark','river','green','house','magic','ocean','music','plant','candy','beach','smile','robot','space','clock','heart','night','story','brave'];
+ const valid=new Set([...answers,'crane','slate','trace','spare','share','stone','proud','quick','sound','touch','bring','water','happy','party','watch','green','power','large','small','round','fresh','words','guess','treat','dream','carry','start','learn','build','chess','dance','fruit','bread','plant','sharp','world','peace','money','youth','place','think','write','speak','clean','clear','house','right','black','white','brown','funny','early','later','maybe','never','often','under','above','there','their','which','other','these','those','great','sweet','every','still','until','value','story','voice','sound','faith','smile','heart','brain','cloud','storm','space','pixel','games','tools','jmbhub']);
+ let answer=answers[Math.floor(Math.random()*answers.length)],guesses=[],finished=false;
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🟩 Word Puzzle</h2><p class="muted">Guess a five-letter word in six tries. Green = correct place, yellow = in the word, grey = not in the word.</p><div id="wordleBoard" style="display:grid;grid-template-rows:repeat(6,1fr);gap:6px;max-width:310px;margin:16px auto"></div><form id="wordleForm" class="tool-actions" style="justify-content:center"><input id="wordleInput" class="tool-input" maxlength="5" minlength="5" pattern="[A-Za-z]{5}" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="5-letter guess" style="max-width:230px;text-transform:uppercase" required><button class="btn btn-primary" id="wordleSubmit" type="submit">Guess</button></form><p id="wordleStatus" class="result-box" role="status">You have 6 tries.</p><button id="wordleAgain" class="btn btn-ghost" type="button">New word</button></div>';
+ const board=$('#wordleBoard'),input=$('#wordleInput'),status=$('#wordleStatus'),form=$('#wordleForm'),submit=$('#wordleSubmit');
+ const styles={correct:'background:#168c62;border-color:#2bc996',present:'background:#a87912;border-color:#f5cb53',absent:'background:#252c3e;border-color:#454d60'};
+ function render(){
+  board.innerHTML=Array.from({length:6},(_,row)=>'<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px">'+Array.from({length:5},(_,col)=>{
+   const guess=guesses[row];if(!guess)return '<div style="aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.025)"></div>';
+   const letter=guess[col];let kind='absent';
+   if(letter===answer[col])kind='correct';
+   else if(answer.includes(letter)){
+    const correctCount=answer.split('').filter((ch,i)=>ch===letter&&guess[i]===ch).length;
+    const before=guess.slice(0,col).split('').filter((ch,i)=>ch===letter&&answer[i]!==ch).length;
+    const total=answer.split('').filter(ch=>ch===letter).length;
+    if(before+correctCount<total)kind='present';
+   }
+   return '<div style="aspect-ratio:1;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;font-size:22px;font-weight:900;'+styles[kind]+'">'+letter.toUpperCase()+'</div>';
+  }).join('')+'</div>').join('');
+ }
+ function finish(won){
+  finished=true;input.disabled=true;submit.disabled=true;
+  status.textContent=won?'🎉 Great job! You found '+answer.toUpperCase()+'.':'The word was '+answer.toUpperCase()+'. Try another round!';
+  saveScore('wordle',won?100+(6-guesses.length)*10:1);
+  if(won)window.JMBMusic?.win?.();else window.JMBMusic?.lose?.();
+ }
+ form.addEventListener('submit',e=>{
+  e.preventDefault();if(finished)return;
+  const guess=input.value.trim().toLowerCase();
+  if(!/^[a-z]{5}$/.test(guess)){status.textContent='Enter exactly five letters.';return}
+  if(!valid.has(guess)){status.textContent='Try a common five-letter word.';return}
+  guesses.push(guess);input.value='';render();
+  if(guess===answer){finish(true);return}
+  if(guesses.length>=6){finish(false);return}
+  status.textContent=(6-guesses.length)+' tries left.';
+ });
+ $('#wordleAgain').onclick=()=>wordle();
+ render();input.focus();
+}
+
+const render={pattern,snake,wordle,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
 function switchGame(name){current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
 (async()=>{user=await guard();renderLibrary();})();
