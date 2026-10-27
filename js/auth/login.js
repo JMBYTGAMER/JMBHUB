@@ -1,12 +1,12 @@
 import {auth,backendReady} from '../core/firebase.js';
 import {APP_CONFIG} from '../config/app-config.js';
 import {$,toast} from '../core/ui.js';
-import {GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
+import {GoogleAuthProvider,signInWithPopup,signInWithRedirect,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,onAuthStateChanged,setPersistence,browserLocalPersistence,browserSessionPersistence} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 
 const modeBtn=$('#modeBtn'),modeText=$('#modeText'),submit=$('#submitBtn'),submitText=$('#submitText'),error=$('#authError'),email=$('#email'),password=$('#password'),confirm=$('#confirmPassword'),confirmWrap=$('#confirmWrap'),forgot=$('#forgotBtn'),remember=$('#remember');
 let signup=false;
 const nextPage=new URLSearchParams(location.search).get('next');
-const allowedNext=new Set(['dashboard.html','games.html','jmb-area.html','minecraft.html','ai.html','support.html','profile.html','admin.html']);
+const allowedNext=new Set(['dashboard.html','games.html','among-us.html','geometry-dash.html','jmb-area.html','minecraft.html','ai.html','support.html','profile.html','admin.html','coins.html','ads.html']);
 function afterAuth(){location.href=allowedNext.has(nextPage)?nextPage:'dashboard.html'}
 
 $('#year').textContent=new Date().getFullYear();
@@ -53,9 +53,15 @@ $('#googleBtn').onclick=async()=>{
     await persistence();
     const provider=new GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
+    const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(mobile){await signInWithRedirect(auth,provider);return}
     await signInWithPopup(auth,provider);
     afterAuth();
   }catch(e){
+    // Popup blockers are common in mobile browsers; fall back to Firebase redirect sign-in.
+    if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment'].includes(e?.code)){
+      try{await signInWithRedirect(auth,new GoogleAuthProvider());return}catch(redirectError){e=redirectError}
+    }
     console.error('[JMBHUB] Google sign-in failed:',e);
     showError(friendly(e));
   }
