@@ -63,8 +63,7 @@ async function loadTransactions(){
  const box=$('#coinTransactions');if(!box||!user)return;
  try{
   const r=await call('getCoinWallet')({});
-  owned=r.data.entitlements||{};renderPerks();renderStore();
-$('#refreshCoinInbox')?.addEventListener('click',()=>{if(user)loadTransactions();});
+  owned=r.data.entitlements||{};adCredits=Number(r.data.adCredits||0);renderPerks();renderStore();
   const tx=r.data.transactions||[];
   box.innerHTML=tx.length?tx.map(x=>{
    const amount=Number(x.amount||0),time=x.createdAt?new Date(x.createdAt).toLocaleString():'';
