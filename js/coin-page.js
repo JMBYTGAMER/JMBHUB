@@ -64,6 +64,7 @@ async function loadTransactions(){
  try{
   const r=await call('getCoinWallet')({});
   owned=r.data.entitlements||{};renderPerks();renderStore();
+$('#refreshCoinInbox')?.addEventListener('click',()=>{if(user)loadTransactions();});
   const tx=r.data.transactions||[];
   box.innerHTML=tx.length?tx.map(x=>{
    const amount=Number(x.amount||0),time=x.createdAt?new Date(x.createdAt).toLocaleString():'';
@@ -97,7 +98,8 @@ onAuthStateChanged(auth,u=>{
  },()=>{$('#coinStatus').textContent='Live wallet updates are unavailable; refresh to retry.'});
   unsubPerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
    const ent=snap.exists()?snap.data():{};owned=ent.perks||{};renderPerks();renderStore();
-  },()=>{});
+  },snap=>{const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();});
+  if(db)unsubInbox=onSnapshot(query(collection(db,'coinNotifications'),where('uid','==',u.uid)),renderInbox,()=>{const box=$('#coinInbox');if(box)box.innerHTML='<div class="empty">Inbox temporarily unavailable. Please refresh and try again.</div>';});
  }
  loadTransactions();
 });
