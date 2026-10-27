@@ -1,6 +1,6 @@
 import {auth,backendReady,db} from './firebase.js';
-import {onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-import {doc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import {doc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 import {APP_CONFIG} from '../config/app-config.js';
 import {$,setText} from './ui.js';
 
