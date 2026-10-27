@@ -1,6 +1,6 @@
 import {auth,db,app} from './core/firebase.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-import {doc,onSnapshot,collection,query,where} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {doc,onSnapshot,collection,query,where,getDocs} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
 
 const $=s=>document.querySelector(s);
@@ -96,7 +96,7 @@ async function buy(button){
   await loadTransactions();
  }catch(e){toast(e?.message||'Purchase failed.');button.disabled=false;button.textContent='Unlock item'}
 }
-$('#refreshCoinInbox')?.addEventListener('click',()=>{if(user)loadTransactions()});
+$('#refreshCoinInbox')?.addEventListener('click',async()=>{if(!user||!db)return;const button=$('#refreshCoinInbox');button.disabled=true;try{const snapshot=await getDocs(query(collection(db,'coinNotifications'),where('uid','==',user.uid)));renderInbox(snapshot);await loadTransactions()}catch{toast('Could not refresh inbox. Try again.')}finally{button.disabled=false}});
 onAuthStateChanged(auth,u=>{
  user=u||null;unsubWallet?.();unsubWallet=null;unsubPerks?.();unsubPerks=null;unsubInbox?.();unsubInbox=null;
  if(!u){location.replace('login.html?next=coins.html');return}
