@@ -45,7 +45,8 @@ const games=[
  ['dice','🎲','Dice Duel','Roll against the computer and collect wins.'],
  ['oddone','🔎','Odd One Out','Find the tile that is different.'],
  ['colormemory','🧠','Color Memory','Remember the highlighted tile and repeat it.'],
- ['safegrid','🛡️','Safe Grid','Cross the grid without hitting hidden traps.']
+ ['safegrid','🛡️','Safe Grid','Cross the grid without hitting hidden traps.'],
+ ['pattern','🧩','Pattern Sprint','Remember and repeat a growing sequence of glowing tiles.']
 ];
 function safe(v){return String(v).replace(/[<>]/g,'')}
 function renderLibrary(){library.innerHTML=games.map(([id,icon,title,desc])=>`<button class="game-card" data-game="${id}"><div class="game-art">${icon}</div><h3>${title}</h3><p>${desc}</p><span class="pill">Play →</span></button>`).join('');library.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>switchGame(b.dataset.game))}
@@ -125,6 +126,19 @@ function jmbDash(){
  reset();
 }
 function guesscolor(){const target={r:Math.floor(Math.random()*256),g:Math.floor(Math.random()*256),b:Math.floor(Math.random()*256)};stage.innerHTML='<div class="game-view"><h2 class="game-title">🌈 Color Guess</h2><div id="guessColorBox" class="result-box" style="height:180px"></div><p class="muted">Enter RGB values.</p><div class="form-grid"><input id="gr" class="tool-input" type="number" min="0" max="255" placeholder="R"><input id="gg" class="tool-input" type="number" min="0" max="255" placeholder="G"><input id="gb" class="tool-input" type="number" min="0" max="255" placeholder="B"></div><button class="btn btn-primary" id="colorGuessBtn">Guess</button><p id="colorGuessMsg"></p></div>';$('#guessColorBox').style.background='rgb('+target.r+','+target.g+','+target.b+')';$('#colorGuessBtn').onclick=()=>{const d=Math.abs(Number($('#gr').value)-target.r)+Math.abs(Number($('#gg').value)-target.g)+Math.abs(Number($('#gb').value)-target.b);const score=Math.max(1,100-Math.floor(d/8));$('#colorGuessMsg').textContent='Score: '+score+'/100';saveScore('guesscolor',score)}}
-const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
+
+function pattern(){
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🧩 Pattern Sprint</h2><p class="muted">Watch the sequence, then tap the tiles in the same order. Each round adds one step.</p><div class="big-number" id="patternRound">Round 1</div><div id="patternGrid" style="display:grid;grid-template-columns:repeat(2,minmax(90px,150px));gap:12px;justify-content:center;margin:18px auto"></div><p id="patternStatus" class="result-box" role="status">Press Start when ready.</p><button id="patternStart" class="btn btn-primary">Start game</button></div>';
+ const grid=$('#patternGrid'),status=$('#patternStatus'),roundOut=$('#patternRound');const colors=['#7c5cff','#00c6ea','#35e6a2','#ffb84d'];let seq=[],input=[],round=0,playing=false,watching=false,score=0;
+ grid.innerHTML=colors.map((c,i)=>'<button type="button" data-tile="'+i+'" aria-label="Tile '+(i+1)+'" style="height:110px;border:1px solid rgba(255,255,255,.2);border-radius:18px;background:'+c+';opacity:.45;touch-action:manipulation;font-size:28px;color:#fff">'+(i+1)+'</button>').join('');
+ const tiles=[...grid.querySelectorAll('[data-tile]')];
+ const flash=async i=>{tiles[i].style.opacity='1';tiles[i].style.transform='scale(1.04)';await new Promise(r=>setTimeout(r,360));tiles[i].style.opacity='.45';tiles[i].style.transform='';await new Promise(r=>setTimeout(r,140))};
+ async function show(){watching=true;status.textContent='Watch the sequence…';for(const n of seq)await flash(n);watching=false;input=[];status.textContent='Your turn — repeat the sequence.'}
+ function finish(win){playing=false;watching=false;status.textContent=win?'Sequence complete! Final score: '+score:'Not quite — final score: '+score;$('#patternStart').textContent='Play again';saveScore('pattern',score);if(win)JMBMusic.win();else JMBMusic.lose()}
+ tiles.forEach((b)=>b.addEventListener('click',async()=>{if(!playing||watching)return;const n=Number(b.dataset.tile);await flash(n);if(n!==seq[input.length])return finish(false);input.push(n);if(input.length===seq.length){score+=round*10;round++;roundOut.textContent='Round '+round;seq.push(Math.floor(Math.random()*4));await new Promise(r=>setTimeout(r,300));show()}}));
+ $('#patternStart').onclick=()=>{seq=[];input=[];round=1;score=0;playing=true;roundOut.textContent='Round 1';$('#patternStart').textContent='Restart';seq.push(Math.floor(Math.random()*4));show()};
+}
+
+const render={pattern,snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
 function switchGame(name){current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
 (async()=>{user=await guard();renderLibrary();})();
