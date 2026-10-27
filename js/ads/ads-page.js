@@ -1,6 +1,6 @@
 import {guard} from '../core/auth-guard.js';
 import {app} from '../core/firebase.js';
-import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
+import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js';
 import {$,toast} from '../core/ui.js';
 const functions=app?getFunctions(app,'asia-south1'):null;
 const call=name=>{if(!functions)throw new Error('Firebase is not configured.');return httpsCallable(functions,name)};
