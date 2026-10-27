@@ -1,10 +1,10 @@
 import {auth,db} from './firebase.js';
 import './coin-notifications.js';
 import {startGlobalCoin} from '../coin.js';
-import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
+import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import {initTelemetry} from './telemetry.js';
 import './sound.js';
-import {doc,getDoc} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {doc,getDoc} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 /* Shared JMBHUB portal behavior */
 const links=[
   ['⌂','Dashboard','dashboard.html'],
