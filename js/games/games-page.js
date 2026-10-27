@@ -1,11 +1,11 @@
 import {guard} from '../core/auth-guard.js';
 import {db,backendReady} from '../core/firebase.js';
-import {collection,query,orderBy,limit,getDocs,addDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {collection,query,orderBy,limit,getDocs,addDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 import {$,toast} from '../core/ui.js';
 import {openWorkspace} from '../core/workspace-window.js';
 import {JMBMusic} from '../core/sound.js';
 import {app} from '../core/firebase.js';
-import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
+import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js';
 const awardCoins = app ? httpsCallable(getFunctions(app,'asia-south1'),'awardGameCoins') : null;
 
 let user,current='snake',sessionScore=0,sessionPlayed=0,sessionWins=0;
