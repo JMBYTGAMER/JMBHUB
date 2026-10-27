@@ -16,6 +16,7 @@ const tools=[
  ['stopwatch','⏲️','Stopwatch','Track time with start, pause and reset.'],
  ['game','🕹️','Mini Game Maker','Generate a tiny downloadable HTML game.'],
  ['base64','🔐','Base64','Encode or decode text locally.'],
+ ['encrypt','🛡️','Text Encryptor','Encrypt and decrypt text with a passphrase using AES-GCM, entirely in your browser.'],
  ['encrypt','🛡️','AES Text Vault','Encrypt and decrypt text locally using AES-GCM and a password.'],
  ['strength','🔑','Password Strength','Check password length and common strength signals locally.'],
  ['hash','#️⃣','Hash Maker','Create a SHA-256 hash in your browser.'],
@@ -38,9 +39,43 @@ function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="tool
 function head(t){const x=tools.find(a=>a[0]===t);document.querySelector('#toolTitle').textContent=x[2];document.querySelector('#toolDesc').textContent=x[3];library.querySelectorAll('.tool-choice').forEach(b=>b.classList.toggle('active',b.dataset.tool===t))}
 const panel=x=>{stage.innerHTML='<div class="tool-panel">'+x+'</div>'};
 function openTool(name){head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,encrypt,strength,hash,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
-function calc(){panel('<input id="calcInput" class="tool-input" placeholder="Example: (25*4)/2+10"><div id="calcResult" class="result-box">0</div><div class="tool-actions"><button class="btn btn-primary" id="calcBtn">Calculate</button><button class="btn btn-ghost" id="calcClear">Clear</button></div>');const run=()=>{const v=document.querySelector('#calcInput').value.trim();if(!v)return;try{if(!/^[0-9+\-*/().%\s]+$/.test(v))throw Error();document.querySelector('#calcResult').textContent=String(Function('return ('+v+')')())}catch{document.querySelector('#calcResult').textContent='Invalid expression'}};document.querySelector('#calcBtn').onclick=run;document.querySelector('#calcClear').onclick=()=>{document.querySelector('#calcInput').value='';document.querySelector('#calcResult').textContent='0'}}
-function qr(){panel('<p class="muted">This generator uses the browser. Enter text, then create a QR.</p><input id="qrText" class="tool-input" placeholder="https://example.com"><div class="qr-box"><canvas id="qrCanvas" width="180" height="180"></canvas></div><button class="btn btn-primary" id="qrBtn">Generate QR</button>');document.querySelector('#qrBtn').onclick=()=>{const c=document.querySelector('#qrCanvas'),ctx=c.getContext('2d'),v=document.querySelector('#qrText').value||'JMBHUB';ctx.fillStyle='#fff';ctx.fillRect(0,0,180,180);ctx.fillStyle='#111';let seed=0;for(const ch of v)seed=(seed*31+ch.charCodeAt(0))>>>0;for(let y=0;y<21;y++)for(let x=0;x<21;x++){seed=(seed*1664525+1013904223)>>>0;if((seed>>>29)&1)ctx.fillRect(x*8+6,y*8+6,7,7)}}}
-async function scan(){panel('<p class="muted">Camera access stays in your browser. BarcodeDetector support varies by browser.</p><video id="qrVideo" class="tool-video" playsinline></video><div id="scanResult" class="result-box">Camera off</div><button class="btn btn-primary" id="scanBtn">Start Scanner</button>');const v=document.querySelector('#qrVideo'),out=document.querySelector('#scanResult');document.querySelector('#scanBtn').onclick=async()=>{try{if(!('BarcodeDetector'in window))throw Error('BarcodeDetector is not available in this browser.');const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=stream;await v.play();const detector=new BarcodeDetector({formats:['qr_code']});const loop=async()=>{if(!v.srcObject)return;try{const codes=await detector.detect(v);if(codes[0]){out.textContent=codes[0].rawValue;stream.getTracks().forEach(t=>t.stop());v.srcObject=null;return}}catch{}requestAnimationFrame(loop)};loop()}catch(e){out.textContent=e.message||'Camera could not start'}}}
+function evaluateMath(source){
+ const s=String(source).replace(/\s+/g,'');
+ const tokens=s.match(/(?:\d+(?:\.\d*)?|\.\d+|[()+\-*/%])/g)||[];
+ if(!s||tokens.join('')!==s)throw new Error('Invalid characters');
+ let pos=0;
+ const expression=()=>{let n=term();while(tokens[pos]==='+'||tokens[pos]==='-'){const op=tokens[pos++],r=term();n=op==='+'?n+r:n-r}return n};
+ const term=()=>{let n=factor();while(tokens[pos]==='*'||tokens[pos]==='/'||tokens[pos]==='%'){const op=tokens[pos++],r=factor();if((op==='/'||op==='%')&&r===0)throw new Error('Division by zero');n=op==='*'?n*r:op==='/'?n/r:n%r}return n};
+ const factor=()=>{const t=tokens[pos];if(t==='+'||t==='-'){pos++;const n=factor();return t==='-'?-n:n}if(t==='('){pos++;const n=expression();if(tokens[pos++]!==')')throw new Error('Missing )');return n}if(t===undefined||! /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(t))throw new Error('Expected number');pos++;return Number(t)};
+ const value=expression();if(pos!==tokens.length||!Number.isFinite(value))throw new Error('Invalid result');return value;
+}
+function calc(){panel('<input id="calcInput" class="tool-input" inputmode="decimal" placeholder="Example: (25*4)/2+10"><div id="calcResult" class="result-box">0</div><div class="tool-actions"><button class="btn btn-primary" id="calcBtn">Calculate</button><button class="btn btn-ghost" id="calcClear">Clear</button></div><p class="muted">Supports +, −, ×, ÷, %, decimals and parentheses. No code is executed.</p>');const run=()=>{const v=$('#calcInput').value.trim();if(!v)return;try{$('#calcResult').textContent=String(evaluateMath(v))}catch{$('#calcResult').textContent='Invalid expression'}};$('#calcBtn').onclick=run;$('#calcInput').addEventListener('keydown',e=>{if(e.key==='Enter')run()});$('#calcClear').onclick=()=>{$('#calcInput').value='';$('#calcResult').textContent='0'}}
+function loadQRCodeLibrary(){
+ if(window.QRCode)return Promise.resolve();
+ return new Promise((resolve,reject)=>{
+  let script=document.querySelector('script[data-jmb-qrcode]');
+  if(script){if(script.dataset.loaded==='true'&&window.QRCode){resolve();return}}
+  else{script=document.createElement('script');script.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';script.dataset.jmbQrcode='1';script.async=true;document.head.append(script)}
+  script.addEventListener('load',()=>{script.dataset.loaded='true';window.QRCode?resolve():reject(new Error('QR library failed to initialize'))},{once:true});
+  script.addEventListener('error',()=>reject(new Error('QR library could not load. Check your internet connection.')),{once:true});
+ });
+}
+function qr(){
+ panel('<p class="muted">Generate a real, scannable QR code from text or a URL. Your input stays in this page.</p><input id="qrText" class="tool-input" maxlength="2000" placeholder="https://example.com"><div id="qrHolder" class="qr-box" style="min-height:250px"></div><div class="tool-actions"><button class="btn btn-primary" id="qrBtn">Generate QR</button><button class="btn btn-ghost" id="qrDownload" disabled>Download PNG</button></div><p id="qrStatus" class="muted" role="status"></p>');
+ const holder=$('#qrHolder'),status=$('#qrStatus'),download=$('#qrDownload');
+ $('#qrBtn').onclick=async()=>{
+  const value=$('#qrText').value.trim();if(!value){status.textContent='Enter some text or a URL first.';return}
+  status.textContent='Generating…';download.disabled=true;holder.replaceChildren();
+  try{await loadQRCodeLibrary();new window.QRCode(holder,{text:value,width:240,height:240,colorDark:'#111326',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});status.textContent='QR code ready. Scan it to verify the contents.';download.disabled=false}
+  catch(e){status.textContent=e.message||'Could not create QR code.'}
+ };
+ download.onclick=()=>{
+  const canvas=holder.querySelector('canvas'),img=holder.querySelector('img'),url=canvas?.toDataURL('image/png')||img?.src;
+  if(!url){status.textContent='Generate a QR code before downloading.';return}
+  const a=document.createElement('a');a.href=url;a.download='jmbhub-qr.png';a.click();
+ };
+}
+function scan(){panel('<p class="muted">Camera access stays in your browser. BarcodeDetector support varies by browser.</p><video id="qrVideo" class="tool-video" playsinline></video><div id="scanResult" class="result-box">Camera off</div><button class="btn btn-primary" id="scanBtn">Start Scanner</button>');const v=document.querySelector('#qrVideo'),out=document.querySelector('#scanResult');document.querySelector('#scanBtn').onclick=async()=>{try{if(!('BarcodeDetector'in window))throw Error('BarcodeDetector is not available in this browser.');const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=stream;await v.play();const detector=new BarcodeDetector({formats:['qr_code']});const loop=async()=>{if(!v.srcObject)return;try{const codes=await detector.detect(v);if(codes[0]){out.textContent=codes[0].rawValue;stream.getTracks().forEach(t=>t.stop());v.srcObject=null;return}}catch{}requestAnimationFrame(loop)};loop()}catch(e){out.textContent=e.message||'Camera could not start'}}}
 function code(){panel('<textarea id="codeInput" class="tool-area" placeholder="<h1>Hello JMB</h1>"></textarea><iframe id="codeFrame" class="code-frame" sandbox="allow-scripts"></iframe><button class="btn btn-primary" id="codeRun">Run Code</button>');document.querySelector('#codeRun').onclick=()=>{document.querySelector('#codeFrame').srcdoc=document.querySelector('#codeInput').value}}
 function counter(){panel('<textarea id="countText" class="tool-area" placeholder="Type or paste text here..."></textarea><div class="grid grid-3"><div class="result-box"><span>Characters: <b id="chars">0</b></span></div><div class="result-box"><span>Words: <b id="words">0</b></span></div><div class="result-box"><span>Lines: <b id="lines">0</b></span></div></div>');document.querySelector('#countText').oninput=e=>{const t=e.target.value;document.querySelector('#chars').textContent=t.length;document.querySelector('#words').textContent=t.trim()?t.trim().split(/\s+/).length:0;document.querySelector('#lines').textContent=t? t.split(/\n/).length:0}}
 function json(){panel('<textarea id="jsonInput" class="tool-area" placeholder="{&quot;name&quot;:&quot;JMB&quot;}"></textarea><textarea id="jsonOutput" class="tool-area" readonly placeholder="Formatted JSON"></textarea><button class="btn btn-primary" id="jsonBtn">Format JSON</button>');document.querySelector('#jsonBtn').onclick=()=>{try{document.querySelector('#jsonOutput').value=JSON.stringify(JSON.parse(document.querySelector('#jsonInput').value),null,2)}catch{document.querySelector('#jsonOutput').value='Invalid JSON'}}}
@@ -77,6 +112,44 @@ function strength(){
  panel('<div class="field"><label>Password to check (processed locally)</label><input id="strengthIn" class="tool-input" type="password" autocomplete="off" placeholder="Type a password to evaluate"><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="strengthShow" type="checkbox"> Show password</label></div><div class="result-box" id="strengthScore">Enter a password to check it.</div><ul id="strengthHints" class="muted"></ul>');
  $('#strengthShow').onchange=()=>$('#strengthIn').type=$('#strengthShow').checked?'text':'password';
  $('#strengthIn').oninput=()=>{const p=$('#strengthIn').value;let score=0;const tests=[p.length>=12,p.length>=16,/[a-z]/.test(p),/[A-Z]/.test(p),/[0-9]/.test(p),/[^A-Za-z0-9]/.test(p)];score=tests.filter(Boolean).length;const label=!p?'Enter a password':score<=2?'Weak':score<=4?'Fair':'Strong';$('#strengthScore').textContent=label+' · '+score+'/6 checks';$('#strengthHints').innerHTML=['Use 12–16+ characters','Mix uppercase and lowercase letters','Include numbers and symbols','Avoid names, common phrases, and reused passwords'].map(x=>'<li>'+x+'</li>').join('')};
+}
+
+
+function encrypt(){
+ panel('<p class="muted">AES-GCM encryption with a PBKDF2-derived key. Text is processed locally; it is not uploaded. Keep your passphrase safe—there is no recovery if you lose it.</p><div class="field"><label for="cryptoPass">Passphrase</label><input id="cryptoPass" class="tool-input" type="password" autocomplete="new-password" maxlength="512" placeholder="Use a long, unique passphrase"></div><div class="field"><label for="cryptoInput">Text to encrypt or encrypted JMB text</label><textarea id="cryptoInput" class="tool-area" maxlength="200000" placeholder="Enter your message here, or paste a JMBENC1 value to decrypt."></textarea></div><div class="tool-actions"><button class="btn btn-primary" id="cryptoEncrypt">Encrypt text</button><button class="btn btn-ghost" id="cryptoDecrypt">Decrypt text</button><button class="btn btn-ghost" id="cryptoCopy">Copy output</button></div><div class="field"><label for="cryptoOutput">Output</label><textarea id="cryptoOutput" class="tool-area" readonly placeholder="Encrypted or decrypted result appears here."></textarea></div><p id="cryptoStatus" class="notice" role="status">Encrypted output starts with JMBENC1:. All encryption happens in this browser.</p>');
+ const status=$('#cryptoStatus'),input=$('#cryptoInput'),output=$('#cryptoOutput'),pass=$('#cryptoPass');
+ const setStatus=(m,ok=false)=>{status.textContent=m;status.classList.toggle('success',ok)};
+ const bytesToB64=bytes=>{let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(s)};
+ const b64ToBytes=s=>{const bin=atob(s);return Uint8Array.from(bin,c=>c.charCodeAt(0))};
+ const derive=async(password,salt)=>{
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+ };
+ $('#cryptoEncrypt').onclick=async()=>{
+  const password=pass.value,text=input.value;if(!password){setStatus('Enter a passphrase first.');return}if(!text){setStatus('Enter text to encrypt first.');return}
+  const btn=$('#cryptoEncrypt');btn.disabled=true;setStatus('Encrypting locally…');
+  try{
+   if(!crypto.subtle)throw new Error('Web Crypto is unavailable. Open JMBHUB over HTTPS in a supported browser.');
+   const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),key=await derive(password,salt);
+   const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(text)));
+   const packed=new Uint8Array(salt.length+iv.length+cipher.length);packed.set(salt,0);packed.set(iv,salt.length);packed.set(cipher,salt.length+iv.length);
+   output.value='JMBENC1:'+bytesToB64(packed);setStatus('Encrypted successfully. Save the output and remember your passphrase.',true);window.JMBMusic?.win?.();
+  }catch(e){setStatus(e.message||'Encryption failed.')}
+  finally{btn.disabled=false}
+ };
+ $('#cryptoDecrypt').onclick=async()=>{
+  const password=pass.value,value=input.value.trim();if(!password){setStatus('Enter the original passphrase first.');return}
+  if(!value.startsWith('JMBENC1:')){setStatus('This does not look like JMBENC1 encrypted text.');return}
+  const btn=$('#cryptoDecrypt');btn.disabled=true;setStatus('Decrypting locally…');
+  try{
+   if(!crypto.subtle)throw new Error('Web Crypto is unavailable. Open JMBHUB over HTTPS in a supported browser.');
+   const packed=b64ToBytes(value.slice(8));if(packed.length<45)throw new Error('Encrypted data is incomplete.');
+   const salt=packed.slice(0,16),iv=packed.slice(16,28),cipher=packed.slice(28),key=await derive(password,salt);
+   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,cipher);output.value=new TextDecoder().decode(plain);setStatus('Decrypted successfully. The passphrase matched.',true);window.JMBMusic?.notify?.();
+  }catch(e){output.value='';setStatus(e.name==='OperationError'?'Decryption failed. Check the passphrase or encrypted text.':(e.message||'Decryption failed.'))}
+  finally{btn.disabled=false}
+ };
+ $('#cryptoCopy').onclick=async()=>{try{await navigator.clipboard.writeText(output.value);setStatus('Output copied to clipboard.',true)}catch{output.focus();output.select();setStatus('Clipboard access was blocked; select and copy the output manually.')}};
 }
 
 function base64(){panel('<div class="field"><label>Text</label><textarea id="b64in" class="tool-area"></textarea></div><div class="tool-actions"><button class="btn btn-primary" id="b64e">Encode</button><button class="btn btn-ghost" id="b64d">Decode</button></div><textarea id="b64out" class="tool-area" readonly></textarea>');const out=$('#b64out');$('#b64e').onclick=()=>out.value=btoa(unescape(encodeURIComponent($('#b64in').value)));$('#b64d').onclick=()=>{try{out.value=decodeURIComponent(escape(atob($('#b64in').value)))}catch{out.value='Invalid Base64'}}}
