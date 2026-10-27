@@ -31,6 +31,7 @@ const games=[
  ['coinflip','🪙','Coin Flip','Pick heads or tails and test your luck.'],
  ['higher','📈','Higher or Lower','Guess whether the next number is higher.'],
  ['word','🔤','Word Scramble','Unscramble a short word as fast as you can.'],
+ ['wordle','🟩','Word Puzzle','Guess the hidden five-letter word in six tries.'],
  ['aim','🎯','Aim Trainer','Tap targets quickly and improve your reaction.'],
  ['simon','🟣','Simon Lights','Repeat the growing color sequence.'],
  ['pong','🏓','Mini Pong','Keep the ball alive with the mobile paddle.'],
@@ -155,6 +156,48 @@ function pattern(){
  function finish(win){playing=false;watching=false;status.textContent=win?'Sequence complete! Final score: '+score:'Not quite — final score: '+score;$('#patternStart').textContent='Play again';saveScore('pattern',score);if(win)JMBMusic.win();else JMBMusic.lose()}
  tiles.forEach((b)=>b.addEventListener('click',async()=>{if(!playing||watching)return;const n=Number(b.dataset.tile);await flash(n);if(n!==seq[input.length])return finish(false);input.push(n);if(input.length===seq.length){score+=round*10;round++;roundOut.textContent='Round '+round;seq.push(Math.floor(Math.random()*4));await new Promise(r=>setTimeout(r,300));show()}}));
  $('#patternStart').onclick=()=>{seq=[];input=[];round=1;score=0;playing=true;roundOut.textContent='Round 1';$('#patternStart').textContent='Restart';seq.push(Math.floor(Math.random()*4));show()};
+}
+
+
+function wordle(){
+ const answers=['apple','grape','chair','plane','stone','cloud','train','bread','flame','light','dream','piano','lemon','water','smart','zebra','tiger','mouse','world','pixel','block','frame','shark','river','green','house','magic','ocean','music','plant','candy','beach','smile','robot','space','clock','heart','night','story','brave'];
+ const valid=new Set([...answers,'crane','slate','trace','spare','share','stone','proud','quick','sound','touch','bring','water','happy','party','watch','green','power','large','small','round','fresh','words','guess','treat','dream','carry','start','learn','build','chess','dance','fruit','bread','plant','sharp','world','peace','money','youth','place','think','write','speak','clean','clear','house','right','black','white','brown','funny','early','later','maybe','never','often','under','above','there','their','which','other','these','those','great','sweet','every','still','until','value','story','voice','sound','faith','smile','heart','brain','cloud','storm','space','pixel','games','tools','jmbhub']);
+ let answer=answers[Math.floor(Math.random()*answers.length)],guesses=[],finished=false;
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🟩 Word Puzzle</h2><p class="muted">Guess a five-letter word in six tries. Green = correct place, yellow = in the word, grey = not in the word.</p><div id="wordleBoard" style="display:grid;grid-template-rows:repeat(6,1fr);gap:6px;max-width:310px;margin:16px auto"></div><form id="wordleForm" class="tool-actions" style="justify-content:center"><input id="wordleInput" class="tool-input" maxlength="5" minlength="5" pattern="[A-Za-z]{5}" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="5-letter guess" style="max-width:230px;text-transform:uppercase" required><button class="btn btn-primary" id="wordleSubmit" type="submit">Guess</button></form><p id="wordleStatus" class="result-box" role="status">You have 6 tries.</p><button id="wordleAgain" class="btn btn-ghost" type="button">New word</button></div>';
+ const board=$('#wordleBoard'),input=$('#wordleInput'),status=$('#wordleStatus'),form=$('#wordleForm'),submit=$('#wordleSubmit');
+ const styles={correct:'background:#168c62;border-color:#2bc996',present:'background:#a87912;border-color:#f5cb53',absent:'background:#252c3e;border-color:#454d60'};
+ function render(){
+  board.innerHTML=Array.from({length:6},(_,row)=>'<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px">'+Array.from({length:5},(_,col)=>{
+   const guess=guesses[row];if(!guess)return '<div style="aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.025)"></div>';
+   const letter=guess[col];let kind='absent';
+   if(letter===answer[col])kind='correct';
+   else if(answer.includes(letter)){
+    const correctCount=answer.split('').filter((ch,i)=>ch===letter&&guess[i]===ch).length;
+    const before=guess.slice(0,col).split('').filter((ch,i)=>ch===letter&&answer[i]!==ch).length;
+    const total=answer.split('').filter(ch=>ch===letter).length;
+    if(before+correctCount<total)kind='present';
+   }
+   return '<div style="aspect-ratio:1;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;font-size:22px;font-weight:900;'+styles[kind]+'">'+letter.toUpperCase()+'</div>';
+  }).join('')+'</div>').join('');
+ }
+ function finish(won){
+  finished=true;input.disabled=true;submit.disabled=true;
+  status.textContent=won?'🎉 Great job! You found '+answer.toUpperCase()+'.':'The word was '+answer.toUpperCase()+'. Try another round!';
+  saveScore('wordle',won?100+(6-guesses.length)*10:1);
+  if(won)window.JMBMusic?.win?.();else window.JMBMusic?.lose?.();
+ }
+ form.addEventListener('submit',e=>{
+  e.preventDefault();if(finished)return;
+  const guess=input.value.trim().toLowerCase();
+  if(!/^[a-z]{5}$/.test(guess)){status.textContent='Enter exactly five letters.';return}
+  if(!valid.has(guess)){status.textContent='Try a common five-letter word.';return}
+  guesses.push(guess);input.value='';render();
+  if(guess===answer){finish(true);return}
+  if(guesses.length>=6){finish(false);return}
+  status.textContent=(6-guesses.length)+' tries left.';
+ });
+ $('#wordleAgain').onclick=()=>wordle();
+ render();input.focus();
 }
 
 const render={pattern,snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
