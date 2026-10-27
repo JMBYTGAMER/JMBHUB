@@ -41,8 +41,14 @@ service cloud.firestore {
 
     match /leaderboards/{game}/scores/{scoreId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.score is number;
-      allow update, delete: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      // Client game scores are untrusted: cap values and prevent players rewriting old entries.
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.score is number
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 100000
+        && request.resource.data.player is string;
+      allow update, delete: if admin();
     }
 
     match /globalChat/{messageId} {
