@@ -92,15 +92,19 @@ async function buy(button){
 onAuthStateChanged(auth,u=>{
  user=u||null;unsubWallet?.();unsubWallet=null;unsubPerks?.();unsubPerks=null;unsubInbox?.();unsubInbox=null;
  if(!u){location.replace('login.html?next=coins.html');return}
- if(db)unsubWallet=onSnapshot(doc(db,'wallets',u.uid),snap=>{
-  const balance=Number(snap.exists()?snap.data().balance||0:0);
-  $('#coinBalance').textContent=money(balance);
- },()=>{$('#coinStatus').textContent='Live wallet updates are unavailable; refresh to retry.'});
+ if(db){
+  unsubWallet=onSnapshot(doc(db,'wallets',u.uid),snap=>{
+   $('#coinBalance').textContent=money(snap.exists()?snap.data().balance||0:0);
+  },()=>{$('#coinStatus').textContent='Live wallet updates are unavailable; refresh to retry.'});
   unsubPerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
-   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();
+   const ent=snap.exists()?snap.data():{};
+   owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();
   },()=>{});
-  if(db)unsubInbox=onSnapshot(query(collection(db,'coinNotifications'),where('uid','==',u.uid)),renderInbox,()=>{const box=$('#coinInbox');if(box)box.innerHTML='<div class="empty">Inbox temporarily unavailable. Please refresh and try again.</div>';});
+  unsubInbox=onSnapshot(query(collection(db,'coinNotifications'),where('uid','==',u.uid)),renderInbox,()=>{
+   const box=$('#coinInbox');if(box)box.innerHTML='<div class="empty">Inbox temporarily unavailable. Please refresh and try again.</div>';
+  });
  }
  loadTransactions();
 });
+$('#refreshCoinInbox')?.addEventListener('click',()=>{if(user)loadTransactions();});
 renderStore();
