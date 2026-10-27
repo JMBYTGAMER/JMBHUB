@@ -97,8 +97,8 @@ onAuthStateChanged(auth,u=>{
   $('#coinBalance').textContent=money(balance);
  },()=>{$('#coinStatus').textContent='Live wallet updates are unavailable; refresh to retry.'});
   unsubPerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
-   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};renderPerks();renderStore();
-  },snap=>{const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();});
+   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();
+  },()=>{});
   if(db)unsubInbox=onSnapshot(query(collection(db,'coinNotifications'),where('uid','==',u.uid)),renderInbox,()=>{const box=$('#coinInbox');if(box)box.innerHTML='<div class="empty">Inbox temporarily unavailable. Please refresh and try again.</div>';});
  }
  loadTransactions();
