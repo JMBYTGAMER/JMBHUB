@@ -2,6 +2,7 @@ import {guard} from '../core/auth-guard.js';
 import {toast} from '../core/ui.js';
 import {openWorkspace} from '../core/workspace-window.js';
 const library=document.querySelector('#toolLibrary'),stage=document.querySelector('#toolStage');
+let activeToolCleanup=null;
 const tools=[
  ['calc','🧮','Calculator','Fast expression calculator.'],
  ['qr','🔳','QR Generator','Create a QR code from text or a URL.'],
@@ -38,7 +39,7 @@ const tools=[
 function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="tool-choice" data-tool="${id}"><div class="tool-art">${i}</div><h3>${n}</h3><p>${d}</p><span class="pill">Open →</span></button>`).join('');library.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>openTool(b.dataset.tool))}
 function head(t){const x=tools.find(a=>a[0]===t);document.querySelector('#toolTitle').textContent=x[2];document.querySelector('#toolDesc').textContent=x[3];library.querySelectorAll('.tool-choice').forEach(b=>b.classList.toggle('active',b.dataset.tool===t))}
 const panel=x=>{stage.innerHTML='<div class="tool-panel">'+x+'</div>'};
-function openTool(name){head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,encrypt,strength,hash,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
+function openTool(name){activeToolCleanup?.();activeToolCleanup=null;head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,encrypt,strength,hash,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:()=>{activeToolCleanup?.();activeToolCleanup=null}})}
 function evaluateMath(source){
  const s=String(source).replace(/\s+/g,'');
  const tokens=s.match(/(?:\d+(?:\.\d*)?|\.\d+|[()+\-*/%])/g)||[];
@@ -75,15 +76,71 @@ function qr(){
   const a=document.createElement('a');a.href=url;a.download='jmbhub-qr.png';a.click();
  };
 }
-function scan(){panel('<p class="muted">Camera access stays in your browser. BarcodeDetector support varies by browser.</p><video id="qrVideo" class="tool-video" playsinline></video><div id="scanResult" class="result-box">Camera off</div><button class="btn btn-primary" id="scanBtn">Start Scanner</button>');const v=document.querySelector('#qrVideo'),out=document.querySelector('#scanResult');document.querySelector('#scanBtn').onclick=async()=>{try{if(!('BarcodeDetector'in window))throw Error('BarcodeDetector is not available in this browser.');const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=stream;await v.play();const detector=new BarcodeDetector({formats:['qr_code']});const loop=async()=>{if(!v.srcObject)return;try{const codes=await detector.detect(v);if(codes[0]){out.textContent=codes[0].rawValue;stream.getTracks().forEach(t=>t.stop());v.srcObject=null;return}}catch{}requestAnimationFrame(loop)};loop()}catch(e){out.textContent=e.message||'Camera could not start'}}}
+function scan(){
+ panel('<p class="muted">Camera permission is requested only after you tap Start. Scanning happens in your browser.</p><video id="qrVideo" class="tool-video" playsinline></video><div id="scanResult" class="result-box">Camera off</div><button class="btn btn-primary" id="scanBtn">Start Scanner</button>');
+ const v=$('#qrVideo'),out=$('#scanResult'),button=$('#scanBtn');
+ let stream=null,raf=0,running=false;
+ const stop=()=>{
+  running=false;if(raf)cancelAnimationFrame(raf);raf=0;
+  stream?.getTracks?.().forEach(t=>t.stop());stream=null;
+  if(v.srcObject)v.srcObject=null;
+  button.disabled=false;
+ };
+ activeToolCleanup=stop;
+ button.onclick=async()=>{
+  button.disabled=true;out.textContent='Requesting camera…';
+  try{
+   if(!('BarcodeDetector'in window))throw new Error('This browser does not support the built-in QR detector. Try a newer browser.');
+   if(!navigator.mediaDevices?.getUserMedia)throw new Error('Camera access requires HTTPS and a supported browser.');
+   running=true;stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+   if(!running){stream.getTracks().forEach(t=>t.stop());stream=null;return}
+   v.srcObject=stream;await v.play();
+   const detector=new BarcodeDetector({formats:['qr_code']});
+   button.textContent='Scanning…';
+   const loop=async()=>{
+    if(!running||!v.srcObject)return;
+    try{
+     const codes=await detector.detect(v);
+     if(codes[0]){out.textContent=codes[0].rawValue;stop();button.textContent='Start Scanner';return}
+    }catch{}
+    if(running)raf=requestAnimationFrame(loop);
+   };
+   loop();
+  }catch(e){out.textContent=e.message||'Camera could not start.';stop();button.textContent='Start Scanner'}
+ };
+}
 function code(){panel('<textarea id="codeInput" class="tool-area" placeholder="<h1>Hello JMB</h1>"></textarea><iframe id="codeFrame" class="code-frame" sandbox="allow-scripts"></iframe><button class="btn btn-primary" id="codeRun">Run Code</button>');document.querySelector('#codeRun').onclick=()=>{document.querySelector('#codeFrame').srcdoc=document.querySelector('#codeInput').value}}
 function counter(){panel('<textarea id="countText" class="tool-area" placeholder="Type or paste text here..."></textarea><div class="grid grid-3"><div class="result-box"><span>Characters: <b id="chars">0</b></span></div><div class="result-box"><span>Words: <b id="words">0</b></span></div><div class="result-box"><span>Lines: <b id="lines">0</b></span></div></div>');document.querySelector('#countText').oninput=e=>{const t=e.target.value;document.querySelector('#chars').textContent=t.length;document.querySelector('#words').textContent=t.trim()?t.trim().split(/\s+/).length:0;document.querySelector('#lines').textContent=t? t.split(/\n/).length:0}}
 function json(){panel('<textarea id="jsonInput" class="tool-area" placeholder="{&quot;name&quot;:&quot;JMB&quot;}"></textarea><textarea id="jsonOutput" class="tool-area" readonly placeholder="Formatted JSON"></textarea><button class="btn btn-primary" id="jsonBtn">Format JSON</button>');document.querySelector('#jsonBtn').onclick=()=>{try{document.querySelector('#jsonOutput').value=JSON.stringify(JSON.parse(document.querySelector('#jsonInput').value),null,2)}catch{document.querySelector('#jsonOutput').value='Invalid JSON'}}}
 function convert(){panel('<div class="form-grid"><div class="field"><label>Value</label><input id="cv" type="number" value="1"></div><div class="field"><label>Type</label><select id="ct"><option value="kmmi">Kilometres → Miles</option><option value="mikm">Miles → Kilometres</option><option value="kg">Kilograms → Pounds</option><option value="lb">Pounds → Kilograms</option><option value="cf">Celsius → Fahrenheit</option><option value="fc">Fahrenheit → Celsius</option></select></div></div><div id="cvout" class="result-box">1</div><button class="btn btn-primary" id="cvbtn">Convert</button>');document.querySelector('#cvbtn').onclick=()=>{const v=Number(document.querySelector('#cv').value),t=document.querySelector('#ct').value,m={kmmi:v=>v*.621371,mikm:v=>v*1.609344,kg:v=>v*2.20462,lb:v=>v*.453592,cf:v=>v*9/5+32,fc:v=>(v-32)*5/9};document.querySelector('#cvout').textContent=m[t](v).toFixed(4).replace(/\.0+$/,'')}}
 function color(){panel('<div class="form-grid"><div class="field"><label>HEX</label><input id="hex" class="tool-input" value="#7c5cff"></div><div class="field"><label>RGB</label><input id="rgb" class="tool-input" readonly></div></div><div id="colorPreview" class="result-box" style="height:130px;justify-content:center">Color preview</div><button class="btn btn-primary" id="colorBtn">Convert</button>');document.querySelector('#colorBtn').onclick=()=>{const h=document.querySelector('#hex').value.trim().replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(h))return;const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);document.querySelector('#rgb').value=`rgb(${r}, ${g}, ${b})`;document.querySelector('#colorPreview').style.background='#'+h}}
 function uuid(){panel('<div id="uuidOut" class="result-box">Click generate.</div><button class="btn btn-primary" id="uuidBtn">Generate UUID</button><button class="btn btn-ghost" id="uuidCopy">Copy</button>');const out=document.querySelector('#uuidOut');document.querySelector('#uuidBtn').onclick=()=>out.textContent=crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);document.querySelector('#uuidCopy').onclick=()=>navigator.clipboard?.writeText(out.textContent)}
-function timer(){panel('<div class="timer-display" id="timerDisplay">05:00</div><div class="form-grid"><div class="field"><label>Minutes</label><input id="tm" type="number" min="0" value="5"></div><div class="field"><label>Seconds</label><input id="ts" type="number" min="0" max="59" value="0"></div></div><div class="tool-actions"><button class="btn btn-primary" id="timerStart">Start</button><button class="btn btn-ghost" id="timerReset">Reset</button></div>');let iv,remain=300;const display=()=>{document.querySelector('#timerDisplay').textContent=String(Math.floor(remain/60)).padStart(2,'0')+':'+String(remain%60).padStart(2,'0')};display();document.querySelector('#timerStart').onclick=()=>{clearInterval(iv);remain=Number(document.querySelector('#tm').value)*60+Number(document.querySelector('#ts').value);display();iv=setInterval(()=>{remain=Math.max(0,remain-1);display();if(!remain){clearInterval(iv);toast('Timer finished','good')}},1000)};document.querySelector('#timerReset').onclick=()=>{clearInterval(iv);remain=300;display()}}
-function stopwatch(){panel('<div class="timer-display" id="sw">00:00.00</div><div class="tool-actions"><button class="btn btn-primary" id="swStart">Start</button><button class="btn btn-ghost" id="swReset">Reset</button></div>');let iv,start=0,elapsed=0;const out=document.querySelector('#sw');const draw=()=>{const ms=elapsed+(start?Date.now()-start:0),sec=Math.floor(ms/1000),hund=Math.floor(ms%1000/10);out.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')+'.'+String(hund).padStart(2,'0')};document.querySelector('#swStart').onclick=()=>{if(start){elapsed+=Date.now()-start;start=0;clearInterval(iv);return}start=Date.now();iv=setInterval(draw,30)};document.querySelector('#swReset').onclick=()=>{clearInterval(iv);start=0;elapsed=0;draw()}}
+function timer(){
+ panel('<div class="timer-display" id="timerDisplay">05:00</div><div class="form-grid"><div class="field"><label>Minutes</label><input id="tm" type="number" min="0" max="999" value="5"></div><div class="field"><label>Seconds</label><input id="ts" type="number" min="0" max="59" value="0"></div></div><div class="tool-actions"><button class="btn btn-primary" id="timerStart">Start</button><button class="btn btn-ghost" id="timerReset">Reset</button></div>');
+ let iv=null,remain=300;
+ const readInput=()=>Math.max(0,Math.min(999,Math.floor(Number($('#tm').value)||0)))*60+Math.max(0,Math.min(59,Math.floor(Number($('#ts').value)||0)));
+ const display=()=>{const el=$('#timerDisplay');if(el)el.textContent=String(Math.floor(remain/60)).padStart(2,'0')+':'+String(remain%60).padStart(2,'0')};
+ const stop=()=>{clearInterval(iv);iv=null};
+ activeToolCleanup=stop;display();
+ $('#timerStart').onclick=()=>{
+  if(iv){stop();$('#timerStart').textContent='Resume';return}
+  if(remain<=0)remain=readInput();
+  if(remain<=0){toast('Set a timer longer than zero.');return}
+  $('#timerStart').textContent='Pause';
+  iv=setInterval(()=>{remain=Math.max(0,remain-1);display();if(!remain){stop();$('#timerStart').textContent='Start again';toast('Timer finished','good');window.JMBMusic?.notify?.()}},1000);
+ };
+ $('#timerReset').onclick=()=>{stop();remain=readInput();display();$('#timerStart').textContent='Start'};
+}
+function stopwatch(){
+ panel('<div class="timer-display" id="sw">00:00.00</div><div class="tool-actions"><button class="btn btn-primary" id="swStart">Start</button><button class="btn btn-ghost" id="swReset">Reset</button></div>');
+ let iv=null,start=0,elapsed=0;const out=$('#sw'),button=$('#swStart');
+ const draw=()=>{const ms=elapsed+(start?Date.now()-start:0),sec=Math.floor(ms/1000),hund=Math.floor(ms%1000/10);out.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')+'.'+String(hund).padStart(2,'0')};
+ const pause=()=>{clearInterval(iv);iv=null;if(start){elapsed+=Date.now()-start;start=0}button.textContent=elapsed?'Resume':'Start';draw()};
+ activeToolCleanup=()=>{clearInterval(iv);iv=null;start=0};
+ button.onclick=()=>{if(start){pause();return}start=Date.now();button.textContent='Pause';clearInterval(iv);iv=setInterval(draw,30)};
+ $('#swReset').onclick=()=>{clearInterval(iv);iv=null;start=0;elapsed=0;button.textContent='Start';draw()};
+ draw();
+}
 function game(){panel('<input id="gameName" class="tool-input" placeholder="My JMB Game"><textarea id="gameDesc" class="tool-area" placeholder="Tap the button to score points."></textarea><div class="tool-actions"><button class="btn btn-primary" id="makeGame">Generate</button><a id="downloadGame" class="btn btn-ghost hide" download="jmb-game.html">Download HTML</a></div>');document.querySelector('#makeGame').onclick=()=>{const n=(document.querySelector('#gameName').value||'JMB Mini Game').replace(/</g,'');const d=(document.querySelector('#gameDesc').value||'Tap to score.').replace(/</g,'');const html='<!doctype html><html><body style="font-family:system-ui;text-align:center;padding:40px"><h1>'+n+'</h1><p>'+d+'</p><button onclick="this.textContent=\'Score: \'+(Number(this.dataset.s||0)+1);this.dataset.s=Number(this.dataset.s||0)+1">Tap!</button></body></html>';const a=document.querySelector('#downloadGame');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.classList.remove('hide')}}
 
 
@@ -156,7 +213,7 @@ function base64(){panel('<div class="field"><label>Text</label><textarea id="b64
 async function hash(){panel('<textarea id="hashIn" class="tool-area" placeholder="Text to hash"></textarea><button class="btn btn-primary" id="hashBtn">SHA-256</button><div id="hashOut" class="result-box">—</div>');$('#hashBtn').onclick=async()=>{const data=new TextEncoder().encode($('#hashIn').value),buf=await crypto.subtle.digest('SHA-256',data);$('#hashOut').textContent=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}}
 function markdown(){panel('<textarea id="mdIn" class="tool-area" placeholder="# Hello JMB"></textarea><div id="mdOut" class="result-box" style="display:block;min-height:180px"></div>');$('#mdIn').oninput=()=>{let s=$('#mdIn').value.replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]));s=s.replace(/^### (.*)$/gm,'<h4>$1</h4>').replace(/^## (.*)$/gm,'<h3>$1</h3>').replace(/^# (.*)$/gm,'<h2>$1</h2>').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>');$('#mdOut').innerHTML=s}}
 function timestamp(){panel('<div class="form-grid"><div class="field"><label>Date/time</label><input id="dateIn" type="datetime-local"></div><div class="field"><label>Unix seconds</label><input id="unixIn" type="number"></div></div><div id="timeOut" class="result-box">—</div><div class="tool-actions"><button class="btn btn-primary" id="timeNow">Convert</button><button class="btn btn-ghost" id="timeCurrent">Now</button></div>');$('#timeNow').onclick=()=>{if($('#dateIn').value){const d=new Date($('#dateIn').value);$('#timeOut').textContent='Unix: '+Math.floor(d.getTime()/1000)}else if($('#unixIn').value){$('#timeOut').textContent=new Date(Number($('#unixIn').value)*1000).toString()}};$('#timeCurrent').onclick=()=>{$('#dateIn').value=new Date().toISOString().slice(0,16);$('#timeNow').click()}}
-function password(){panel('<div class="form-grid"><div class="field"><label>Length</label><input id="pwLen" type="number" min="8" max="64" value="16"></div><div class="field"><label>Result</label><input id="pwOut" class="tool-input" readonly></div></div><button class="btn btn-primary" id="pwBtn">Generate</button><button class="btn btn-ghost" id="pwCopy">Copy</button>');const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';$('#pwBtn').onclick=()=>{let x='';const a=new Uint32Array(Number($('#pwLen').value)||16);crypto.getRandomValues(a);for(let i=0;i<a.length;i++)x+=chars[a[i]%chars.length];$('#pwOut').value=x};$('#pwCopy').onclick=()=>navigator.clipboard?.writeText($('#pwOut').value)}
+function password(){panel('<div class="form-grid"><div class="field"><label>Length</label><input id="pwLen" type="number" min="8" max="64" value="16"></div><div class="field"><label>Result</label><input id="pwOut" class="tool-input" readonly></div></div><button class="btn btn-primary" id="pwBtn">Generate</button><button class="btn btn-ghost" id="pwCopy">Copy</button>');const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';$('#pwBtn').onclick=()=>{const length=Math.max(8,Math.min(64,Math.floor(Number($('#pwLen').value)||16)));$('#pwLen').value=length;let x='';const a=new Uint32Array(length);crypto.getRandomValues(a);for(let i=0;i<a.length;i++)x+=chars[a[i]%chars.length];$('#pwOut').value=x};$('#pwCopy').onclick=()=>navigator.clipboard?.writeText($('#pwOut').value)}
 function regex(){panel('<input id="rx" class="tool-input" placeholder="Regular expression, e.g. ^JMB"><textarea id="rxText" class="tool-area" placeholder="Text to test"></textarea><div id="rxOut" class="result-box">—</div><button class="btn btn-primary" id="rxBtn">Test</button>');$('#rxBtn').onclick=()=>{try{const re=new RegExp($('#rx').value);const m=$('#rxText').value.match(re);$('#rxOut').textContent=m?'Match found: '+m[0]:'No match'}catch(e){$('#rxOut').textContent='Invalid regex'}}}
 function gradient(){panel('<div class="form-grid"><div class="field"><label>Start</label><input id="g1" value="#7c5cff"></div><div class="field"><label>End</label><input id="g2" value="#00c6ea"></div></div><div id="gradOut" class="result-box" style="height:150px"></div><div class="tool-actions"><button class="btn btn-primary" id="gradBtn">Build</button><button class="btn btn-ghost" id="gradCopy">Copy CSS</button></div>');const draw=()=>{const v='linear-gradient(135deg,'+$('#g1').value+','+$('#g2').value+')';$('#gradOut').style.background=v;$('#gradOut').dataset.css='background:'+v+';'};$('#gradBtn').onclick=draw;$('#gradCopy').onclick=()=>navigator.clipboard?.writeText($('#gradOut').dataset.css||'');draw()}
 function csv(){panel('<textarea id="csvIn" class="tool-area" placeholder="name,score\nJMB,100"></textarea><div class="table-wrap"><table class="table"><tbody id="csvOut"></tbody></table></div><button class="btn btn-primary" id="csvBtn">Render CSV</button>');$('#csvBtn').onclick=()=>{const rows=$('#csvIn').value.trim().split(/\n/).map(x=>x.split(','));$('#csvOut').innerHTML=rows.map((row,i)=>'<tr>'+row.map(v=>'<'+(i===0?'th':'td')+'>'+v.replace(/[<>]/g,'')+'</'+(i===0?'th':'td')+'>').join('')+'</tr>').join('')}}
