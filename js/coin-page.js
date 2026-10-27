@@ -64,6 +64,7 @@ async function loadTransactions(){
  try{
   const r=await call('getCoinWallet')({});
   owned=r.data.entitlements||{};adCredits=Number(r.data.adCredits||0);renderPerks();renderStore();
+$('#refreshCoinInbox')?.addEventListener('click',()=>{if(user)loadTransactions();});
   const tx=r.data.transactions||[];
   box.innerHTML=tx.length?tx.map(x=>{
    const amount=Number(x.amount||0),time=x.createdAt?new Date(x.createdAt).toLocaleString():'';
