@@ -34,14 +34,20 @@ async function applyUser(u){
   return {...u,owner,admin,claims};
 }
 
+const RETURNABLE_PAGES=new Set(['dashboard.html','games.html','among-us.html','geometry-dash.html','jmb-area.html','minecraft.html','ai.html','support.html','profile.html','admin.html','coins.html','ads.html']);
+function redirectToLogin(){
+  const page=location.pathname.split('/').pop()||'';
+  const next=RETURNABLE_PAGES.has(page)?'?next='+encodeURIComponent(page):'';
+  location.replace('login.html'+next);
+}
 export function guard(){
   if(!backendReady){
-    location.replace('login.html');
+    redirectToLogin();
     return new Promise(()=>{});
   }
   return new Promise(resolve=>{
     onAuthStateChanged(auth,async u=>{
-      if(!u){location.href='login.html';return}
+      if(!u){redirectToLogin();return}
       resolve(await applyUser(u));
     });
   });
