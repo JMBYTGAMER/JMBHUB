@@ -8,7 +8,7 @@ import {app} from '../core/firebase.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
 const awardCoins = app ? httpsCallable(getFunctions(app,'asia-south1'),'awardGameCoins') : null;
 
-let user,current='snake',sessionScore=0;
+let user,current='snake',sessionScore=0,sessionPlayed=0,sessionWins=0;
 const stage=$('#gameStage'),library=$('#gameLibrary');
 const games=[
  ['snake','🐍','Snake','Classic snake with touch + arrow controls.'],
@@ -51,7 +51,25 @@ const games=[
 function safe(v){return String(v).replace(/[<>]/g,'')}
 function renderLibrary(){library.innerHTML=games.map(([id,icon,title,desc])=>`<button class="game-card" data-game="${id}"><div class="game-art">${icon}</div><h3>${title}</h3><p>${desc}</p><span class="pill">Play →</span></button>`).join('');library.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>switchGame(b.dataset.game))}
 function setHeader(g){const x=games.find(a=>a[0]===g);$('#activeGameTitle').textContent=x[2];$('#activeGameDesc').textContent=x[3];$('#lbTitle').textContent=x[2];library.querySelectorAll('.game-card').forEach(b=>b.classList.toggle('active',b.dataset.game===g))}
-async function saveScore(game,score){score=Math.max(0,Math.floor(Number(score)||0));sessionScore+=score;$('#overallScore').textContent=sessionScore;if(!backendReady||user?.demo||score<=0)return;try{await addDoc(collection(db,'leaderboards',game,'scores'),{uid:user.uid,player:user.displayName||user.email?.split('@')[0]||'Player',score,createdAt:serverTimestamp()});await loadBoard(game);}catch(e){toast('Score could not be saved: '+e.message)}if(awardCoins){try{const r=await awardCoins({gameId:game,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}catch(e){if(!String(e.code||'').includes('resource-exhausted'))console.warn('JMB Coin reward unavailable:',e.message)}}}
+async function saveScore(game,score){
+ score=Number(score);
+ if(!Number.isFinite(score))return;
+ score=Math.max(0,Math.min(100000,Math.floor(score)));
+ sessionScore+=score;sessionPlayed++;if(score>0)sessionWins++;
+ const points=$('#overallPoints')||$('#overallScore'),played=$('#overallPlayed'),wins=$('#overallWins');
+ if(points)points.textContent=String(sessionScore);
+ if(played)played.textContent=String(sessionPlayed);
+ if(wins)wins.textContent=String(sessionWins);
+ if(!backendReady||user?.demo||score<=0)return;
+ try{
+  await addDoc(collection(db,'leaderboards',game,'scores'),{uid:user.uid,player:user.displayName||user.email?.split('@')[0]||'Player',score,createdAt:serverTimestamp()});
+  await loadBoard(game);
+ }catch(e){toast('Score could not be saved: '+(e?.message||'Connection unavailable.'))}
+ if(awardCoins){
+  try{const r=await awardCoins({gameId:game,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}
+  catch(e){if(!String(e.code||'').includes('resource-exhausted'))console.warn('JMB Coin reward unavailable:',e.message)}
+ }
+}
 async function loadBoard(game){if(!backendReady){$('#leaderboardBody').innerHTML='<tr><td colspan="3" class="empty">Online leaderboard is temporarily unavailable.</td></tr>';return}try{const snap=await getDocs(query(collection(db,'leaderboards',game,'scores'),orderBy('score','desc'),limit(20)));$('#leaderboardBody').innerHTML=snap.empty?'<tr><td colspan="3" class="empty">No scores yet.</td></tr>':snap.docs.map((d,i)=>{const x=d.data();return `<tr><td>${i+1}</td><td>${safe(x.player||'Player')}</td><td>${Number(x.score||0)}</td></tr>`}).join('')}catch{$('#leaderboardBody').innerHTML='<tr><td colspan="3" class="empty">Leaderboard unavailable right now.</td></tr>'}}
 
 function snake(){stage.innerHTML='<div class="game-view"><h2 class="game-title">🐍 Snake</h2><div class="score-readout">Score: <b id="snakeScore">0</b></div><canvas id="snakeCanvas" width="320" height="320" style="max-width:100%;border:1px solid var(--line);border-radius:18px;background:#090d17;margin:14px 0;touch-action:none"></canvas><div class="dpad"><button class="up" data-d="up">▲</button><button class="left" data-d="left">◀</button><button class="down" data-d="down">▼</button><button class="right" data-d="right">▶</button></div><button class="btn btn-primary" id="snakeStart">Start / Restart</button><p class="muted">Use the arrows, keyboard or swipe on the board.</p></div>';
