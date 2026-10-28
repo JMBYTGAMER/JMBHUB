@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080a18"><title>Security Lab — JMB HUB</title>
+<link rel="icon" href="../assets/icons/favicon.png">
+<link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/app.css"><link rel="stylesheet" href="../css/portal.css"><link rel="stylesheet" href="../css/premium.css"><link rel="stylesheet" href="../css/security-lab.css">
+</head>
+<body class="app-body">
+<div class="mobile-head"><div class="mobile-head-left"><a class="brand" href="dashboard.html"><span class="brand-mark"><img src="../assets/jmbhub-logo.png" alt="JMB HUB"></span><span><b>JMB</b><small>SECURITY LAB</small></span></a></div><div class="portal-top-actions"><a class="btn btn-ghost" href="jmb-area.html">All tools</a></div></div>
+<div class="app-shell"><aside class="sidebar"><div class="side-brand"><a class="brand" href="dashboard.html"><span class="brand-mark"><img src="../assets/jmbhub-logo.png" alt="JMB HUB"></span><span><b>JMB</b><small>SECURITY LAB</small></span></a></div><div class="side-section"><div class="side-label">PORTAL</div><a class="nav-link" href="dashboard.html"><span>⌂</span><span>Dashboard</span></a><a class="nav-link" href="games.html"><span>🎮</span><span>Games</span></a><a class="nav-link active" href="jmb-area.html"><span>🧰</span><span>JMB Area</span></a><a class="nav-link" href="minecraft.html"><span>⛏️</span><span>Minecraft</span></a><a class="nav-link" href="ai.html"><span>🤖</span><span>JMB AI</span></a><a class="nav-link" href="support.html"><span>🎫</span><span>Support</span></a></div></aside>
+<main class="main"><section class="page">
+<div class="page-head"><div><div class="eyebrow">LOCAL-FIRST CRYPTO TOOLS</div><h1>🔐 Security Lab</h1><p>Hash, encrypt, sign and generate keys using your browser's Web Crypto API.</p></div></div>
+<div class="security-notice"><b>Privacy by design</b><span>These tools process your inputs in this browser and do not upload them to JMB HUB. Never paste a real password, recovery phrase or private key into a website you do not trust. Keep a backup of data encrypted with your own passphrase.</span></div>
+<div class="security-tool-grid">
+<button class="security-tool active" data-security-tool="aes"><span>🔒</span><b>Password Encryption</b><small>AES-256-GCM + PBKDF2</small></button>
+<button class="security-tool" data-security-tool="hash"><span>#️⃣</span><b>Hash & File Checksum</b><small>SHA-256 / 384 / 512</small></button>
+<button class="security-tool" data-security-tool="hmac"><span>🛡️</span><b>HMAC Sign & Verify</b><small>Keyed message authentication</small></button>
+<button class="security-tool" data-security-tool="random"><span>🎲</span><b>Secure Random Generator</b><small>Cryptographic random bytes</small></button>
+<button class="security-tool" data-security-tool="rsa"><span>🗝️</span><b>RSA Key Pair</b><small>Public/private key generation</small></button>
+<button class="security-tool" data-security-tool="password"><span>🔑</span><b>Password Generator</b><small>Strong random passwords</small></button>
+</div>
+<div class="card security-workspace">
+<div class="section-title"><div><div class="eyebrow">TOOL WORKSPACE</div><h2 id="securityTitle">Password Encryption</h2><p id="securityDescription" class="muted">Encrypt text with a passphrase; keep that passphrase safe.</p></div><span class="pill">Runs locally</span></div>
+<section class="security-panel" data-security-panel="aes">
+<label for="aesText">Text to encrypt or encrypted JSON</label><textarea id="aesText" class="tool-area" rows="5" maxlength="100000" placeholder="Type a message, or paste an encrypted JSON package to decrypt."></textarea>
+<label for="aesPass">Passphrase</label><input id="aesPass" class="tool-input" type="password" autocomplete="new-password" maxlength="1024" placeholder="Use a long, unique passphrase">
+<div class="tool-actions"><button id="aesEncrypt" class="btn btn-primary">Encrypt text</button><button id="aesDecrypt" class="btn btn-ghost">Decrypt package</button><button id="aesClear" class="btn btn-ghost">Clear</button></div>
+<label for="aesOutput">Result</label><textarea id="aesOutput" class="tool-area mono" rows="6" readonly placeholder="Encrypted package or decrypted text appears here."></textarea><div id="aesStatus" class="security-status" role="status" aria-live="polite"></div>
+<p class="security-help">Uses AES-256-GCM with a fresh random salt and IV. The encrypted package includes its settings so it can be decrypted later. Losing the passphrase means the text cannot be recovered.</p>
+</section>
+<section class="security-panel" data-security-panel="hash" hidden>
+<label for="hashText">Text to hash</label><textarea id="hashText" class="tool-area" rows="4" maxlength="100000" placeholder="Text to hash (optional if you choose a file)"></textarea>
+<label for="hashFile">Or choose a file</label><input id="hashFile" class="tool-input" type="file">
+<div class="tool-actions"><button id="hashRun" class="btn btn-primary">Calculate hashes</button><button id="hashClear" class="btn btn-ghost">Clear</button></div>
+<div class="security-result-list"><div><b>SHA-256</b><textarea id="sha256Out" class="tool-area mono" rows="2" readonly></textarea><button class="btn btn-ghost copy-output" data-copy="sha256Out">Copy</button></div><div><b>SHA-384</b><textarea id="sha384Out" class="tool-area mono" rows="2" readonly></textarea><button class="btn btn-ghost copy-output" data-copy="sha384Out">Copy</button></div><div><b>SHA-512</b><textarea id="sha512Out" class="tool-area mono" rows="2" readonly></textarea><button class="btn btn-ghost copy-output" data-copy="sha512Out">Copy</button></div></div>
+<div id="hashStatus" class="security-status" role="status" aria-live="polite"></div><p class="security-help">A hash is a one-way fingerprint, not encryption. A matching checksum can help verify a file has not changed.</p>
+</section>
+<section class="security-panel" data-security-panel="hmac" hidden>
+<label for="hmacMessage">Message</label><textarea id="hmacMessage" class="tool-area" rows="4" maxlength="100000" placeholder="Message to sign or verify"></textarea>
+<label for="hmacKey">Secret key</label><input id="hmacKey" class="tool-input" type="password" maxlength="4096" autocomplete="off" placeholder="Enter a private shared secret">
+<label for="hmacSignature">Signature (for verification)</label><textarea id="hmacSignature" class="tool-area mono" rows="2" placeholder="Base64 HMAC signature"></textarea>
+<div class="tool-actions"><button id="hmacSign" class="btn btn-primary">Sign message</button><button id="hmacVerify" class="btn btn-ghost">Verify signature</button><button id="hmacClear" class="btn btn-ghost">Clear</button></div>
+<div id="hmacStatus" class="security-status" role="status" aria-live="polite"></div><p class="security-help">Both parties must protect the same secret key. Do not use an HMAC signature as a password or disclose the secret alongside the signature.</p>
+</section>
+<section class="security-panel" data-security-panel="random" hidden>
+<label for="randomBits">Random bytes</label><select id="randomBits" class="tool-input"><option value="16">16 bytes (128 bit)</option><option value="32" selected>32 bytes (256 bit)</option><option value="48">48 bytes (384 bit)</option><option value="64">64 bytes (512 bit)</option><option value="128">128 bytes (1024 bit)</option></select>
+<div class="tool-actions"><button id="randomGenerate" class="btn btn-primary">Generate</button><button id="randomClear" class="btn btn-ghost">Clear</button></div>
+<label for="randomHex">Hexadecimal</label><textarea id="randomHex" class="tool-area mono" rows="3" readonly></textarea><button class="btn btn-ghost copy-output" data-copy="randomHex">Copy hex</button>
+<label for="randomBase64">Base64</label><textarea id="randomBase64" class="tool-area mono" rows="3" readonly></textarea><button class="btn btn-ghost copy-output" data-copy="randomBase64">Copy Base64</button>
+<div id="randomStatus" class="security-status" role="status" aria-live="polite"></div><p class="security-help">Randomness comes from crypto.getRandomValues(). Do not treat arbitrary random bytes as a wallet seed; use the official wallet's secure creation flow for that.</p>
+</section>
+<section class="security-panel" data-security-panel="rsa" hidden>
+<p class="security-help">Create an RSA-OAEP 2048-bit key pair in this browser. The private key is sensitive: do not share it or store it on a public computer.</p>
+<div class="tool-actions"><button id="rsaGenerate" class="btn btn-primary">Generate RSA key pair</button><button id="rsaClear" class="btn btn-ghost">Clear keys</button></div>
+<label for="rsaPublic">Public key (SPKI PEM)</label><textarea id="rsaPublic" class="tool-area mono" rows="6" readonly></textarea><button class="btn btn-ghost copy-output" data-copy="rsaPublic">Copy public key</button>
+<label for="rsaPrivate">Private key (PKCS#8 PEM)</label><textarea id="rsaPrivate" class="tool-area mono" rows="7" readonly></textarea><div class="tool-actions"><button class="btn btn-ghost copy-output" data-copy="rsaPrivate">Copy private key</button><button id="rsaDownload" class="btn btn-ghost">Download private key</button></div>
+<div id="rsaStatus" class="security-status" role="status" aria-live="polite"></div>
+</section>
+<section class="security-panel" data-security-panel="password" hidden>
+<label for="passwordLength">Password length</label><input id="passwordLength" class="tool-input" type="number" min="12" max="128" value="24">
+<div class="security-checks"><label><input id="pwLower" type="checkbox" checked> Lowercase</label><label><input id="pwUpper" type="checkbox" checked> Uppercase</label><label><input id="pwDigits" type="checkbox" checked> Numbers</label><label><input id="pwSymbols" type="checkbox" checked> Symbols</label></div>
+<div class="tool-actions"><button id="passwordGenerate" class="btn btn-primary">Generate password</button><button id="passwordClear" class="btn btn-ghost">Clear</button></div>
+<label for="passwordOutput">Generated password</label><textarea id="passwordOutput" class="tool-area mono" rows="3" readonly></textarea><div class="tool-actions"><button class="btn btn-ghost copy-output" data-copy="passwordOutput">Copy password</button></div>
+<div id="passwordStatus" class="security-status" role="status" aria-live="polite"></div><p class="security-help">This generator uses browser cryptographic randomness. Save generated passwords in a reputable password manager.</p>
+</section>
+</div>
+</section></main></div>
+<script type="module" src="../js/core/portal.js"></script><script type="module" src="../js/tools/security-lab.js"></script>
+</body></html>
