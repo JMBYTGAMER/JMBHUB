@@ -1,5 +1,5 @@
 import {guard} from '../core/auth-guard.js';
-import {toast} from '../core/ui.js';
+import {toast,$} from '../core/ui.js';
 import {openWorkspace,closeWorkspace} from '../core/workspace-window.js';
 const library=document.querySelector('#toolLibrary'),stage=document.querySelector('#toolStage');
 let activeToolCleanup=()=>{};
@@ -33,12 +33,21 @@ const tools=[
  ['colorpick','🎯','Color Picker','Pick a color and copy its HEX/RGB values.'],
  ['aspect','🖼️','Aspect Ratio','Calculate image and video dimensions.'],
  ['lorem','📄','Lorem Generator','Generate placeholder text locally.'],
+ ['filehash','📁','File SHA-256','Calculate a local SHA-256 checksum for a file.'],
+ ['hmac','🛡️','HMAC Sign & Verify','Create and verify keyed HMAC-SHA-256 signatures locally.'],
+ ['passphrase','🧩','Passphrase Generator','Create random multi-word passphrases using secure browser randomness.'],
  ['ip','🌐','Browser Info','Check browser and online status without sharing IP data.']
 ];
-function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="tool-choice" data-tool="${id}"><div class="tool-art">${i}</div><h3>${n}</h3><p>${d}</p><span class="pill">Open →</span></button>`).join('');library.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>openTool(b.dataset.tool))}
+function render(filter=''){
+ const q=String(filter||'').trim().toLowerCase();
+ const visible=tools.filter(([id,icon,name,desc])=>!q||(id+' '+name+' '+desc).toLowerCase().includes(q));
+ library.innerHTML=visible.length?visible.map(([id,icon,name,desc])=>'<button type="button" class="tool-choice" data-tool="'+id+'"><div class="tool-art">'+icon+'</div><h3>'+name+'</h3><p>'+desc+'</p><span class="pill">Open →</span></button>').join(''):'<div class="empty">No tools match that search. Try “hash”, “encrypt” or “QR”.</div>';
+ const count=document.querySelector('#toolCount');if(count)count.textContent=visible.length+' of '+tools.length+' tools';
+ library.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>openTool(b.dataset.tool));
+}
 function head(t){const x=tools.find(a=>a[0]===t);document.querySelector('#toolTitle').textContent=x[2];document.querySelector('#toolDesc').textContent=x[3];library.querySelectorAll('.tool-choice').forEach(b=>b.classList.toggle('active',b.dataset.tool===t))}
 const panel=x=>{stage.innerHTML='<div class="tool-panel">'+x+'</div>'};
-function openTool(name){closeWorkspace();cleanupTool();head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,hash,encrypt,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:cleanupTool})}
+function openTool(name){closeWorkspace();cleanupTool();head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,hash,encrypt,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,filehash,hmac,passphrase,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:cleanupTool})}
 function evaluateExpression(source){
  let i=0;
  const skip=()=>{while(i<source.length&&/\s/.test(source[i]))i++};
@@ -146,5 +155,29 @@ function lorem(){
  const words='JMB HUB creates useful games tools Minecraft utilities community features and simple experiences for everyone'.split(' ');
  $('#lg').onclick=()=>{const count=Number($('#lp').value);if(!Number.isInteger(count)||count<1||count>20){$('#loremStatus').textContent='Choose a whole number from 1 to 20.';return}$('#lo').value=Array.from({length:count},(_,i)=>Array.from({length:25},(_,j)=>words[(i*25+j)%words.length]).join(' ')).join('\n\n');$('#loremStatus').textContent='Generated '+count+' paragraphs locally.'};
 }
+
+function filehash(){
+ panel('<p class="muted">Calculate a SHA-256 checksum entirely in this browser. File contents are not uploaded. This is useful for checking whether two files have matching hashes.</p><label for="fileHashInput">Choose a file (up to 25 MB)</label><input id="fileHashInput" class="tool-input" type="file"><div id="fileHashMeta" class="muted" role="status">No file selected.</div><label for="fileHashOut">SHA-256 checksum</label><textarea id="fileHashOut" class="tool-area" readonly placeholder="Checksum will appear here"></textarea><div class="tool-actions"><button type="button" class="btn btn-primary" id="fileHashBtn">Calculate checksum</button><button type="button" class="btn btn-ghost" id="fileHashCopy">Copy hash</button></div><p id="fileHashStatus" class="muted" role="status"></p>');
+ const file=$('#fileHashInput'),out=$('#fileHashOut'),status=$('#fileHashStatus'),btn=$('#fileHashBtn');
+ file.onchange=()=>{const f=file.files?.[0];$('#fileHashMeta').textContent=f?f.name+' · '+(f.size/1024).toFixed(1)+' KB':'No file selected.';out.value='';status.textContent=''};
+ btn.onclick=async()=>{const f=file.files?.[0];if(!f){status.textContent='Choose a file first.';return}if(f.size>25*1024*1024){status.textContent='This tool accepts files up to 25 MB.';return}btn.disabled=true;status.textContent='Reading file locally…';out.value='';try{if(!crypto?.subtle)throw Error('Web Crypto is unavailable. Open the site over HTTPS.');const digest=await crypto.subtle.digest('SHA-256',await f.arrayBuffer());out.value=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');status.textContent='SHA-256 created locally for '+f.name+'.'}catch(e){status.textContent=e?.message||'Could not calculate the file hash.'}finally{btn.disabled=false}};
+ $('#fileHashCopy').onclick=async()=>{if(!out.value){status.textContent='Calculate a checksum first.';return}try{await navigator.clipboard.writeText(out.value);status.textContent='Checksum copied.'}catch{out.focus();out.select();status.textContent='Clipboard blocked; select the hash and copy it manually.'}};
+}
+function hmac(){
+ panel('<p class="muted">HMAC-SHA-256 makes a keyed message authentication code. The key and message stay in this browser. Anyone who has the secret key can generate a valid signature, so do not use this page as a production authentication server.</p><label for="hmacKey">Secret key</label><input id="hmacKey" type="password" class="tool-input" autocomplete="off" placeholder="Enter a secret key"><label for="hmacMessage">Message</label><textarea id="hmacMessage" class="tool-area" placeholder="Exact message to sign or verify"></textarea><label for="hmacExpected">Expected HMAC (optional for verify)</label><input id="hmacExpected" class="tool-input" autocomplete="off" placeholder="Paste a SHA-256 HMAC hex string"><div class="tool-actions"><button type="button" class="btn btn-primary" id="hmacSign">Create HMAC</button><button type="button" class="btn btn-ghost" id="hmacVerify">Verify HMAC</button><button type="button" class="btn btn-ghost" id="hmacCopy">Copy HMAC</button></div><label for="hmacOutput">HMAC-SHA-256 (hex)</label><textarea id="hmacOutput" class="tool-area" readonly placeholder="Signature will appear here"></textarea><div id="hmacStatus" class="muted" role="status"></div>');
+ const keyInput=$('#hmacKey'),message=$('#hmacMessage'),expected=$('#hmacExpected'),out=$('#hmacOutput'),status=$('#hmacStatus');
+ async function compute(){if(!keyInput.value)throw Error('Enter a secret key first.');if(!message.value)throw Error('Enter a message first.');if(!crypto?.subtle)throw Error('Web Crypto is unavailable. Open the site over HTTPS.');const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(keyInput.value),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);const data=new TextEncoder().encode(message.value);return {key,data,hex:Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,data)),b=>b.toString(16).padStart(2,'0')).join('')}}
+ $('#hmacSign').onclick=async()=>{const b=$('#hmacSign');b.disabled=true;try{const r=await compute();out.value=r.hex;status.textContent='HMAC created locally. Keep the secret key private.';window.JMBMusic?.win?.()}catch(e){status.textContent=e?.message||'Could not create HMAC.'}finally{b.disabled=false}};
+ $('#hmacVerify').onclick=async()=>{const b=$('#hmacVerify');b.disabled=true;try{const r=await compute(),provided=expected.value.trim().toLowerCase();out.value=r.hex;if(!/^[0-9a-f]{64}$/.test(provided))throw Error('Expected signature must be 64 hexadecimal characters.');status.textContent=provided===r.hex?'Signature matches. Note: this UI comparison is not a constant-time server-side verifier.':'Signature does not match this message and key.'}catch(e){status.textContent=e?.message||'Could not verify HMAC.'}finally{b.disabled=false}};
+ $('#hmacCopy').onclick=async()=>{if(!out.value){status.textContent='Create a signature first.';return}try{await navigator.clipboard.writeText(out.value);status.textContent='HMAC copied.'}catch{out.focus();out.select();status.textContent='Clipboard blocked; select the HMAC and copy it manually.'}};
+}
+function passphrase(){
+ panel('<p class="muted">Generate a multi-word passphrase with cryptographically secure browser randomness. It is created locally and is not saved by JMBHUB.</p><div class="form-grid"><div class="field"><label for="phraseWords">Number of words (4–8)</label><select id="phraseWords" class="tool-input"><option value="4">4 words</option><option value="5">5 words</option><option value="6" selected>6 words</option><option value="7">7 words</option><option value="8">8 words</option></select></div><div class="field"><label for="phraseSep">Separator</label><select id="phraseSep" class="tool-input"><option value="-">Hyphen (-)</option><option value=" ">Space</option><option value="_">Underscore (_)</option><option value=".">Dot (.)</option></select></div></div><div id="phraseOut" class="result-box" aria-live="polite">Tap generate to create a phrase.</div><div class="tool-actions"><button type="button" class="btn btn-primary" id="phraseBtn">Generate passphrase</button><button type="button" class="btn btn-ghost" id="phraseCopy">Copy phrase</button></div><p id="phraseStatus" class="muted" role="status"></p>');
+ const words=['amber','anchor','apricot','bamboo','beacon','birch','breeze','cactus','canyon','castle','cobalt','comet','coral','cosmos','crystal','dawn','delta','ember','falcon','fern','forest','galaxy','garden','glacier','harbor','honey','island','jasmine','lantern','maple','meadow','meteor'];
+ const out=$('#phraseOut'),status=$('#phraseStatus');
+ $('#phraseBtn').onclick=()=>{try{if(!crypto?.getRandomValues)throw Error('Secure random generation is unavailable.');const count=Number($('#phraseWords').value),bytes=crypto.getRandomValues(new Uint8Array(count));const phrase=Array.from(bytes,b=>words[b&31]).join($('#phraseSep').value);out.textContent=phrase;status.textContent='Passphrase generated locally. Store it securely; it will disappear when you leave this tool.';window.JMBMusic?.win?.()}catch(e){status.textContent=e?.message||'Could not generate a secure passphrase.'}};
+ $('#phraseCopy').onclick=async()=>{const phrase=out.textContent;if(!phrase||phrase.startsWith('Tap generate')){status.textContent='Generate a passphrase first.';return}try{await navigator.clipboard.writeText(phrase);status.textContent='Passphrase copied.'}catch{status.textContent='Clipboard unavailable; select the phrase and copy it manually.'}};
+}
+
 function ip(){panel('<div class="notice">This tool does not look up or send your public IP address. It only reads information already exposed to this browser.</div><div id="ipOut" class="result-box" style="display:block;word-break:break-word">Checking…</div><button class="btn btn-ghost" id="ipRefresh">Refresh</button>');const draw=()=>{$('#ipOut').textContent='Browser: '+navigator.userAgent+'\nOnline status: '+(navigator.onLine?'Online':'Offline')+'\nLanguage: '+(navigator.language||'Unknown')+'\nPlatform: '+(navigator.platform||'Not provided by browser')};$('#ipRefresh').onclick=draw;draw()}
-await guard();render();
+await guard();render();document.querySelector('#toolSearch')?.addEventListener('input',e=>render(e.target.value));
