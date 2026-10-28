@@ -205,7 +205,7 @@ function mini2048(){
  }
  $('#g2048Restart').onclick=reset;
  addGameListener(window,'keydown',e=>{if(current!=='2048'||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();move(({ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'})[e.key])});
- g.addEventListener('pointerdown',e=>{if(current!=='2048')return;const b=e.target.closest('button[data-i]');if(!b)return});
+ let swipeStart=null;g.addEventListener('pointerdown',e=>{if(current==='2048')swipeStart={x:e.clientX,y:e.clientY}});g.addEventListener('pointerup',e=>{if(current!=='2048'||!swipeStart)return;const dx=e.clientX-swipeStart.x,dy=e.clientY-swipeStart.y;swipeStart=null;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;move(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'))});g.addEventListener('pointercancel',()=>{swipeStart=null});
  reset();
 }
 function rps(){
