@@ -6,7 +6,7 @@ import {GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUser
 const modeBtn=$('#modeBtn'),modeText=$('#modeText'),submit=$('#submitBtn'),submitText=$('#submitText'),error=$('#authError'),email=$('#email'),password=$('#password'),confirm=$('#confirmPassword'),confirmWrap=$('#confirmWrap'),forgot=$('#forgotBtn'),remember=$('#remember');
 let signup=false;
 const nextPage=new URLSearchParams(location.search).get('next');
-const allowedNext=new Set(['dashboard.html','games.html','jmb-area.html','minecraft.html','ai.html','support.html','profile.html','admin.html']);
+const allowedNext=new Set(['dashboard.html','games.html','jmb-area.html','minecraft.html','ai.html','support.html','profile.html','admin.html','coins.html','ads.html','among-us.html','geometry-dash.html','arcade-plus.html','dev-toolbox.html','security-lab.html','seo.html']);
 function afterAuth(){location.href=allowedNext.has(nextPage)?nextPage:'dashboard.html'}
 
 $('#year').textContent=new Date().getFullYear();
@@ -23,16 +23,21 @@ function friendly(e){
     'auth/weak-password':'Choose a stronger password.',
     'auth/popup-closed-by-user':'The Google sign-in window was closed.',
     'auth/popup-blocked':'Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.',
-    'auth/unauthorized-domain':'Firebase is rejecting this website domain. Add jmbhost.qzz.io and www.jmbhost.qzz.io in Firebase Authentication → Settings → Authorized domains.',
+    'auth/unauthorized-domain':'This website domain is not authorized for sign-in. Add every domain you use (including jmbhost.qzz.io, www.jmbhost.qzz.io, jmbhub.cyou and www.jmbhub.cyou) in Firebase Authentication → Settings → Authorized domains.',
     'auth/operation-not-allowed':'This sign-in method is disabled in Firebase Authentication → Sign-in method.',
     'auth/network-request-failed':'The connection to Firebase failed. Check your internet connection and try again.',
     'auth/too-many-requests':'Too many attempts were made. Wait a little and try again.',
     'auth/internal-error':'Firebase returned an internal authentication error. Check the browser console for the exact error.'
   };
-  return map[code]||`Authentication failed${code?` (${code})`:''}. Please try again.`;
+  return map[code]||'We could not complete sign-in. Please check your connection and try again. If this keeps happening, contact JMB HUB Support.';
 }
 function busy(b){submit.disabled=b;submitText.textContent=b?(signup?'Creating account…':'Signing in…'):(signup?'Create account':'Sign In')}
 async function persistence(){await setPersistence(auth,remember.checked?browserLocalPersistence:browserSessionPersistence)}
+function providerBusy(button, pending, label){
+  if(!button)return;
+  if(pending){button.dataset.originalHtml=button.innerHTML;button.disabled=true;button.setAttribute('aria-busy','true');button.querySelector('span:last-child')?.replaceChildren(document.createTextNode(label));}
+  else{if(button.dataset.originalHtml)button.innerHTML=button.dataset.originalHtml;button.disabled=false;button.removeAttribute('aria-busy');delete button.dataset.originalHtml;}
+}
 function scorePassword(p){let s=0;if(p.length>=8)s++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))s++;if(/\d/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;return s}
 function updateStrength(){if(!signup)return;const n=scorePassword(password.value),bar=$('#strengthBar'),txt=$('#strengthText');bar.style.width=`${n*25}%`;txt.textContent=n<=1?'Use 8+ characters with letters and numbers.':n===2?'Good start — add another character type.':n===3?'Strong password.':'Excellent password.'}
 function toggle(input,button){const visible=input.type==='text';input.type=visible?'password':'text';button.textContent=visible?'Show':'Hide'}
@@ -48,7 +53,8 @@ if(!backendReady){
 
 $('#googleBtn').onclick=async()=>{
   clearError();
-  if(!backendReady)return showError('Firebase is not configured.');
+  if(!backendReady)return showError('Account sign-in is temporarily unavailable. Please try again later.');
+  providerBusy($('#googleBtn'),true,'Connecting…');
   try{
     await persistence();
     const provider=new GoogleAuthProvider();
@@ -58,18 +64,25 @@ $('#googleBtn').onclick=async()=>{
   }catch(e){
     console.error('[JMBHUB] Google sign-in failed:',e);
     showError(friendly(e));
-  }
+  }finally{providerBusy($('#googleBtn'),false)}
 };
 
-$('#discordBtn').onclick=()=>{if(!APP_CONFIG.DISCORD_OAUTH_URL)return showError('Discord sign-in is not configured yet.');location.href=APP_CONFIG.DISCORD_OAUTH_URL};
+$('#discordBtn').onclick=()=>{
+  clearError();
+  if(!APP_CONFIG.DISCORD_OAUTH_URL)return showError('Discord sign-in has not been connected yet. Use Google or email for now.');
+  providerBusy($('#discordBtn'),true,'Opening Discord…');
+  location.href=APP_CONFIG.DISCORD_OAUTH_URL;
+};
 
 forgot.onclick=async()=>{
   clearError();
   if(!backendReady)return showError('Firebase is not configured.');
   const e=email.value.trim();
   if(!e)return showError('Enter your email address first.');
-  try{await sendPasswordResetEmail(auth,e);toast('Password reset instructions sent','good')}
+  forgot.disabled=true;const oldText=forgot.textContent;forgot.textContent='Sending…';
+  try{await sendPasswordResetEmail(auth,e);toast('If an account exists for that email, reset instructions have been sent.','good')}
   catch(err){console.error('[JMBHUB] Password reset failed:',err);showError(friendly(err))}
+  finally{forgot.disabled=false;forgot.textContent=oldText}
 };
 
 $('#authForm').onsubmit=async(ev)=>{
