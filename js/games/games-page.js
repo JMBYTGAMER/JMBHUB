@@ -214,9 +214,9 @@ function cipher(){
   e.preventDefault();if(finished)return;
   const guess=input.value.trim().toUpperCase();
   if(!/^[A-Z]{3,12}$/.test(guess)){status.textContent='Enter letters only.';return}
-  if(guess===answer){score+=20;round++;status.textContent='Correct! +20 points.';JMBMusic.win();trackedTimeout(next,650);return}
+  if(guess===answer){score+=20;round++;input.disabled=true;submit.disabled=true;status.textContent='Correct! +20 points.';JMBMusic.win();trackedTimeout(next,650);return}
   attempts++;
-  if(attempts>=3){round++;status.textContent='The answer was '+answer+'. Moving on…';JMBMusic.lose();trackedTimeout(next,900)}
+  if(attempts>=3){round++;input.disabled=true;submit.disabled=true;status.textContent='The answer was '+answer+'. Moving on…';JMBMusic.lose();trackedTimeout(next,900)}
   else status.textContent='Not quite. '+(3-attempts)+' attempts left.';
  });
  start.onclick=()=>{round=0;score=0;attempts=0;finished=false;start.hidden=true;next()};
