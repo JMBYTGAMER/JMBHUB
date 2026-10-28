@@ -1,6 +1,6 @@
 import {guard} from '../core/auth-guard.js';
 import {toast} from '../core/ui.js';
-import {openWorkspace} from '../core/workspace-window.js';
+import {openWorkspace,closeWorkspace} from '../core/workspace-window.js';
 const library=document.querySelector('#toolLibrary'),stage=document.querySelector('#toolStage');
 let activeToolCleanup=()=>{};
 function cleanupTool(){try{activeToolCleanup()}catch{}activeToolCleanup=()=>{}}
@@ -38,7 +38,7 @@ const tools=[
 function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="tool-choice" data-tool="${id}"><div class="tool-art">${i}</div><h3>${n}</h3><p>${d}</p><span class="pill">Open →</span></button>`).join('');library.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>openTool(b.dataset.tool))}
 function head(t){const x=tools.find(a=>a[0]===t);document.querySelector('#toolTitle').textContent=x[2];document.querySelector('#toolDesc').textContent=x[3];library.querySelectorAll('.tool-choice').forEach(b=>b.classList.toggle('active',b.dataset.tool===t))}
 const panel=x=>{stage.innerHTML='<div class="tool-panel">'+x+'</div>'};
-function openTool(name){cleanupTool();head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,hash,encrypt,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:cleanupTool})}
+function openTool(name){closeWorkspace();cleanupTool();head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,hash,encrypt,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:cleanupTool})}
 function evaluateExpression(source){
  let i=0;
  const skip=()=>{while(i<source.length&&/\s/.test(source[i]))i++};
