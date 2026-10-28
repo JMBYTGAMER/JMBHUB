@@ -1,79 +1,168 @@
-import {auth,db,app} from '../js/core/firebase.js';
+import {auth,db,app} from './core/firebase.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import {doc,onSnapshot} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
 
-const $=s=>document.querySelector(s);
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:8});
-const call=name=>{if(!app)throw new Error('Coin services are not configured.');return httpsCallable(getFunctions(app,'asia-south1'),name)};
-let user=null,unsubWallet=null,unsubPerks=null,owned={},adCredits=0;
+const $ = selector => document.querySelector(selector);
+const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
+ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[ch]));
+const coins = value => Number(value || 0).toLocaleString(undefined, {maximumFractionDigits:8});
+const call = name => {
+ if (!app) throw new Error('JMB Coin services are not configured.');
+ return httpsCallable(getFunctions(app, 'asia-south1'), name);
+};
 
-const items=[
+let user = null;
+let unsubWallet = null;
+let unsubPerks = null;
+let owned = {};
+let adCredits = 0;
+let balance = 0;
+
+const items = [
  {id:'supporter',perk:'supporter',icon:'⭐',name:'JMB Supporter Badge',price:25,desc:'Unlock a supporter badge for your JMB profile.'},
  {id:'profile-glow',perk:'profile-glow',icon:'✨',name:'Profile Glow',price:50,desc:'Unlock a glowing profile style.'},
  {id:'name-highlight',perk:'name-highlight',icon:'🌟',name:'Name Highlight',price:100,desc:'Unlock a highlighted display-name style.'},
  {id:'vip-dashboard',perk:'vip-dashboard',icon:'💎',name:'VIP Dashboard Theme',price:250,desc:'Unlock the premium dashboard theme.'},
  {id:'creator-pack',perk:'creator-pack',icon:'🚀',name:'Creator Pack',price:500,desc:'Unlock the creator profile pack.'}
 ];
-function toast(message,kind=''){
- const el=document.createElement('div');el.className='toast '+kind;el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),3400);
+
+function toast(message, kind='') {
+ const el = document.createElement('div');
+ el.className = 'toast ' + kind;
+ el.textContent = message;
+ document.body.append(el);
+ window.setTimeout(() => el.remove(), 3400);
 }
-function renderStore(){
- const grid=$('#coinStore');if(!grid)return;
- grid.innerHTML=items.map(x=>{
-  const isOwned=!!owned[x.perk];
-  return `<article class="card coin-item"><div class="service-art" style="font-size:40px">${x.icon}</div><h3>${x.name}</h3><p class="muted">${x.desc}</p><div class="price">🪙 ${x.price} coins</div><button class="btn ${isOwned?'btn-ghost':'btn-primary'} buy-item" data-id="${x.id}" ${isOwned?'disabled':''}>${isOwned?'✓ Owned':'Unlock item'}</button></article>`;
+
+function renderStore() {
+ const grid = $('#coinStore');
+ if (!grid) return;
+ grid.innerHTML = items.map(item => {
+  const isOwned = Boolean(owned[item.perk]);
+  return '<article class="card coin-item"><div class="service-art" style="font-size:40px" aria-hidden="true">' +
+   item.icon + '</div><h3>' + esc(item.name) + '</h3><p class="muted">' + esc(item.desc) +
+   '</p><div class="price">🪙 ' + item.price + ' coins</div><button class="btn ' +
+   (isOwned ? 'btn-ghost' : 'btn-primary') + ' buy-item" data-id="' + esc(item.id) + '"' +
+   (isOwned ? ' disabled' : '') + '>' + (isOwned ? '✓ Owned' : 'Unlock item') + '</button></article>';
  }).join('');
- grid.querySelectorAll('.buy-item').forEach(b=>b.onclick=()=>buy(b));
+ grid.querySelectorAll('.buy-item').forEach(button => {
+  button.addEventListener('click', () => buy(button));
+ });
 }
-function renderPerks(){
- const box=$('#userPerks');if(!box)return;
- const names={supporter:'⭐ JMB Supporter', 'profile-glow':'✨ Profile Glow','name-highlight':'🌟 Name Highlight','vip-dashboard':'💎 VIP Dashboard','creator-pack':'🚀 Creator Pack'};
- const active=Object.entries(names).filter(([k])=>owned[k]).map(([,name])=>'<span class="jmb-perk-chip">'+name+'</span>');
- if(adCredits>0)active.push('<span class="jmb-perk-chip">📢 Ad credits: '+adCredits+'</span>');
- box.innerHTML=active.length?active.join(''):'<span class="muted">No special perks unlocked yet.</span>';
+
+function renderPerks() {
+ const box = $('#userPerks');
+ if (!box) return;
+ const names = {
+  supporter:'⭐ JMB Supporter',
+  'profile-glow':'✨ Profile Glow',
+  'name-highlight':'🌟 Name Highlight',
+  'vip-dashboard':'💎 VIP Dashboard',
+  'creator-pack':'🚀 Creator Pack'
+ };
+ const active = Object.entries(names)
+  .filter(([key]) => Boolean(owned[key]))
+  .map(([, label]) => '<span class="jmb-perk-chip">' + label + '</span>');
+ if (adCredits > 0) active.push('<span class="jmb-perk-chip">📢 Ad credits: ' + adCredits + '</span>');
+ box.innerHTML = active.length ? active.join('') : '<span class="muted">No special perks unlocked yet.</span>';
 }
-async function loadTransactions(){
- const box=$('#coinTransactions');if(!box||!user)return;
- try{
-  const r=await call('getCoinWallet')({});
-  owned=r.data.entitlements||{};renderPerks();renderStore();
-  const tx=r.data.transactions||[];
-  box.innerHTML=tx.length?tx.map(x=>{
-   const amount=Number(x.amount||0),time=x.createdAt?new Date(x.createdAt).toLocaleString():'';
-   return `<article class="coin-tx"><div><b>${esc(x.description||'JMB Coin transaction')}</b><small class="muted" style="display:block">${esc(time)}</small></div><strong class="${amount>=0?'plus':'minus'}">${amount>=0?'+':''}${money(amount)} <small>JMB</small></strong></article>`;
-  }).join(''):'<div class="empty">No transactions yet. Finish a supported game to earn your first JMB Coin.</div>';
-  $('#coinStatus').textContent='Wallet and ledger are connected. JMB Coins are virtual credits only; they have no cash value.';
- }catch(e){box.innerHTML='<div class="empty">Transaction history is temporarily unavailable.</div>';$('#coinStatus').textContent=e?.message||'Could not load the JMB Coin wallet.'}
+
+function renderTransactions(transactions) {
+ const box = $('#coinTransactions');
+ if (!box) return;
+ if (!transactions.length) {
+  box.innerHTML = '<div class="empty">No transactions yet. Finish a supported game to earn your first JMB Coin.</div>';
+  return;
+ }
+ box.innerHTML = transactions.map(tx => {
+  const amount = Number(tx.amount || 0);
+  const time = tx.createdAt ? new Date(tx.createdAt).toLocaleString() : '';
+  const sign = amount >= 0 ? '+' : '';
+  return '<article class="coin-tx"><div><b>' + esc(tx.description || 'JMB Coin transaction') +
+   '</b><small class="muted" style="display:block">' + esc(time) +
+   '</small></div><strong class="' + (amount >= 0 ? 'plus' : 'minus') + '">' + sign +
+   esc(coins(amount)) + ' <small>JMB</small></strong></article>';
+ }).join('');
 }
-async function buy(button){
- const item=items.find(x=>x.id===button.dataset.id);if(!item)return;
- button.disabled=true;button.textContent='Processing…';
- try{
-  if(!user)throw new Error('Please sign in to use the store.');
-  const r=await call('purchaseCoinItem')({itemId:item.id});
-  if(!r.data?.ok)throw new Error('Purchase was not completed.');
-  owned=r.data.perks||owned;
-  $('#coinBalance').textContent=money(r.data.balance);
-  renderStore();renderPerks();
+
+async function loadTransactions() {
+ const box = $('#coinTransactions');
+ if (!box || !user) return;
+ try {
+  const response = await call('getCoinWallet')({});
+  const data = response.data || {};
+  balance = Number(data.balance || 0);
+  owned = data.entitlements || {};
+  adCredits = Number(data.adCredits || 0);
+  $('#coinBalance').textContent = coins(balance);
+  renderPerks();
+  renderStore();
+  renderTransactions(Array.isArray(data.transactions) ? data.transactions : []);
+  $('#coinStatus').textContent = 'Wallet and transaction history are connected. JMB Coins are virtual website credits and have no cash value.';
+ } catch (error) {
+  box.innerHTML = '<div class="empty">Transaction history is temporarily unavailable.</div>';
+  $('#coinStatus').textContent = error?.message || 'Could not load the JMB Coin wallet.';
+ }
+}
+
+async function buy(button) {
+ const item = items.find(entry => entry.id === button.dataset.id);
+ if (!item || !user) return;
+ button.disabled = true;
+ button.textContent = 'Processing…';
+ try {
+  const response = await call('purchaseCoinItem')({itemId:item.id});
+  const data = response.data || {};
+  if (!data.ok) throw new Error('Purchase was not completed.');
+  balance = Number(data.balance || 0);
+  owned = data.perks || owned;
+  adCredits = Number(data.adCredits ?? adCredits);
+  $('#coinBalance').textContent = coins(balance);
+  renderStore();
+  renderPerks();
   window.JMBMusic?.win?.();
-  toast('Unlocked '+item.name+' ✓','good');
-  $('#coinStatus').textContent='Item unlocked. Your virtual coin balance is '+money(r.data.balance)+'.';
+  toast('Unlocked ' + item.name + ' ✓', 'good');
+  $('#coinStatus').textContent = 'Item unlocked. Your virtual balance is ' + coins(balance) + ' JMB Coins.';
   await loadTransactions();
- }catch(e){toast(e?.message||'Purchase failed.');button.disabled=false;button.textContent='Unlock item'}
+ } catch (error) {
+  toast(error?.message || 'Purchase failed.');
+  button.disabled = false;
+  button.textContent = 'Unlock item';
+ }
 }
-onAuthStateChanged(auth,u=>{
- user=u||null;unsubWallet?.();unsubWallet=null;unsubPerks?.();unsubPerks=null;adCredits=0;
- if(!u){location.replace('login.html?next=coins.html');return}
- if(db)unsubWallet=onSnapshot(doc(db,'wallets',u.uid),snap=>{
-  const balance=Number(snap.exists()?snap.data().balance||0:0);
-  $('#coinBalance').textContent=money(balance);
- },()=>{$('#coinStatus').textContent='Live wallet updates are unavailable; refresh to retry.'});
-  unsubPerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
-   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();
-  },()=>{});
+
+onAuthStateChanged(auth, currentUser => {
+ user = currentUser || null;
+ unsubWallet?.();
+ unsubWallet = null;
+ unsubPerks?.();
+ unsubPerks = null;
+ adCredits = 0;
+ owned = {};
+ if (!currentUser) {
+  location.replace('login.html?next=coins.html');
+  return;
+ }
+ if (db) {
+  unsubWallet = onSnapshot(doc(db, 'wallets', currentUser.uid), snapshot => {
+   balance = Number(snapshot.exists() ? snapshot.data().balance || 0 : 0);
+   $('#coinBalance').textContent = coins(balance);
+  }, () => {
+   $('#coinStatus').textContent = 'Live wallet updates are unavailable; refresh to retry.';
+  });
+  unsubPerks = onSnapshot(doc(db, 'userEntitlements', currentUser.uid), snapshot => {
+   const entitlement = snapshot.exists() ? snapshot.data() : {};
+   owned = entitlement.perks || {};
+   adCredits = Number(entitlement.adCredits || 0);
+   renderPerks();
+   renderStore();
+  }, () => {
+   $('#coinStatus').textContent = 'Your perks are temporarily unavailable.';
+  });
  }
  loadTransactions();
 });
+
 renderStore();
