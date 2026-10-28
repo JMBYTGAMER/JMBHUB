@@ -39,6 +39,7 @@
   }
   </script>
   <link rel="stylesheet" href="css/premium.css">
+  <link rel="stylesheet" href="css/home-upgrade.css">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to content</a><div class="bg-grid"></div><div class="orb orb-a"></div><div class="orb orb-b"></div>
@@ -63,6 +64,33 @@
         </div>
       </div>
     </section>
+
+    <section class="jmb-live-hub container" aria-labelledby="jmbHomeGreeting">
+      <div class="jmb-hub-banner">
+        <div class="jmb-hub-copy">
+          <div class="jmb-hub-kicker"><i aria-hidden="true"></i> YOUR DIGITAL HOME BASE</div>
+          <h2 id="jmbHomeGreeting">Welcome to <span>JMB HUB.</span></h2>
+          <p id="jmbHomeSub">Games, tools, Minecraft utilities and creator features — together in one fast, mobile-friendly workspace.</p>
+          <div class="jmb-hub-actions">
+            <a class="btn btn-primary" href="pages/login.html?next=dashboard.html">Open my dashboard <span aria-hidden="true">→</span></a>
+            <button class="btn btn-ghost" type="button" data-jmb-copy-link="https://www.jmbhost.qzz.io/">Share JMB HUB ↗</button>
+          </div>
+        </div>
+        <div class="jmb-hub-stats" aria-label="JMB HUB highlights">
+          <div class="jmb-hub-stat"><span class="jmb-stat-icon" aria-hidden="true">🎮</span><strong>Play & compete</strong><small>Arcade games and personal bests</small></div>
+          <div class="jmb-hub-stat"><span class="jmb-stat-icon" aria-hidden="true">🧰</span><strong>Make things faster</strong><small>Developer and everyday tools</small></div>
+          <div class="jmb-hub-stat"><span class="jmb-stat-icon" aria-hidden="true">🔐</span><strong>Privacy-aware tools</strong><small>Local-first utilities where supported</small></div>
+          <div class="jmb-hub-stat"><span class="jmb-stat-icon" aria-hidden="true">📱</span><strong>Built for mobile</strong><small>Designed for phone and desktop</small></div>
+        </div>
+      </div>
+      <nav class="jmb-hub-quicklinks" aria-label="Quick access">
+        <a class="jmb-hub-quicklink" href="pages/login.html?next=games.html"><span aria-hidden="true">🎮</span><span><b>JMB Games</b><small>Arcade & challenges</small></span></a>
+        <a class="jmb-hub-quicklink" href="pages/login.html?next=jmb-area.html"><span aria-hidden="true">🧰</span><span><b>JMB Area</b><small>Tools & utilities</small></span></a>
+        <a class="jmb-hub-quicklink" href="pages/login.html?next=dev-toolbox.html"><span aria-hidden="true">🧑‍💻</span><span><b>Developer tools</b><small>JSON, encoding & more</small></span></a>
+        <a class="jmb-hub-quicklink" href="pages/login.html?next=security-lab.html"><span aria-hidden="true">🔐</span><span><b>Security Lab</b><small>Hash & encryption tools</small></span></a>
+      </nav>
+    </section>
+
     <section id="features" class="section container"><div class="section-head"><div><div class="eyebrow">BUILT FOR JMB</div><h2>One portal. A lot of possibilities.</h2></div><p>Modular code keeps the portal easy to expand.</p></div>
       <div class="feature-grid">
 <a class="feature-card glass feature-link" href="pages/login.html?next=games.html"><span>🎮</span><h3>JMB Games</h3><p>Fast mini-games with score tracking and leaderboards.</p><b>Open →</b></a>
@@ -80,6 +108,7 @@
   <footer class="container footer"><span>© <span id="year"></span> JMBHUB</span><span>Built for JMBHUB</span></footer>
   <script>document.getElementById('year').textContent=new Date().getFullYear()</script>
 <script type="module" src="js/core/portal.js"></script>
-<script type="module" src="js/core/maintenance.js"></script><script type="module" src="js/ads/auto-render.js"></script>
+<script type="module" src="js/core/maintenance.js"></script>
+<script type="module" src="js/core/home-upgrade.js"></script><script type="module" src="js/ads/auto-render.js"></script>
 </body>
 </html>
