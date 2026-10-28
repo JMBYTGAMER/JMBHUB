@@ -1,5 +1,6 @@
 import {auth,db} from './firebase.js';
 import './coin-notifications.js';
+import './command-center.js';
 import {startGlobalCoin} from '../coin.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import {initTelemetry} from './telemetry.js';
