@@ -93,7 +93,7 @@ exports.purchaseCoinItem=onCall(async request=>{
 
 const SKILL_GAMES=new Set([
  'snake','click','reaction','target','dodge','tap','number','math','color','whack','memory','tic','stack','coin','flappy','2048',
- 'higher','word','aim','simon','pong','lights','connect','reaction2','guesscolor','jmbdash','quickdraw','maze','typing','oddone','colormemory','safegrid','rps','coinflip','dice','tilesprint','wordrush','patternlock'
+ 'higher','word','aim','simon','pong','lights','connect','reaction2','guesscolor','jmbdash','quickdraw','maze','typing','oddone','colormemory','safegrid','rps','coinflip','dice','tilesprint','wordrush','patternlock','bubblepop','quickquiz'
 ]);
 
 exports.awardGameCoins=onCall(async request=>{
