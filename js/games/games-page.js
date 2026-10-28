@@ -100,12 +100,14 @@ function wordRush(){
 }
 function patternLock(){
  stage.innerHTML='<div class="game-view"><h2 class="game-title">🧩 Pattern Lock</h2><p class="muted">Watch the highlighted tiles, then repeat the sequence in order.</p><div id="plGrid" class="four-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"></div><div class="score-readout" id="plMsg">Level 0</div><div class="tool-actions"><button class="btn btn-primary" id="plStart">Start</button><button class="btn btn-ghost" id="plReset">Reset</button></div></div>';
- const grid=$('#plGrid'),msg=$('#plMsg'),start=$('#plStart'),reset=$('#plReset');let seq=[],pos=0,locked=true,level=0;
- function draw(active=-1){grid.innerHTML=Array.from({length:9},(_,i)=>'<button type="button" data-i="'+i+'" style="min-height:62px;border:1px solid var(--line);border-radius:12px;background:'+(i===active?'#7c5cff':'#13192c')+';color:#fff">'+(i===active?'✦':'·')+'</button>').join('')}
- function next(){seq.push(Math.floor(Math.random()*9));pos=0;locked=true;msg.textContent='Level '+seq.length+' — watch';draw();seq.forEach((v,i)=>trackedTimeout(()=>{draw(v);trackedTimeout(()=>draw(),260)},i*520));trackedTimeout(()=>{locked=false;msg.textContent='Repeat the pattern · '+seq.length+' tiles'},seq.length*520+280)}
- function newGame(){seq=[];pos=0;level=0;next()}
- grid.onclick=e=>{const b=e.target.closest('[data-i]');if(!b||locked||!seq.length)return;const n=Number(b.dataset.i);if(n!==seq[pos]){msg.textContent='Pattern missed. Final level: '+level;if(level>0)saveScore('patternlock',level*20);locked=true;return}pos++;window.JMBMusic?.click?.();if(pos===seq.length){level=seq.length;locked=true;msg.textContent='Correct! Level '+level;if(level>=12){saveScore('patternlock',level*20);msg.textContent='Amazing! Final score '+(level*20);return}trackedTimeout(next,650)}};
- start.onclick=newGame;reset.onclick=()=>{seq=[];pos=0;level=0;locked=true;draw();msg.textContent='Level 0'};draw();
+ const grid=$('#plGrid'),msg=$('#plMsg'),start=$('#plStart'),reset=$('#plReset');let seq=[],pos=0,locked=true,level=0,sequenceTimers=[];
+ function clearSequence(){for(const id of sequenceTimers)clearTrackedTimeout(id);sequenceTimers=[]}
+ function later(fn,ms){let id;id=trackedTimeout(()=>{sequenceTimers=sequenceTimers.filter(item=>item!==id);fn()},ms);sequenceTimers.push(id);return id}
+ function draw(active=-1){grid.innerHTML=Array.from({length:9},(_,i)=>'<button type="button" data-i="'+i+'" aria-label="Pattern tile '+(i+1)+'" style="min-height:62px;border:1px solid var(--line);border-radius:12px;background:'+(i===active?'#7c5cff':'#13192c')+';color:#fff">'+(i===active?'✦':'·')+'</button>').join('')}
+ function next(){clearSequence();seq.push(Math.floor(Math.random()*9));pos=0;locked=true;start.disabled=true;msg.textContent='Level '+seq.length+' — watch';draw();seq.forEach((v,i)=>{later(()=>{draw(v);later(()=>draw(),260)},i*520)});later(()=>{locked=false;start.disabled=false;msg.textContent='Repeat the pattern · '+seq.length+' tiles'},seq.length*520+280)}
+ function newGame(){if(start.disabled)return;clearSequence();seq=[];pos=0;level=0;next()}
+ grid.onclick=e=>{const b=e.target.closest('[data-i]');if(!b||locked||!seq.length)return;const n=Number(b.dataset.i);if(n!==seq[pos]){msg.textContent='Pattern missed. Final level: '+level;if(level>0)saveScore('patternlock',level*20);locked=true;return}pos++;window.JMBMusic?.click?.();if(pos===seq.length){level=seq.length;locked=true;msg.textContent='Correct! Level '+level;if(level>=12){saveScore('patternlock',level*20);msg.textContent='Amazing! Final score '+(level*20);return}later(next,650)}};
+ start.onclick=newGame;reset.onclick=()=>{clearSequence();seq=[];pos=0;level=0;locked=true;start.disabled=false;draw();msg.textContent='Level 0'};draw();
 }
 
 function safe(v){return String(v).replace(/[<>]/g,'')}
