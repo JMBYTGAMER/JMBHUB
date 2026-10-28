@@ -53,9 +53,9 @@ const games=[
 let gameScope=0;
 const gameTimers=new Map(),gameFrames=new Map();
 const gameListeners=[];
-function clearTrackedInterval(id){window.clearTrackedInterval(id);gameTimers.delete(id)}
-function clearTrackedTimeout(id){window.clearTrackedTimeout(id);gameTimers.delete(id)}
-function cancelTrackedFrame(id){window.cancelTrackedFrame(id);gameFrames.delete(id)}
+function clearTrackedInterval(id){window.clearInterval(id);gameTimers.delete(id)}
+function clearTrackedTimeout(id){window.clearTimeout(id);gameTimers.delete(id)}
+function cancelTrackedFrame(id){window.cancelAnimationFrame(id);gameFrames.delete(id)}
 function addGameListener(target,type,handler,options){target.addEventListener(type,handler,options);gameListeners.push({target,type,handler,options});}
 function clearGameRuntime(){
  gameScope++;
