@@ -18,6 +18,7 @@ const tools=[
  ['game','🕹️','Mini Game Maker','Generate a tiny downloadable HTML game.'],
  ['base64','🔐','Base64','Encode or decode text locally.'],
  ['encrypt','🛡️','AES Text Vault','Encrypt and decrypt text locally using AES-GCM and a password.'],
+ ['fileencrypt','🔐','File Encryptor','Encrypt files in your browser and download a JMB file package.'],
  ['strength','🔑','Password Strength','Check password length and common strength signals locally.'],
  ['hash','#️⃣','Hash Maker','Create a SHA-256 hash in your browser.'],
  ['filehash','📂','File Checksum','Generate SHA-256 and SHA-512 checksums locally for a file.'],
@@ -39,7 +40,7 @@ const tools=[
 function render(){library.innerHTML=tools.map(([id,i,n,d])=>`<button class="tool-choice" data-tool="${id}"><div class="tool-art">${i}</div><h3>${n}</h3><p>${d}</p><span class="pill">Open →</span></button>`).join('');library.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>openTool(b.dataset.tool))}
 function head(t){const x=tools.find(a=>a[0]===t);document.querySelector('#toolTitle').textContent=x[2];document.querySelector('#toolDesc').textContent=x[3];library.querySelectorAll('.tool-choice').forEach(b=>b.classList.toggle('active',b.dataset.tool===t))}
 const panel=x=>{stage.innerHTML='<div class="tool-panel">'+x+'</div>'};
-function openTool(name){activeToolCleanup?.();activeToolCleanup=null;head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,encrypt,strength,hash,filehash,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:()=>{activeToolCleanup?.();activeToolCleanup=null}})}
+function openTool(name){activeToolCleanup?.();activeToolCleanup=null;head(name);const info=tools.find(x=>x[0]===name)||tools[0];const renderers={calc,qr,scan,code,counter,json,convert,color,uuid,timer,stopwatch,game,base64,encrypt,fileencrypt,strength,hash,filehash,markdown,timestamp,password,regex,gradient,csv,url,jwt,diff,baseconv,colorpick,aspect,lorem,ip};renderers[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:()=>{activeToolCleanup?.();activeToolCleanup=null}})}
 function evaluateMath(source){
  const s=String(source).replace(/\s+/g,'');
  const tokens=s.match(/(?:\d+(?:\.\d*)?|\.\d+|[()+\-*/%])/g)||[];
@@ -190,6 +191,48 @@ function encrypt(){
 
 function base64(){panel('<div class="field"><label>Text</label><textarea id="b64in" class="tool-area"></textarea></div><div class="tool-actions"><button class="btn btn-primary" id="b64e">Encode</button><button class="btn btn-ghost" id="b64d">Decode</button></div><textarea id="b64out" class="tool-area" readonly></textarea>');const out=$('#b64out');$('#b64e').onclick=()=>out.value=btoa(unescape(encodeURIComponent($('#b64in').value)));$('#b64d').onclick=()=>{try{out.value=decodeURIComponent(escape(atob($('#b64in').value)))}catch{out.value='Invalid Base64'}}}
 async function hash(){panel('<textarea id="hashIn" class="tool-area" placeholder="Text to hash"></textarea><button class="btn btn-primary" id="hashBtn">SHA-256</button><div id="hashOut" class="result-box">—</div>');$('#hashBtn').onclick=async()=>{const data=new TextEncoder().encode($('#hashIn').value),buf=await crypto.subtle.digest('SHA-256',data);$('#hashOut').textContent=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}}
+async function fileencrypt(){
+ panel('<p class="muted">AES-256-GCM file encryption runs locally in your browser. Password-derived keys use PBKDF2-SHA-256. Files up to 50 MB are supported; nothing is uploaded. Keep the password safe.</p><div class="field"><label for="feFile">Choose a file to encrypt, or a .jmbenc file to decrypt</label><input id="feFile" class="tool-input" type="file"></div><div class="field"><label for="fePass">Password (at least 12 characters recommended)</label><input id="fePass" class="tool-input" type="password" autocomplete="new-password" maxlength="512"></div><div class="tool-actions"><button id="feEncrypt" type="button" class="btn btn-primary">🔒 Encrypt & download</button><button id="feDecrypt" type="button" class="btn btn-ghost">🔓 Decrypt & download</button></div><div id="feStatus" class="notice" role="status">Choose a file to begin.</div>');
+ const fileInput=$('#feFile'),password=$('#fePass'),status=$('#feStatus'),encBtn=$('#feEncrypt'),decBtn=$('#feDecrypt');
+ const encoder=new TextEncoder(),decoder=new TextDecoder(),magic=encoder.encode('JMBFILE1');
+ const derive=async(pass,salt)=>{const material=await crypto.subtle.importKey('raw',encoder.encode(pass),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])};
+ const save=(blob,name)=>{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.hidden=true;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)};
+ const busy=value=>{encBtn.disabled=value;decBtn.disabled=value;fileInput.disabled=value};
+ encBtn.onclick=async()=>{
+  const file=fileInput.files?.[0],pass=password.value;
+  if(!file){status.textContent='Choose a file first.';return}
+  if(!pass||pass.length<8){status.textContent='Use a password with at least 8 characters (12 or more is recommended).';return}
+  if(file.size>50*1024*1024){status.textContent='Files larger than 50 MB are not supported by this browser tool.';return}
+  if(!globalThis.crypto?.subtle){status.textContent='Web Crypto is unavailable. Open JMBHUB over HTTPS in a supported browser.';return}
+  const name=encoder.encode(file.name.slice(0,200)),mime=encoder.encode((file.type||'application/octet-stream').slice(0,200));
+  if(name.length>65535||mime.length>65535){status.textContent='File metadata is too long.';return}
+  busy(true);status.textContent='Encrypting locally…';
+  try{
+   const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),key=await derive(pass,salt),plain=await file.arrayBuffer();
+   const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,plain));
+   const header=new Uint8Array(40+name.length+mime.length),view=new DataView(header.buffer);header.set(magic,0);view.setUint16(8,name.length);view.setUint16(10,mime.length);header.set(salt,12);header.set(iv,28);header.set(name,40);header.set(mime,40+name.length);
+   save(new Blob([header,cipher],{type:'application/octet-stream'}),file.name+'.jmbenc');status.textContent='Encrypted file downloaded. Keep the password and encrypted file together in a safe place.';window.JMBMusic?.win?.();
+  }catch(e){status.textContent=e.message||'File encryption failed.'}
+  finally{busy(false)}
+ };
+ decBtn.onclick=async()=>{
+  const file=fileInput.files?.[0],pass=password.value;
+  if(!file){status.textContent='Choose a .jmbenc file first.';return}
+  if(!pass){status.textContent='Enter the original password.';return}
+  if(file.size>51*1024*1024){status.textContent='This file is too large for the browser tool.';return}
+  if(!globalThis.crypto?.subtle){status.textContent='Web Crypto is unavailable. Open JMBHUB over HTTPS in a supported browser.';return}
+  busy(true);status.textContent='Decrypting locally…';
+  try{
+   const bytes=new Uint8Array(await file.arrayBuffer());
+   if(bytes.length<56||decoder.decode(bytes.slice(0,8))!=='JMBFILE1')throw new Error('This file is not a supported JMBFILE1 package.');
+   const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),nameLength=view.getUint16(8),mimeLength=view.getUint16(10),nameStart=40,mimeStart=nameStart+nameLength,cipherStart=mimeStart+mimeLength;
+   if(cipherStart>=bytes.length)throw new Error('Encrypted file appears incomplete.');
+   const name=decoder.decode(bytes.slice(nameStart,mimeStart)).replace(/[\\/\\0]/g,'_').slice(0,200)||'decrypted-file.bin',mime=decoder.decode(bytes.slice(mimeStart,cipherStart)).slice(0,200)||'application/octet-stream',salt=bytes.slice(12,28),iv=bytes.slice(28,40),cipher=bytes.slice(cipherStart),key=await derive(pass,salt);
+   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,cipher);save(new Blob([plain],{type:mime}),name);status.textContent='Decrypted file downloaded.';window.JMBMusic?.notify?.();
+  }catch(e){status.textContent=e.name==='OperationError'?'Decryption failed. Check the password or file integrity.':(e.message||'File decryption failed.')}
+  finally{busy(false)}
+ };
+}
 function filehash(){
  panel('<p class="muted">Create file fingerprints in your browser. Your file is not uploaded. SHA-256 and SHA-512 are integrity hashes, not encryption.</p><div class="field"><label for="fhFile">Choose a file (max 50 MB)</label><input id="fhFile" class="tool-input" type="file"></div><div id="fhStatus" class="notice" role="status">Select a file to calculate its checksums.</div><div class="field"><label>SHA-256</label><textarea id="fh256" class="tool-area" readonly></textarea><button id="fhCopy256" class="btn btn-ghost" type="button">Copy SHA-256</button></div><div class="field"><label>SHA-512</label><textarea id="fh512" class="tool-area" readonly></textarea><button id="fhCopy512" class="btn btn-ghost" type="button">Copy SHA-512</button></div>');
  const file=$('#fhFile'),status=$('#fhStatus'),out256=$('#fh256'),out512=$('#fh512');
