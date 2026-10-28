@@ -70,7 +70,7 @@ const games=[
 function safe(v){return String(v).replace(/[<>]/g,'')}
 function renderLibrary(){library.innerHTML=games.map(([id,icon,title,desc])=>`<button class="game-card" data-game="${id}"><div class="game-art">${icon}</div><h3>${title}</h3><p>${desc}</p><span class="pill">Play →</span></button>`).join('');library.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>switchGame(b.dataset.game))}
 function setHeader(g){const x=games.find(a=>a[0]===g);$('#activeGameTitle').textContent=x[2];$('#activeGameDesc').textContent=x[3];$('#lbTitle').textContent=x[2];library.querySelectorAll('.game-card').forEach(b=>b.classList.toggle('active',b.dataset.game===g))}
-async function saveScore(game,score){
+async function saveScore(game,score,rewardGameId=game){
  score=Number(score);
  if(!Number.isFinite(score))return;
  score=Math.max(0,Math.min(100000,Math.floor(score)));
@@ -85,7 +85,7 @@ async function saveScore(game,score){
   await loadBoard(game);
  }catch(e){toast('Score could not be saved: '+(e?.message||'Connection unavailable.'))}
  if(awardCoins){
-  try{const r=await awardCoins({gameId:game,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}
+  try{const r=await awardCoins({gameId:rewardGameId,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}
   catch(e){if(!String(e.code||'').includes('resource-exhausted'))console.warn('JMB Coin reward unavailable:',e.message)}
  }
 }
@@ -208,7 +208,7 @@ function cipher(){
  function finish(){
   finished=true;form.hidden=true;start.hidden=false;start.textContent='Play again';
   status.textContent='Cipher complete! Score: '+score+' / 100. '+(score>=60?'Nice decoding!':'Practice and try again.');
-  saveScore('cipher',score);if(score>0)JMBMusic.win();else JMBMusic.lose();
+  saveScore('cipher',score,'pattern');if(score>0)JMBMusic.win();else JMBMusic.lose();
  }
  form.addEventListener('submit',e=>{
   e.preventDefault();if(finished)return;
