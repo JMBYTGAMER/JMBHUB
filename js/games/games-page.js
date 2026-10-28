@@ -48,7 +48,9 @@ const games=[
  ['safegrid','🛡️','Safe Grid','Cross the grid without hitting hidden traps.'],
  ['tilesprint','🟩','Tile Sprint','Tap the glowing tile before it moves.'],
  ['wordrush','⌨️','Word Rush','Type the target words before time runs out.'],
- ['patternlock','🧩','Pattern Lock','Remember and repeat an expanding tile pattern.']
+ ['patternlock','🧩','Pattern Lock','Remember and repeat an expanding tile pattern.'],
+ ['bubblepop','🫧','Bubble Pop','Pop floating bubbles before the 20-second round ends.'],
+ ['quickquiz','🧠','Quick Quiz','Answer 10 quick questions and build your score.']
 ];
 let gameScope=0;
 const gameTimers=new Map(),gameFrames=new Map();
@@ -64,7 +66,6 @@ function clearGameRuntime(){
  for(const id of gameFrames.keys())window.cancelAnimationFrame(id);
  gameFrames.clear();
  for(const item of gameListeners.splice(0))item.target.removeEventListener(item.type,item.handler,item.options);
- window.onkeydown=null;
  window.JMBMusic?.stop?.();
 }
 function trackedTimeout(fn,ms,...args){
@@ -123,7 +124,7 @@ function draw(){ctx.clearRect(0,0,320,320);ctx.fillStyle='#10182a';ctx.fillRect(
 function setDir(d){if(d==='up'&&dir.y!==1)dir={x:0,y:-1};if(d==='down'&&dir.y!==-1)dir={x:0,y:1};if(d==='left'&&dir.x!==1)dir={x:-1,y:0};if(d==='right'&&dir.x!==-1)dir={x:1,y:0}}
 function step(){const h={x:body[0].x+dir.x,y:body[0].y+dir.y};if(h.x<0||h.x>=size||h.y<0||h.y>=size||body.some(s=>s.x===h.x&&s.y===h.y)){clearTrackedInterval(timer);started=false;toast(`Snake over — ${score}`);saveScore('snake',score);return}body.unshift(h);if(h.x===food.x&&h.y===food.y){score++;$('#snakeScore').textContent=score;do{food={x:Math.floor(Math.random()*size),y:Math.floor(Math.random()*size)}}while(body.some(s=>s.x===food.x&&s.y===food.y))}else body.pop();draw()}
 function start(){clearTrackedInterval(timer);reset();started=true;timer=trackedInterval(step,100)}
-$('#snakeStart').onclick=start;document.querySelectorAll('.dpad [data-d]').forEach(b=>b.onpointerdown=()=>setDir(b.dataset.d));window.onkeydown=e=>{if(current!=='snake'||!started)return;({ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'}[e.key])&&setDir(({ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'}[e.key]))};let last; c.addEventListener('touchstart',e=>{last=e.touches[0]},{passive:true});c.addEventListener('touchend',e=>{if(!last)return;const t=e.changedTouches[0],dx=t.clientX-last.clientX,dy=t.clientY-last.clientY;if(Math.max(Math.abs(dx),Math.abs(dy))>25)setDir(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));last=null},{passive:true});reset()}
+$('#snakeStart').onclick=start;document.querySelectorAll('.dpad [data-d]').forEach(b=>b.onpointerdown=()=>setDir(b.dataset.d));addGameListener(window,'keydown',e=>{if(current!=='snake'||!started)return;const d=({ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'})[e.key];if(d){e.preventDefault();setDir(d)}});let last; c.addEventListener('touchstart',e=>{last=e.touches[0]},{passive:true});c.addEventListener('touchend',e=>{if(!last)return;const t=e.changedTouches[0],dx=t.clientX-last.clientX,dy=t.clientY-last.clientY;if(Math.max(Math.abs(dx),Math.abs(dy))>25)setDir(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));last=null},{passive:true});reset()}
 
 function clickRush(){stage.innerHTML='<div class="game-view"><h2 class="game-title">⚡ Click Rush</h2><p class="muted">Tap the button as many times as you can.</p><div id="clickTimer" class="big-number">10</div><button class="btn btn-primary game-btn" id="rushBtn">START</button><p class="score-readout">Clicks: <b id="clickScore">0</b></p></div>';let active=false,score=0;const btn=$('#rushBtn');btn.onclick=()=>{if(active)return;active=true;score=0;$('#clickScore').textContent=0;btn.textContent='TAP!';let t=10;const iv=trackedInterval(()=>{t--;$('#clickTimer').textContent=t;if(t<=0){clearTrackedInterval(iv);active=false;btn.textContent='START AGAIN';toast(`Click Rush — ${score}`);saveScore('click',score)}},1000)};btn.onpointerdown=e=>{if(active){e.preventDefault();score++;$('#clickScore').textContent=score}}}
 
@@ -174,7 +175,40 @@ function stack(){
 }
 function coin(){stage.innerHTML='<div class="game-view"><h2 class="game-title">🪙 Coin Catch</h2><p class="muted">Move the player and catch coins.</p><div class="dodge-stage" id="coinStage"><div class="dodge-player" id="coinPlayer"></div></div><p>Coins: <b id="coinScore">0</b></p></div>';const s=$('#coinStage'),p=$('#coinPlayer');let x=50,y=240,score=0,keys={};function move(){x=Math.max(0,Math.min(s.clientWidth-28,x+(keys.ArrowRight?6:0)-(keys.ArrowLeft?6:0)));y=Math.max(0,Math.min(s.clientHeight-28,y+(keys.ArrowDown?6:0)-(keys.ArrowUp?6:0)));p.style.left=x+'px';p.style.top=y+'px'}addGameListener(window,'keydown',e=>{if(current==='coin')keys[e.key]=true});addGameListener(window,'keyup',e=>{if(current==='coin')keys[e.key]=false});const iv=trackedInterval(()=>{move();const c=document.createElement('div');c.className='coin';c.style.left=Math.random()*Math.max(1,s.clientWidth-25)+'px';c.style.top='-25px';s.append(c);let t=trackedInterval(()=>{c.style.top=(parseFloat(c.style.top)+4)+'px';const a=c.getBoundingClientRect(),q=p.getBoundingClientRect();if(a.left<q.right&&a.right>q.left&&a.top<q.bottom&&a.bottom>q.top){score++;$('#coinScore').textContent=score;clearTrackedInterval(t);c.remove()}if(parseFloat(c.style.top)>s.clientHeight){clearTrackedInterval(t);c.remove()}},35)},600);trackedTimeout(()=>{clearTrackedInterval(iv);toast(`Coin Catch — ${score}`);saveScore('coin',score)},20000)}
 
-function flappy(){stage.innerHTML='<div class="game-view"><h2 class="game-title">🐤 Flappy Dot</h2><p class="muted">Tap to flap through the gaps.</p><div class="flappy-stage" id="flappyStage"><div class="flappy-bird" id="flappyBird"></div></div><button class="btn btn-primary" id="flappyStart">START</button><p>Score: <b id="flappyScore">0</b></p></div>';const s=$('#flappyStage'),p=$('#flappyBird'),b=$('#flappyStart');let y=140,vy=0,score=0,active=false,iv;function flap(){if(active)vy=-6}b.onclick=()=>{if(active)return;active=true;b.textContent='TAP TO FLAP';iv=trackedInterval(()=>{vy+=.35;y+=vy;p.style.top=y+'px';p.style.left='80px';if(y<0||y>s.clientHeight-25){clearTrackedInterval(iv);active=false;toast(`Flappy Dot — ${score}`);saveScore('flappy',score)}if(Math.random()<.025){const gap=70+Math.random()*130;const top=document.createElement('div'),bot=document.createElement('div');top.className=bot.className='pipe';top.style.left=bot.style.left=s.clientWidth+'px';top.style.top='0';top.style.height=gap+'px';bot.style.bottom='0';bot.style.height=(s.clientHeight-gap-95)+'px';s.append(top,bot);let x=s.clientWidth;const mv=trackedInterval(()=>{x-=3;top.style.left=bot.style.left=x+'px';if(x<40&&x>15)score++;if(x<-60){clearTrackedInterval(mv);top.remove();bot.remove()}},25)}$('#flappyScore').textContent=score},25);s.onpointerdown=flap};addGameListener(document,'keydown',e=>{if(current==='flappy'&&e.code==='Space')flap()})}
+function flappy(){
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🐤 Flappy Dot</h2><p class="muted">Tap the play field or press Space to flap through the gaps. Pipes score once when passed.</p><div class="flappy-stage" id="flappyStage"><div class="flappy-bird" id="flappyBird"></div></div><div class="tool-actions"><button type="button" class="btn btn-primary" id="flappyStart">START</button><span class="pill">Score: <b id="flappyScore">0</b></span></div><p id="flappyMsg" class="muted" role="status">Ready.</p></div>';
+ const s=$('#flappyStage'),p=$('#flappyBird'),b=$('#flappyStart'),scoreOut=$('#flappyScore'),msg=$('#flappyMsg');
+ let y=140,vy=0,score=0,active=false,iv=null,spawnMs=0,pipes=[];
+ function clearPipes(){pipes.forEach(pipe=>{pipe.top.remove();pipe.bottom.remove()});pipes=[]}
+ function finish(reason){if(!active)return;active=false;if(iv){clearTrackedInterval(iv);iv=null}clearPipes();b.disabled=false;b.textContent='PLAY AGAIN';msg.textContent=reason+' Final score: '+score+'.';toast('Flappy Dot — '+score);if(score>0)saveScore('flappy',score)}
+ function flap(){if(active)vy=-6.3}
+ function spawnPipe(){
+  const height=s.clientHeight||330,gap=112,gapTop=36+Math.random()*Math.max(1,height-gap-95);
+  const top=document.createElement('div'),bottom=document.createElement('div');
+  top.className='pipe';bottom.className='pipe';top.style.left=bottom.style.left=(s.clientWidth||440)+'px';
+  top.style.top='0px';top.style.height=gapTop+'px';bottom.style.top=(gapTop+gap)+'px';bottom.style.height=Math.max(0,height-gapTop-gap)+'px';
+  s.append(top,bottom);pipes.push({x:s.clientWidth||440,gapTop,gapBottom:gapTop+gap,top,bottom,scored:false});
+ }
+ function tick(){
+  if(!active)return;
+  const height=s.clientHeight||330,width=s.clientWidth||440;
+  vy+=.30;y+=vy;p.style.top=y+'px';p.style.left='80px';
+  if(y<0||y+25>height){finish('You hit the edge.');return}
+  spawnMs+=25;if(spawnMs>=1350){spawnMs=0;spawnPipe()}
+  const birdLeft=80,birdRight=105,birdTop=y,birdBottom=y+25;
+  for(const pipe of pipes){
+   pipe.x-=2.7;pipe.top.style.left=pipe.x+'px';pipe.bottom.style.left=pipe.x+'px';
+   if(!pipe.scored&&pipe.x+48<birdLeft){pipe.scored=true;score++;scoreOut.textContent=String(score)}
+   const horizontal=pipe.x<birdRight&&pipe.x+48>birdLeft;
+   if(horizontal&&(birdTop<pipe.gapTop||birdBottom>pipe.gapBottom)){finish('You hit a pipe.');return}
+  }
+  pipes=pipes.filter(pipe=>{if(pipe.x<-52){pipe.top.remove();pipe.bottom.remove();return false}return true});
+ }
+ function start(){if(iv){clearTrackedInterval(iv);iv=null}clearPipes();y=140;vy=0;score=0;spawnMs=0;active=true;scoreOut.textContent='0';p.style.top=y+'px';p.style.left='80px';b.textContent='Tap / press Space';b.disabled=true;msg.textContent='Keep flying!';iv=trackedInterval(tick,25)}
+ s.addEventListener('pointerdown',e=>{if(active){e.preventDefault();flap()}},{passive:false});
+ addGameListener(window,'keydown',e=>{if(current==='flappy'&&e.code==='Space'&&active){e.preventDefault();flap()}});
+ b.onclick=start;
+}
 
 function mini2048(){
  let board=Array(16).fill(0),score=0,recorded=false,over=false;
@@ -279,6 +313,46 @@ function guesscolor(){
  stage.innerHTML='<div class="game-view"><h2 class="game-title">🌈 Color Guess</h2><div id="guessColorBox" class="result-box" style="height:180px"></div><p class="muted">Guess the RGB values for the displayed color.</p><div class="form-grid"><input id="gr" class="tool-input" type="number" min="0" max="255" step="1" placeholder="R"><input id="gg" class="tool-input" type="number" min="0" max="255" step="1" placeholder="G"><input id="gb" class="tool-input" type="number" min="0" max="255" step="1" placeholder="B"></div><button class="btn btn-primary" id="colorGuessBtn">Guess</button><p id="colorGuessMsg" aria-live="polite"></p></div>';
  $('#guessColorBox').style.background='rgb('+target.r+','+target.g+','+target.b+')';const button=$('#colorGuessBtn');button.onclick=()=>{const fields=[$('#gr').value,$('#gg').value,$('#gb').value];if(fields.some(v=>v.trim()==='')||fields.some(v=>!Number.isInteger(Number(v))||Number(v)<0||Number(v)>255)){$('#colorGuessMsg').textContent='Enter whole-number RGB values from 0 to 255.';return}const diff=Math.abs(Number(fields[0])-target.r)+Math.abs(Number(fields[1])-target.g)+Math.abs(Number(fields[2])-target.b),score=Math.max(1,100-Math.floor(diff/8));button.disabled=true;$('#colorGuessMsg').textContent='Score: '+score+'/100 · Target RGB: '+target.r+', '+target.g+', '+target.b;saveScore('guesscolor',score)}
 }
-const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid'),tilesprint:tileSprint,wordrush:wordRush,patternlock:patternLock};
+function bubblePop(){
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🫧 Bubble Pop</h2><p class="muted">Pop as many bubbles as you can in 20 seconds. Works with touch and mouse.</p><div class="score-readout">Score: <b id="bubbleScore">0</b> · Time: <b id="bubbleTime">20</b>s</div><div id="bubbleStage" style="position:relative;overflow:hidden;min-height:300px;border:1px solid var(--line);border-radius:18px;background:radial-gradient(circle at 20% 15%,rgba(0,212,255,.12),transparent 36%),#0a1020;touch-action:manipulation"></div><div class="tool-actions"><button type="button" class="btn btn-primary" id="bubbleStart">Start round</button></div><p id="bubbleMsg" class="muted" role="status">Press start when ready.</p></div>';
+ const s=$('#bubbleStage'),b=$('#bubbleStart'),scoreOut=$('#bubbleScore'),timeOut=$('#bubbleTime'),msg=$('#bubbleMsg');
+ let active=false,score=0,left=20,tick=null,spawn=null;const bubbles=new Map();
+ function removeBubble(id){const entry=bubbles.get(id);if(!entry)return;clearTrackedTimeout(entry.timer);entry.el.remove();bubbles.delete(id)}
+ function clearBubbles(){for(const id of [...bubbles.keys()])removeBubble(id)}
+ function spawnBubble(){
+  if(!active)return;
+  const id=String(Date.now())+'_'+Math.random().toString(36).slice(2,7),el=document.createElement('button');
+  const size=34+Math.floor(Math.random()*30);el.type='button';el.setAttribute('aria-label','Pop bubble');el.textContent='●';
+  Object.assign(el.style,{position:'absolute',width:size+'px',height:size+'px',left:Math.floor(Math.random()*Math.max(1,s.clientWidth-size))+'px',top:Math.floor(Math.random()*Math.max(1,s.clientHeight-size))+'px',border:'1px solid rgba(255,255,255,.75)',borderRadius:'50%',color:'#fff',fontSize:(size-4)+'px',lineHeight:'1',background:'radial-gradient(circle at 30% 25%,#b7f7ff,#4a9dff 60%,#7c5cff)',boxShadow:'0 0 22px rgba(0,212,255,.25)',cursor:'pointer'});
+  el.onclick=()=>{if(!active)return;score++;scoreOut.textContent=String(score);window.JMBMusic?.click?.();removeBubble(id);spawnBubble()};
+  s.append(el);const timer=trackedTimeout(()=>removeBubble(id),1600);bubbles.set(id,{el,timer});
+ }
+ function finish(){if(!active)return;active=false;if(tick)clearTrackedInterval(tick);if(spawn)clearTrackedInterval(spawn);tick=spawn=null;clearBubbles();b.disabled=false;b.textContent='Play again';msg.textContent='Round complete — '+score+' bubbles popped.';if(score>0)saveScore('bubblepop',score)}
+ b.onclick=()=>{if(active)return;clearBubbles();score=0;left=20;active=true;b.disabled=true;b.textContent='Playing…';scoreOut.textContent='0';timeOut.textContent='20';msg.textContent='Pop! Pop! Pop!';spawnBubble();spawn=trackedInterval(spawnBubble,450);tick=trackedInterval(()=>{left--;timeOut.textContent=String(left);if(left<=0)finish()},1000)};
+}
+function quickQuiz(){
+ const questions=[
+  {q:'Which planet is known as the Red Planet?',a:['Mars','Venus','Jupiter','Mercury'],correct:0},
+  {q:'How many sides does a hexagon have?',a:['5','6','7','8'],correct:1},
+  {q:'Which language runs natively in a web browser?',a:['Python','Java','JavaScript','C'],correct:2},
+  {q:'What does CPU stand for?',a:['Central Processing Unit','Computer Power Utility','Core Program User','Central Pixel Unit'],correct:0},
+  {q:'Which is a valid secure web URL scheme?',a:['ftp://','https://','file://','data://'],correct:1},
+  {q:'What is 12 × 8?',a:['86','92','96','108'],correct:2},
+  {q:'Which data format uses key-value pairs and braces?',a:['JSON','PNG','MP3','CSS Grid'],correct:0},
+  {q:'Which is a primary color of light?',a:['Brown','Cyan','Black','White'],correct:1},
+  {q:'Which file extension commonly means a JavaScript module?',a:['.png','.mp4','.js','.zip'],correct:2},
+  {q:'What does RAM mainly provide?',a:['Temporary working memory','Permanent backup','Internet connection','Screen brightness'],aIndex:0,correct:0}
+ ];
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🧠 Quick Quiz</h2><p class="muted">Answer 10 general knowledge and tech questions. Each correct answer adds 10 points.</p><div class="score-readout">Question <b id="quizIndex">1</b>/10 · Score: <b id="quizScore">0</b></div><h3 id="quizQuestion" style="margin:18px 0"></h3><div id="quizAnswers" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px"></div><p id="quizMsg" class="muted" role="status">Choose an answer.</p><button type="button" id="quizRestart" class="btn btn-ghost">Restart quiz</button></div>';
+ let order=[],pos=0,score=0,locked=false,finished=false;
+ const qEl=$('#quizQuestion'),answers=$('#quizAnswers'),msg=$('#quizMsg');
+ function show(){if(pos>=order.length){finish();return}locked=false;const item=questions[order[pos]];$('#quizIndex').textContent=String(pos+1);qEl.textContent=item.q;answers.innerHTML='';item.a.forEach((label,index)=>{const b=document.createElement('button');b.type='button';b.className='btn btn-ghost';b.textContent=label;b.dataset.answer=String(index);answers.append(b)});msg.textContent='Choose the best answer.'}
+ function finish(){if(finished)return;finished=true;locked=true;answers.innerHTML='';qEl.textContent='Quiz complete!';msg.textContent='Final score: '+score+'/100.';if(score>0)saveScore('quickquiz',score);window.JMBMusic?.win?.()}
+ answers.onclick=e=>{const b=e.target.closest('button[data-answer]');if(!b||locked||finished)return;locked=true;const item=questions[order[pos]];const correct=Number(b.dataset.answer)===item.correct;if(correct){score+=10;window.JMBMusic?.win?.()}else window.JMBMusic?.lose?.();$('#quizScore').textContent=String(score);answers.querySelectorAll('button').forEach(btn=>{btn.disabled=true;if(Number(btn.dataset.answer)===item.correct)btn.classList.add('btn-primary')});msg.textContent=correct?'Correct!':'Not quite — the correct answer is '+item.a[item.correct]+'.';pos++;trackedTimeout(show,650)};
+ function reset(){order=questions.map((_,i)=>i);for(let i=order.length-1;i>0;i--){const j=crypto?.getRandomValues?crypto.getRandomValues(new Uint32Array(1))[0]%(i+1):Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}pos=0;score=0;locked=false;finished=false;$('#quizScore').textContent='0';show()}
+ $('#quizRestart').onclick=reset;reset();
+}
+
+const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid'),tilesprint:tileSprint,wordrush:wordRush,patternlock:patternLock,bubblepop:bubblePop,quickquiz:quickQuiz};
 function switchGame(name){clearGameRuntime();current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
 (async()=>{user=await guard();renderLibrary();})();
