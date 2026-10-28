@@ -149,7 +149,7 @@ function math(){
  let score=0,index=0,answer=0,finished=false;const input=$('#mathA'),button=$('#mathBtn'),msg=$('#mathMsg');function next(){const a=Math.floor(Math.random()*20)+1,b=Math.floor(Math.random()*20)+1;answer=a+b;$('#mathQ').textContent=a+' + '+b+' = ?';input.value='';input.focus()}function submit(){if(finished)return;if(input.value.trim()==='')return;const correct=Number(input.value)===answer;if(correct)score+=10;index++;$('#mathScore').textContent=score;if(index>=10){finished=true;button.disabled=true;input.disabled=true;msg.textContent='Complete! Correct answers earned '+score+' points.';saveScore('math',score);return}msg.textContent=correct?'Correct! Next question.':'Not quite — next question.';next()}button.onclick=submit;input.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});next();
 }
 function color(){
- const colors=[['RED','#d44'],['BLUE','#4b8'],['GREEN','#56d'],['YELLOW','#e0b83d']];
+ const colors=[['RED','#e53935'],['BLUE','#2f80ed'],['GREEN','#27ae60'],['YELLOW','#f2c94c']];
  stage.innerHTML='<div class="game-view"><h2 class="game-title">🎨 Color Match</h2><p class="muted">Tap the button matching the word. The round ends after 15 seconds.</p><h2 id="colorWord"></h2><div class="color-pad" id="colorPad"></div><p>Score: <b id="colorScore">0</b></p><p id="colorMsg" class="muted" aria-live="polite">Round in progress.</p></div>';
  let score=0,active=true;const pad=$('#colorPad'),msg=$('#colorMsg');
  function finish(){if(!active)return;active=false;pad.querySelectorAll('button').forEach(b=>b.disabled=true);msg.textContent='Round complete — '+score+' points.';saveScore('color',score)}
@@ -176,8 +176,38 @@ function coin(){stage.innerHTML='<div class="game-view"><h2 class="game-title">�
 
 function flappy(){stage.innerHTML='<div class="game-view"><h2 class="game-title">🐤 Flappy Dot</h2><p class="muted">Tap to flap through the gaps.</p><div class="flappy-stage" id="flappyStage"><div class="flappy-bird" id="flappyBird"></div></div><button class="btn btn-primary" id="flappyStart">START</button><p>Score: <b id="flappyScore">0</b></p></div>';const s=$('#flappyStage'),p=$('#flappyBird'),b=$('#flappyStart');let y=140,vy=0,score=0,active=false,iv;function flap(){if(active)vy=-6}b.onclick=()=>{if(active)return;active=true;b.textContent='TAP TO FLAP';iv=trackedInterval(()=>{vy+=.35;y+=vy;p.style.top=y+'px';p.style.left='80px';if(y<0||y>s.clientHeight-25){clearTrackedInterval(iv);active=false;toast(`Flappy Dot — ${score}`);saveScore('flappy',score)}if(Math.random()<.025){const gap=70+Math.random()*130;const top=document.createElement('div'),bot=document.createElement('div');top.className=bot.className='pipe';top.style.left=bot.style.left=s.clientWidth+'px';top.style.top='0';top.style.height=gap+'px';bot.style.bottom='0';bot.style.height=(s.clientHeight-gap-95)+'px';s.append(top,bot);let x=s.clientWidth;const mv=trackedInterval(()=>{x-=3;top.style.left=bot.style.left=x+'px';if(x<40&&x>15)score++;if(x<-60){clearTrackedInterval(mv);top.remove();bot.remove()}},25)}$('#flappyScore').textContent=score},25);s.onpointerdown=flap};addGameListener(document,'keydown',e=>{if(current==='flappy'&&e.code==='Space')flap()})}
 
-function mini2048(){let board=Array(16).fill(0),milestoneAwarded=false;stage.innerHTML='<div class="game-view"><h2 class="game-title">🔢 2048 Mini</h2><div class="four-grid" id="g2048"></div><p>Score: <b id="g2048Score">0</b></p><p class="muted">Swipe or use arrow keys.</p></div>';const g=$('#g2048'),sc=$('#g2048Score');let score=0;function draw(){g.innerHTML=board.map((v,i)=>`<button data-i="${i}">${v||''}</button>`).join('')}function add(){const e=board.map((v,i)=>v?null:i).filter(i=>i!==null);if(e.length)board[e[Math.floor(Math.random()*e.length)]]=Math.random()<.9?2:4}function move(dir){let old=board.join(),rows=[];for(let r=0;r<4;r++){let line=dir==='left'||dir==='right'?[...board.slice(r*4,r*4+4)]:[board[r],board[r+4],board[r+8],board[r+12]];if(dir==='right'||dir==='down')line.reverse();line=line.filter(Boolean);for(let i=0;i<line.length-1;i++)if(line[i]===line[i+1]){line[i]*=2;score+=line[i];line.splice(i+1,1)}while(line.length<4)line.push(0);if(dir==='right'||dir==='down')line.reverse();rows.push(line)}if(dir==='left'||dir==='right')board=rows.flat();else board=Array.from({length:4},(_,i)=>rows.map(r=>r[i])).flat();if(board.join()!==old){add();sc.textContent=score;draw();if(!milestoneAwarded&&Math.max(...board)>=128){milestoneAwarded=true;toast('2048 milestone!');saveScore('2048',score)}}}draw();add();draw();addGameListener(window,'keydown',e=>{if(current!=='2048')return;const d=({ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'}[e.key]);if(d)move(d)})}
-
+function mini2048(){
+ let board=Array(16).fill(0),score=0,recorded=false,over=false;
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🔢 2048 Mini</h2><div class="four-grid" id="g2048"></div><p>Score: <b id="g2048Score">0</b></p><p class="muted">Swipe or use arrow keys. Reach 128 for a milestone; no-move boards can be restarted.</p><p id="g2048Status" class="muted" aria-live="polite">Make your first move.</p><button type="button" id="g2048Restart" class="btn btn-ghost">Restart</button></div>';
+ const g=$('#g2048'),sc=$('#g2048Score'),status=$('#g2048Status');
+ function draw(){g.innerHTML=board.map((v,i)=>'<button type="button" data-i="'+i+'" aria-label="Tile '+(v||'empty')+'">'+(v||'')+'</button>').join('')}
+ function add(){const empty=board.map((v,i)=>v?null:i).filter(i=>i!==null);if(empty.length)board[empty[Math.floor(Math.random()*empty.length)]]=Math.random()<.9?2:4}
+ function canMove(){if(board.some(v=>v===0))return true;for(let r=0;r<4;r++)for(let col=0;col<4;col++){const i=r*4+col;if(col<3&&board[i]===board[i+1])return true;if(r<3&&board[i]===board[i+4])return true}return false}
+ function finish(){if(over)return;over=true;status.textContent='No moves left. Restart to play again.';if(!recorded&&score>0){recorded=true;saveScore('2048',score)}}
+ function reset(){board=Array(16).fill(0);score=0;recorded=false;over=false;sc.textContent='0';status.textContent='Make your first move.';add();add();draw()}
+ function move(dir){
+  if(over)return;const old=board.join(','),rows=[];
+  for(let r=0;r<4;r++){
+   let line=dir==='left'||dir==='right'?[...board.slice(r*4,r*4+4)]:[board[r],board[r+4],board[r+8],board[r+12]];
+   if(dir==='right'||dir==='down')line.reverse();
+   line=line.filter(Boolean);
+   for(let i=0;i<line.length-1;i++)if(line[i]===line[i+1]){line[i]*=2;score+=line[i];line.splice(i+1,1)}
+   while(line.length<4)line.push(0);
+   if(dir==='right'||dir==='down')line.reverse();
+   rows.push(line);
+  }
+  if(dir==='left'||dir==='right')board=rows.flat();
+  else board=Array.from({length:4},(_,i)=>rows.map(row=>row[i])).flat();
+  if(board.join(',')===old){if(!canMove())finish();return}
+  add();sc.textContent=String(score);draw();
+  if(!recorded&&Math.max(...board)>=128){recorded=true;status.textContent='128 milestone reached!';toast('2048 milestone!');saveScore('2048',Math.max(1,score))}
+  if(!canMove())finish();
+ }
+ $('#g2048Restart').onclick=reset;
+ addGameListener(window,'keydown',e=>{if(current!=='2048'||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();move(({ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'})[e.key])});
+ g.addEventListener('pointerdown',e=>{if(current!=='2048')return;const b=e.target.closest('button[data-i]');if(!b)return});
+ reset();
+}
 function rps(){
  stage.innerHTML='<div class="game-view"><h2 class="game-title">✊ Rock Paper Scissors</h2><p class="muted">Best of five rounds. First to three points wins.</p><div class="tool-actions" style="justify-content:center"><button class="btn btn-primary rps" data-v="rock">✊ Rock</button><button class="btn btn-primary rps" data-v="paper">✋ Paper</button><button class="btn btn-primary rps" data-v="scissors">✌️ Scissors</button></div><div id="rpsMsg" class="result-box" aria-live="polite">Ready!</div><p>Score: <b id="rpsScore">0</b></p><button id="rpsReset" class="btn btn-ghost">Play again</button></div>';
  let score=0,rounds=0,finished=false;const buttons=[...document.querySelectorAll('.rps')],msg=$('#rpsMsg');
