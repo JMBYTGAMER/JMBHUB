@@ -1,6 +1,6 @@
 import {auth,db,app} from './firebase.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
-import {collection,query,where,onSnapshot,doc} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+import {collection,query,where,onSnapshot,doc,limit} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js';
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -69,7 +69,7 @@ function subscribe(u){
   document.body.classList.toggle('jmb-perk-supporter',!!perks.supporter);
   document.querySelectorAll('#userName,.user-name,[data-user-name]').forEach(el=>el.classList.toggle('jmb-perk-name',!!perks['name-highlight']));
  },()=>{});
- const q=query(collection(db,'coinNotifications'),where('uid','==',u.uid));
+ const q=query(collection(db,'coinNotifications'),where('uid','==',u.uid),limit(100));
  unsubscribe=onSnapshot(q,snap=>{
   const incoming=snap.docs.map(d=>({id:d.id,...d.data()}));
   const nextPending=new Set(incoming.filter(n=>n.status==='pending'&&n.type==='admin_gift').map(n=>n.id));
