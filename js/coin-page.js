@@ -7,7 +7,7 @@ const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:8});
 const call=name=>{if(!app)throw new Error('Coin services are not configured.');return httpsCallable(getFunctions(app,'asia-south1'),name)};
-let user=null,unsubWallet=null,unsubPerks=null,owned={};
+let user=null,unsubWallet=null,unsubPerks=null,owned={},adCredits=0;
 
 const items=[
  {id:'supporter',perk:'supporter',icon:'⭐',name:'JMB Supporter Badge',price:25,desc:'Unlock a supporter badge for your JMB profile.'},
@@ -64,14 +64,14 @@ async function buy(button){
  }catch(e){toast(e?.message||'Purchase failed.');button.disabled=false;button.textContent='Unlock item'}
 }
 onAuthStateChanged(auth,u=>{
- user=u||null;unsubWallet?.();unsubWallet=null;unsubPerks?.();unsubPerks=null;
+ user=u||null;unsubWallet?.();unsubWallet=null;unsubPerks?.();unsubPerks=null;adCredits=0;
  if(!u){location.replace('login.html?next=coins.html');return}
  if(db)unsubWallet=onSnapshot(doc(db,'wallets',u.uid),snap=>{
   const balance=Number(snap.exists()?snap.data().balance||0:0);
   $('#coinBalance').textContent=money(balance);
  },()=>{$('#coinStatus').textContent='Live wallet updates are unavailable; refresh to retry.'});
   unsubPerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
-   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};renderPerks();renderStore();
+   const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();
   },()=>{});
  }
  loadTransactions();
