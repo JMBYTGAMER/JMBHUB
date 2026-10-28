@@ -41,8 +41,20 @@ service cloud.firestore {
 
     match /leaderboards/{game}/scores/{scoreId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.score is number;
-      allow update, delete: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      // Clients may add bounded score entries for their own account, but cannot edit
+      // an existing score or forge its timestamp after the fact.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'player', 'score', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.player is string
+        && request.resource.data.player.size() > 0
+        && request.resource.data.player.size() <= 40
+        && request.resource.data.score is number
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 1000000
+        && request.resource.data.createdAt == request.time;
+      allow update: if admin();
+      allow delete: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
     match /globalChat/{messageId} {
