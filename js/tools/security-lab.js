@@ -34,8 +34,7 @@ function setupAes(){
 }
 function setupHash(){
  $('#hashRun').addEventListener('click',async()=>{try{let data;if($('#hashFile').files[0])data=await $('#hashFile').files[0].arrayBuffer();else{const t=$('#hashText').value;if(!t)throw new Error('Enter text or select a file.');data=encoder.encode(t)}
-  for(const alg of ['SHA-256','SHA-384','SHA-512'])$('#sha'+alg.slice(4).toLowerCase()==='never'? '': ''); 
-  const outputs=[['sha256Out','SHA-256'],['sha384Out','SHA-384'],['sha512Out','SHA-512']];
+   const outputs=[['sha256Out','SHA-256'],['sha384Out','SHA-384'],['sha512Out','SHA-512']];
   for(const [id,alg] of outputs)$('#'+id).value=toHex(new Uint8Array(await crypto.subtle.digest(alg,data)));
   status('hashStatus','Calculated locally for '+($('#hashFile').files[0]?.name||'text input')+'.');
  }catch(e){status('hashStatus',e.message||'Could not calculate hashes.',true)}});
