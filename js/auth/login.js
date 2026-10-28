@@ -17,7 +17,7 @@ function friendly(e){
   const map={
     'auth/invalid-credential':'That email or password is incorrect.',
     'auth/invalid-email':'Please enter a valid email address.',
-    'auth/user-not-found':'No account was found with that email.',
+    'auth/user-not-found':'That email or password is incorrect.',
     'auth/wrong-password':'That email or password is incorrect.',
     'auth/email-already-in-use':'An account already exists with this email. Try signing in instead.',
     'auth/weak-password':'Choose a stronger password.',
