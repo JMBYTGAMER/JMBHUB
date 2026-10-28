@@ -39,7 +39,7 @@ const games=[
  ['reaction2','⚡','Speed Tap','Tap the target 20 times as fast as possible.'],
  ['guesscolor','🌈','Color Guess','Guess the hidden color from clues.'],
  ['jmbdash','🟪','JMB Dash','Original rhythm runner with tap-to-jump controls.'],
- ['quickdraw','⚡','Quick Draw','Wait for GO, then tap as fast as you can.'],
+ ['quickdraw','⚡','Reaction Rush','Wait for GO, then tap as fast as you can.'],
  ['maze','🧩','Maze Escape','Find the exit using touch-friendly controls.'],
  ['typing','⌨️','Typing Rush','Type the shown word before the timer ends.'],
  ['dice','🎲','Dice Duel','Roll against the computer and collect wins.'],
@@ -249,7 +249,7 @@ function connect(){
 }
 function reaction2(){let n=0,start=0;stage.innerHTML='<div class="game-view"><h2 class="game-title">⚡ Speed Tap</h2><p class="muted">Tap the target 20 times as fast as possible.</p><button class="btn btn-primary game-btn" id="speedTap">START</button><div id="speedMsg" class="big-number">0 / 20</div></div>';const b=$('#speedTap');b.onclick=()=>{if(!start){start=Date.now();n=0;b.textContent='TAP!'}n++;$('#speedMsg').textContent=n+' / 20';if(n>=20){const ms=Date.now()-start;toast('Speed Tap: '+ms+' ms');saveScore('reaction2',Math.max(1,Math.floor(20000/ms*100)));start=0;b.textContent='TRY AGAIN'}}}
 function arcade(mode){
- const titles={quickdraw:['⚡ Quick Draw','Tap only when GO appears.'],maze:['🧩 Maze Escape','Use the arrows to reach the exit.'],typing:['⌨️ Typing Rush','Type the word before time runs out.'],dice:['🎲 Dice Duel','Roll against the computer.'],oddone:['🔎 Odd One Out','Tap the tile with the different color.'],colormemory:['🧠 Color Memory','Remember the highlighted tile.'],safegrid:['🛡️ Safe Grid','Reach the bottom without stepping on a trap.']};
+ const titles={quickdraw:['⚡ Reaction Rush','Wait for GO, then tap when the signal appears.'],maze:['🧩 Maze Escape','Use the arrows to reach the exit.'],typing:['⌨️ Typing Rush','Type the word before time runs out.'],dice:['🎲 Dice Duel','Roll against the computer.'],oddone:['🔎 Odd One Out','Tap the tile with the different color.'],colormemory:['🧠 Color Memory','Remember the highlighted tile.'],safegrid:['🛡️ Safe Grid','Reach the bottom without stepping on a trap.']};
  if(mode==='jmbdash'){jmbDash();return}
  const t=titles[mode];stage.innerHTML='<div class="game-view"><h2 class="game-title">'+t[0]+'</h2><p class="muted">'+t[1]+'</p><div id="arcadeArea" class="target-stage"></div><div class="actions" style="justify-content:center"><button class="btn btn-primary" id="arcadeStart">START</button></div><div id="arcadeMsg" class="score-readout">Ready</div></div>';
  const a=$('#arcadeArea'),m=$('#arcadeMsg'),start=$('#arcadeStart');
