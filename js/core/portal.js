@@ -18,16 +18,6 @@ const links=[
   ['◉','Profile','profile.html']
 ];
 function currentPage(){return location.pathname.split('/').pop()||'index.html'}
-  const searchButton=document.createElement('button');
-  searchButton.type='button';
-  searchButton.className='jmb-nav-search';
-  searchButton.textContent='⌕ Search';
-  searchButton.setAttribute('aria-label','Search JMB HUB pages and tools');
-  searchButton.addEventListener('click',()=>document.dispatchEvent(new KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true})));
-  const desktop=document.querySelector('.sidebar .side-brand');
-  if(desktop && !document.querySelector('.sidebar .jmb-nav-search')) desktop.after(searchButton);
-  const mobile=document.querySelector('.mobile-head .portal-top-actions');
-  if(mobile && !document.querySelector('.mobile-head .jmb-nav-search')) mobile.prepend(searchButton);
 
 function makeNav(){
   if(currentPage()==='index.html')return;
