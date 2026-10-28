@@ -2,67 +2,146 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function owner() { return signedIn() && request.auth.token.email == 'jobinmathewbiju@gmail.com'; }
+    function owner() {
+      return signedIn() && request.auth.token.email == 'jobinmathewbiju@gmail.com';
+    }
     function admin() {
-      return signedIn() && (
-        request.auth.token.admin == true ||
-        request.auth.token.get('role', '') == 'admin' ||
-        owner()
-      );
+      return signedIn() && (request.auth.token.get('admin', false) == true || request.auth.token.get('role', '') == 'admin' || owner());
     }
-    match /leaderboards/{game}/scores/{scoreId} {
+
+    match /settings/{docId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow write: if owner();
     }
+
+    match /logs/{logId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'event', 'page', 'at', 'mode', 'x', 'y', 'target', 'game', 'route', 'meta', 'createdAt'
+        ])
+        && request.resource.data.event is string
+        && request.resource.data.event.size() > 0
+        && request.resource.data.event.size() <= 40
+        && request.resource.data.page is string
+        && request.resource.data.page.size() <= 120
+        && request.resource.data.at is number
+        && request.resource.data.mode in ['low', 'normal', 'extreme']
+        && (!('x' in request.resource.data) || (request.resource.data.x is number && request.resource.data.x >= 0 && request.resource.data.x <= 1))
+        && (!('y' in request.resource.data) || (request.resource.data.y is number && request.resource.data.y >= 0 && request.resource.data.y <= 1))
+        && (!('target' in request.resource.data) || (request.resource.data.target is string && request.resource.data.target.size() <= 80))
+        && (!('game' in request.resource.data) || (request.resource.data.game is string && request.resource.data.game.size() <= 80))
+        && (!('route' in request.resource.data) || (request.resource.data.route is string && request.resource.data.route.size() <= 80))
+        && (!('meta' in request.resource.data) || (request.resource.data.meta is string && request.resource.data.meta.size() <= 80))
+        && request.resource.data.createdAt == request.time;
+      allow read: if admin();
+      allow update, delete: if owner();
+    }
+
+    match /profiles/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'photoURL', 'emailVerified', 'lastSeenAt'
+        ]);
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'photoURL', 'emailVerified', 'lastSeenAt'
+        ])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'photoURL', 'emailVerified', 'lastSeenAt'
+        ]);
+      allow delete: if owner();
+    }
+
     match /tickets/{ticketId} {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
       allow update: if admin() || (signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid);
       allow delete: if admin();
     }
+
     match /suggestions/{suggestionId} {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
       allow update: if admin();
       allow delete: if owner();
     }
-    match /settings/{docId} {
+
+    match /leaderboards/{game}/scores/{scoreId} {
       allow read: if signedIn();
-      allow write: if owner();
+      // Clients may add bounded score entries for their own account, but cannot edit
+      // an existing score or forge its timestamp after the fact.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'player', 'score', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.player is string
+        && request.resource.data.player.size() > 0
+        && request.resource.data.player.size() <= 40
+        && request.resource.data.score is number
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 1000000
+        && request.resource.data.createdAt == request.time;
+      allow update: if admin();
+      allow delete: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
     }
-    match /logs/{logId} {
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid
-        && request.resource.data.event is string
-        && request.resource.data.page is string
-        && request.resource.data.event.size() <= 40;
-      allow read: if admin();
-      allow update, delete: if owner();
-    }
+
     match /globalChat/{messageId} {
       allow read: if signedIn();
-      allow create, update: if false;
+      allow create: if false;
+      allow update: if false;
       allow delete: if admin();
     }
 
-    /* Minimal account directory used by the admin console.
-       Users can maintain only their own basic profile fields.
-       Admins can read profiles; role/admin claims remain server-controlled. */
-    match /profiles/{uid} {
-      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+    // Coin balances, purchases, rewards and the transaction ledger are server-managed.
+    match /wallets/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
       allow create: if signedIn() && request.auth.uid == uid
-        && request.resource.data.uid == uid
-        && request.resource.data.keys().hasOnly([
-          'uid','email','displayName','photoURL','emailVerified','lastSeenAt'
-        ]);
-      allow update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'uid','email','displayName','photoURL','emailVerified','lastSeenAt'
-        ]);
-      allow delete: if owner();
+        && request.resource.data.uid == uid && request.resource.data.balance == 0;
+      allow update, delete: if false;
     }
 
-    match /{document=**} { allow read, write: if false; }
+    match /coinTransactions/{txId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /coinPurchases/{purchaseId} {
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /coinGameClaims/{claimId} {
+      allow read, write: if false;
+    }
+
+    match /coinGameCooldowns/{uid} {
+      allow read, write: if false;
+    }
+
+    match /coinNotifications/{noticeId} {
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /userEntitlements/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create, update, delete: if false;
+    }
+
+    // Ad campaigns are created, charged, approved and refunded only by trusted Cloud Functions.
+    // Signed-in users may read their own campaigns; admins may review all campaigns.
+    match /adCampaigns/{campaignId} {
+      allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
