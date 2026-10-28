@@ -10,7 +10,8 @@ function mount(u){
   const el=document.createElement('a');
   el.id='jmbGlobalCoin';
   el.className='jmb-global-coin';
-  el.href='coins.html';
+  // Pages use sibling links, while the public landing page is one directory above them.
+  el.href=location.pathname.includes('/pages/')?'coins.html':'pages/coins.html';
   el.setAttribute('aria-label','Open JMB Coin wallet');
   el.innerHTML='<span class="jmb-global-coin-icon">🪙</span><span id="jmbGlobalCoinBalance">0</span><span class="jmb-global-coin-label">JMB</span>';
   document.body.append(el);
