@@ -69,7 +69,7 @@ const games=[
 function safe(v){return String(v).replace(/[<>]/g,'')}
 function renderLibrary(){library.innerHTML=games.map(([id,icon,title,desc])=>`<button class="game-card" data-game="${id}"><div class="game-art">${icon}</div><h3>${title}</h3><p>${desc}</p><span class="pill">Play →</span></button>`).join('');library.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>switchGame(b.dataset.game))}
 function setHeader(g){const x=games.find(a=>a[0]===g);$('#activeGameTitle').textContent=x[2];$('#activeGameDesc').textContent=x[3];$('#lbTitle').textContent=x[2];library.querySelectorAll('.game-card').forEach(b=>b.classList.toggle('active',b.dataset.game===g))}
-async function saveScore(game,score){
+async function saveScore(game,score,rewardGame=game){
  score=Number(score);
  if(!Number.isFinite(score))return;
  score=Math.max(0,Math.min(100000,Math.floor(score)));
@@ -84,7 +84,7 @@ async function saveScore(game,score){
   await loadBoard(game);
  }catch(e){toast('Score could not be saved: '+(e?.message||'Connection unavailable.'))}
  if(awardCoins){
-  try{const r=await awardCoins({gameId:game,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}
+  try{const r=await awardCoins({gameId:rewardGame,score});if(r.data?.ok){toast('+1 JMB Coin earned! (virtual credit)','good');JMBMusic.win()}}
   catch(e){if(!String(e.code||'').includes('resource-exhausted'))console.warn('JMB Coin reward unavailable:',e.message)}
  }
 }
@@ -121,7 +121,7 @@ function mathdash(){
  function finish(){
   if(!active)return;active=false;stop();answers.querySelectorAll('button').forEach(b=>b.disabled=true);
   start.disabled=false;start.textContent='Play again';question.textContent='Time is up!';status.textContent='Final score: '+score+' · Best streak: '+streakOut.dataset.best;
-  saveScore('mathdash',score);if(score>0)JMBMusic.win();else JMBMusic.lose();
+  saveScore('mathdash',score,'math');if(score>0)JMBMusic.win();else JMBMusic.lose();
  }
  function next(){
   const op=Math.random()<.55?'+':Math.random()<.65?'−':'×';
@@ -197,7 +197,7 @@ function pattern(){
  const tiles=[...grid.querySelectorAll('[data-tile]')];
  const flash=async i=>{tiles[i].style.opacity='1';tiles[i].style.transform='scale(1.04)';await new Promise(r=>trackedTimeout(r,360));tiles[i].style.opacity='.45';tiles[i].style.transform='';await new Promise(r=>trackedTimeout(r,140))};
  async function show(){watching=true;status.textContent='Watch the sequence…';for(const n of seq)await flash(n);watching=false;input=[];status.textContent='Your turn — repeat the sequence.'}
- function finish(win){playing=false;watching=false;status.textContent=win?'Sequence complete! Final score: '+score:'Not quite — final score: '+score;$('#patternStart').textContent='Play again';saveScore('pattern',score);if(win)JMBMusic.win();else JMBMusic.lose()}
+ function finish(win){playing=false;watching=false;status.textContent=win?'Sequence complete! Final score: '+score:'Not quite — final score: '+score;$('#patternStart').textContent='Play again';saveScore('pattern',score,'memory');if(win)JMBMusic.win();else JMBMusic.lose()}
  tiles.forEach((b)=>b.addEventListener('click',async()=>{if(!playing||watching)return;const n=Number(b.dataset.tile);await flash(n);if(n!==seq[input.length])return finish(false);input.push(n);if(input.length===seq.length){score+=round*10;round++;roundOut.textContent='Round '+round;seq.push(Math.floor(Math.random()*4));await new Promise(r=>trackedTimeout(r,300));show()}}));
  $('#patternStart').onclick=()=>{seq=[];input=[];round=1;score=0;playing=true;roundOut.textContent='Round 1';$('#patternStart').textContent='Restart';seq.push(Math.floor(Math.random()*4));show()};
 }
@@ -227,7 +227,7 @@ function wordle(){
  function finish(won){
   finished=true;input.disabled=true;submit.disabled=true;
   status.textContent=won?'🎉 Great job! You found '+answer.toUpperCase()+'.':'The word was '+answer.toUpperCase()+'. Try another round!';
-  saveScore('wordle',won?100+(6-guesses.length)*10:1);
+  saveScore('wordle',won?100+(6-guesses.length)*10:1,'word');
   if(won)window.JMBMusic?.win?.();else window.JMBMusic?.lose?.();
  }
  form.addEventListener('submit',e=>{
