@@ -47,5 +47,5 @@ function frame(t){
 }
 function begin(next=false){cancelAnimationFrame(raf);if(next&&level<levels.length-1)level++;reset();running=true;paused=false;start.textContent='RUNNING';pauseBtn.textContent='Ⅱ Pause';JMBMusic.start();draw();raf=requestAnimationFrame(frame)}
 function pause(){if(!running)return;paused=!paused;pauseBtn.textContent=paused?'▶ Resume':'Ⅱ Pause'}
-start.onclick=()=>{if(!running&&document.querySelector('#gdProgress').textContent.includes('100%')&&level<levels.length-1)begin(true);else begin(false)}
+start.onclick=()=>{if(running)return;if(document.querySelector('#gdProgress').textContent.includes('100%')&&level<levels.length-1)begin(true);else begin(false)}
 jumpBtn.onclick=jump;pauseBtn.onclick=pause;c.addEventListener('pointerdown',e=>{e.preventDefault();if(!running)begin(false);else jump()});addEventListener('keydown',e=>{if(['Space','ArrowUp','p','P'].includes(e.code)||e.key==='p'||e.key==='P')e.preventDefault();if(e.code==='Space'||e.key==='ArrowUp')jump();if(e.key==='p'||e.key==='P')pause()});reset();draw();
