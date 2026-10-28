@@ -35,6 +35,7 @@ const games=[
  ['tap','🥁','Tap Tempo','Tap the beat and build a streak.'],
  ['number','🔢','Number Guess','Find the hidden number in fewer tries.'],
  ['math','🧠','Math Sprint','Solve quick math questions for points.'],
+ ['mathdash','🚀','Math Dash','Answer as many quick questions as you can in 30 seconds.'],
  ['color','🎨','Color Match','Tap the color that matches the word.'],
  ['whack','🔨','Whack-a-Mole','Tap the active mole before it moves.'],
  ['memory','🃏','Memory Match','Match every pair with your memory.'],
@@ -112,6 +113,33 @@ function number(){const n=Math.floor(Math.random()*50)+1;stage.innerHTML=`<div c
 
 function math(){stage.innerHTML='<div class="game-view"><h2 class="game-title">🧠 Math Sprint</h2><div class="big-number" id="mathScore">0</div><div class="number-box" id="mathQ"></div><input id="mathA" class="tool-input" type="number" placeholder="Answer"><button class="btn btn-primary" id="mathBtn">Submit</button><p class="muted">Solve 10 questions.</p></div>';let score=0,i=0,a;function next(){const x=Math.floor(Math.random()*20)+1,y=Math.floor(Math.random()*20)+1;a=x+y;$('#mathQ').textContent=`${x} + ${y} = ?`;$('#mathA').value=''}next();$('#mathBtn').onclick=()=>{if(Number($('#mathA').value)===a)score+=10;i++;$('#mathScore').textContent=score;if(i>=10){toast(`Math Sprint — ${score}`);saveScore('math',score);return}next()}}
 
+function mathdash(){
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🚀 Math Dash</h2><p class="muted">Answer quick mental-math questions before the 30-second clock runs out.</p><div class="grid grid-3"><div class="result-box">Time <b id="mdTime">30</b>s</div><div class="result-box">Score <b id="mdScore">0</b></div><div class="result-box">Streak <b id="mdStreak">0</b></div></div><div id="mdQuestion" class="big-number" style="margin:18px 0">Ready?</div><div id="mdAnswers" class="tool-actions" style="justify-content:center;flex-wrap:wrap"></div><button id="mdStart" class="btn btn-primary" type="button">Start Math Dash</button><p id="mdStatus" class="muted" role="status">Each correct answer is worth one point.</p></div>';
+ const time=$('#mdTime'),scoreOut=$('#mdScore'),streakOut=$('#mdStreak'),question=$('#mdQuestion'),answers=$('#mdAnswers'),start=$('#mdStart'),status=$('#mdStatus');
+ let score=0,streak=0,seconds=30,answer=0,active=false,iv=null;
+ function stop(){if(iv!==null){trackedClearInterval(iv);iv=null}}
+ function finish(){
+  if(!active)return;active=false;stop();answers.querySelectorAll('button').forEach(b=>b.disabled=true);
+  start.disabled=false;start.textContent='Play again';question.textContent='Time is up!';status.textContent='Final score: '+score+' · Best streak: '+streakOut.dataset.best;
+  saveScore('mathdash',score);if(score>0)JMBMusic.win();else JMBMusic.lose();
+ }
+ function next(){
+  const op=Math.random()<.55?'+':Math.random()<.65?'−':'×';
+  let a,b;
+  if(op==='+'){a=1+Math.floor(Math.random()*40);b=1+Math.floor(Math.random()*40);answer=a+b}
+  else if(op==='−'){a=10+Math.floor(Math.random()*50);b=Math.floor(Math.random()*(a+1));answer=a-b}
+  else{a=2+Math.floor(Math.random()*12);b=2+Math.floor(Math.random()*10);answer=a*b}
+  question.textContent=a+' '+op+' '+b+' = ?';answers.replaceChildren();
+  const options=new Set([answer]);while(options.size<4){const n=answer+Math.floor(Math.random()*19)-9;if(n>=0)options.add(n)}
+  [...options].sort(()=>Math.random()-.5).forEach(value=>{const button=document.createElement('button');button.type='button';button.className='btn btn-ghost';button.textContent=String(value);button.addEventListener('click',()=>{
+   if(!active)return;
+   if(value===answer){score++;streak++;streakOut.dataset.best=String(Math.max(Number(streakOut.dataset.best||0),streak));status.textContent='Correct! Keep going.';JMBMusic.click()}
+   else{streak=0;status.textContent='Not quite — the answer was '+answer+'.'}
+   scoreOut.textContent=String(score);streakOut.textContent=String(streak);next();
+  });answers.append(button)});
+ }
+ start.onclick=()=>{stop();active=true;score=0;streak=0;seconds=30;streakOut.dataset.best='0';scoreOut.textContent='0';streakOut.textContent='0';time.textContent='30';start.disabled=true;start.textContent='Running…';status.textContent='Go!';next();iv=trackedInterval(()=>{seconds--;time.textContent=String(seconds);if(seconds<=0)finish()},1000)};
+}
 function color(){const colors=[['RED','#d44'],['BLUE','#4b8'],['GREEN','#56d'],['YELLOW','#e0b83d']];stage.innerHTML='<div class="game-view"><h2 class="game-title">🎨 Color Match</h2><p class="muted">Tap the button matching the word.</p><h2 id="colorWord"></h2><div class="color-pad" id="colorPad"></div><p>Score: <b id="colorScore">0</b></p></div>';let score=0;function next(){const target=colors[Math.floor(Math.random()*colors.length)];$('#colorWord').textContent=target[0];$('#colorPad').innerHTML=colors.map(c=>`<button style="background:${c[1]}" data-c="${c[0]}">${c[0]}</button>`).join('');$('#colorPad').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.c===target[0])score+=10;else score=Math.max(0,score-3);$('#colorScore').textContent=score;next()})}next();trackedTimeout(()=>saveScore('color',score),15000)}
 
 function whack(){stage.innerHTML='<div class="game-view"><h2 class="game-title">🔨 Whack-a-Mole</h2><p class="muted">Tap the active mole for 15 seconds.</p><div class="whack-grid" id="whackGrid"></div><p>Score: <b id="whackScore">0</b></p></div>';const g=$('#whackGrid');g.innerHTML=Array.from({length:9},(_,i)=>`<button class="mole" data-i="${i}">●</button>`).join('');let score=0;const iv=trackedInterval(()=>{g.querySelectorAll('.mole').forEach(x=>x.classList.remove('active'));g.children[Math.floor(Math.random()*9)].classList.add('active')},650);g.onclick=e=>{if(e.target.classList.contains('active')){score++;e.target.classList.remove('active');$('#whackScore').textContent=score}};trackedTimeout(()=>{trackedClearInterval(iv);saveScore('whack',score);toast(`Whack-a-Mole — ${score}`)},15000)}
@@ -216,6 +244,6 @@ function wordle(){
  render();input.focus();
 }
 
-const render={pattern,snake,wordle,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
+const render={pattern,snake,wordle,click:clickRush,reaction,target,dodge,tap,number,math,mathdash,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
 function switchGame(name){stopGameWork();current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
 (async()=>{user=await guard();renderLibrary();})();
