@@ -62,17 +62,17 @@ function clearGameRuntime(){
 }
 function trackedTimeout(fn,ms,...args){
  const scope=gameScope;let id;
- id=trackedTimeout(()=>{gameTimers.delete(id);if(scope!==gameScope)return;fn(...args)},ms);
+ id=window.setTimeout(()=>{gameTimers.delete(id);if(scope!==gameScope)return;fn(...args)},ms);
  gameTimers.set(id,'timeout');return id;
 }
 function trackedInterval(fn,ms,...args){
  const scope=gameScope;let id;
- id=trackedInterval(()=>{if(scope!==gameScope){clearInterval(id);gameTimers.delete(id);return}fn(...args)},ms);
+ id=window.setInterval(()=>{if(scope!==gameScope){clearInterval(id);gameTimers.delete(id);return}fn(...args)},ms);
  gameTimers.set(id,'interval');return id;
 }
 function trackedFrame(fn){
  const scope=gameScope;let id;
- id=trackedFrame(ts=>{gameFrames.delete(id);if(scope!==gameScope)return;fn(ts)});
+ id=window.requestAnimationFrame(ts=>{gameFrames.delete(id);if(scope!==gameScope)return;fn(ts)});
  gameFrames.set(id,scope);return id;
 }
 function tileSprint(){
