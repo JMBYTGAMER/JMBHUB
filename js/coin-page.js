@@ -108,7 +108,7 @@ onAuthStateChanged(auth,u=>{
   unsubPerks=onSnapshot(doc(db,'userEntitlements',u.uid),snap=>{
    const ent=snap.exists()?snap.data():{};owned=ent.perks||{};adCredits=Number(ent.adCredits||0);renderPerks();renderStore();
   },()=>{});
-  unsubInbox=onSnapshot(query(collection(db,'coinNotifications'),where('uid','==',u.uid)),renderInbox,()=>{
+  unsubInbox=onSnapshot(query(collection(db,'coinNotifications'),where('uid','==',u.uid),limit(100)),renderInbox,()=>{
    const box=$('#coinInbox');if(box)box.innerHTML='<div class="empty">Inbox temporarily unavailable. Please refresh and try again.</div>';
   });
  }
