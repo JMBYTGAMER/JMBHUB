@@ -14,14 +14,47 @@ service cloud.firestore {
       allow write: if owner();
     }
 
+    match /logs/{logId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'event', 'page', 'at', 'mode', 'x', 'y', 'target', 'game', 'route', 'meta', 'createdAt'
+        ])
+        && request.resource.data.event is string
+        && request.resource.data.event.size() > 0
+        && request.resource.data.event.size() <= 40
+        && request.resource.data.page is string
+        && request.resource.data.page.size() <= 120
+        && request.resource.data.at is number
+        && request.resource.data.mode in ['low', 'normal', 'extreme']
+        && (!('x' in request.resource.data) || (request.resource.data.x is number && request.resource.data.x >= 0 && request.resource.data.x <= 1))
+        && (!('y' in request.resource.data) || (request.resource.data.y is number && request.resource.data.y >= 0 && request.resource.data.y <= 1))
+        && (!('target' in request.resource.data) || (request.resource.data.target is string && request.resource.data.target.size() <= 80))
+        && (!('game' in request.resource.data) || (request.resource.data.game is string && request.resource.data.game.size() <= 80))
+        && (!('route' in request.resource.data) || (request.resource.data.route is string && request.resource.data.route.size() <= 80))
+        && (!('meta' in request.resource.data) || (request.resource.data.meta is string && request.resource.data.meta.size() <= 80))
+        && request.resource.data.createdAt == request.time;
+      allow read: if admin();
+      allow update, delete: if owner();
+    }
+
     match /profiles/{uid} {
       allow read: if admin() || (signedIn() && request.auth.uid == uid);
       allow create: if signedIn() && request.auth.uid == uid
         && request.resource.data.uid == uid
-        && request.resource.data.email == request.auth.token.email;
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'photoURL', 'emailVerified', 'lastSeenAt'
+        ]);
       allow update: if signedIn() && request.auth.uid == uid
         && request.resource.data.uid == resource.data.uid
-        && request.resource.data.email == resource.data.email;
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'photoURL', 'emailVerified', 'lastSeenAt'
+        ])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'photoURL', 'emailVerified', 'lastSeenAt'
+        ]);
       allow delete: if owner();
     }
 
