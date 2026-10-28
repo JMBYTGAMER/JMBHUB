@@ -49,6 +49,7 @@ const games=[
  ['higher','📈','Higher or Lower','Guess whether the next number is higher.'],
  ['word','🔤','Word Scramble','Unscramble a short word as fast as you can.'],
  ['wordle','🟩','Word Puzzle','Guess the hidden five-letter word in six tries.'],
+ ['cipher','🔐','Cipher Quest','Decode secret words by solving a shifting-letter cipher.'],
  ['aim','🎯','Aim Trainer','Tap targets quickly and improve your reaction.'],
  ['simon','🟣','Simon Lights','Repeat the growing color sequence.'],
  ['pong','🏓','Mini Pong','Keep the ball alive with the mobile paddle.'],
@@ -190,6 +191,36 @@ function jmbDash(){
 }
 function guesscolor(){const target={r:Math.floor(Math.random()*256),g:Math.floor(Math.random()*256),b:Math.floor(Math.random()*256)};stage.innerHTML='<div class="game-view"><h2 class="game-title">🌈 Color Guess</h2><div id="guessColorBox" class="result-box" style="height:180px"></div><p class="muted">Enter RGB values.</p><div class="form-grid"><input id="gr" class="tool-input" type="number" min="0" max="255" placeholder="R"><input id="gg" class="tool-input" type="number" min="0" max="255" placeholder="G"><input id="gb" class="tool-input" type="number" min="0" max="255" placeholder="B"></div><button class="btn btn-primary" id="colorGuessBtn">Guess</button><p id="colorGuessMsg"></p></div>';$('#guessColorBox').style.background='rgb('+target.r+','+target.g+','+target.b+')';$('#colorGuessBtn').onclick=()=>{const d=Math.abs(Number($('#gr').value)-target.r)+Math.abs(Number($('#gg').value)-target.g)+Math.abs(Number($('#gb').value)-target.b);const score=Math.max(1,100-Math.floor(d/8));$('#colorGuessMsg').textContent='Score: '+score+'/100';saveScore('guesscolor',score)}}
 
+function cipher(){
+ const words=['JMBHUB','GAMER','PUZZLE','PIXEL','ROCKET','PLANET','CIPHER','CASTLE','BROWSER','RAINBOW','DIAMOND','MYSTERY'];
+ let round=0,score=0,attempts=0,answer='',shift=3,finished=false;
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🔐 Cipher Quest</h2><p class="muted">Decode each word. Every letter has been shifted forward by a secret number from 1 to 5. Shift it backward to reveal the answer. Complete 5 rounds.</p><div class="big-number" id="cipherRound">Round 1 / 5</div><div class="result-box" style="display:block"><small class="muted">ENCODED WORD</small><div id="cipherPuzzle" class="big-number" style="letter-spacing:5px">—</div><p id="cipherHint" class="muted"></p></div><form id="cipherForm" class="tool-actions" style="justify-content:center"><input id="cipherInput" class="tool-input" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Your decoded word" required><button type="submit" class="btn btn-primary" id="cipherSubmit">Decode</button></form><p id="cipherStatus" class="result-box" role="status">Press Start to begin.</p><button class="btn btn-ghost" type="button" id="cipherStart">Start game</button></div>';
+ const encoded=$('#cipherPuzzle'),hint=$('#cipherHint'),form=$('#cipherForm'),input=$('#cipherInput'),status=$('#cipherStatus'),roundOut=$('#cipherRound'),submit=$('#cipherSubmit'),start=$('#cipherStart');
+ form.hidden=true;
+ const encode=(word,n)=>word.replace(/[A-Z]/g,ch=>String.fromCharCode((ch.charCodeAt(0)-65+n)%26+65));
+ function next(){
+  if(round>=5){finish();return}
+  answer=words[Math.floor(Math.random()*words.length)];
+  shift=1+Math.floor(Math.random()*5);
+  encoded.textContent=encode(answer,shift);hint.textContent='Secret shift: '+shift+' letters forward. Undo it to decode.';
+  roundOut.textContent='Round '+(round+1)+' / 5';attempts=0;input.value='';input.disabled=false;submit.disabled=false;status.textContent='Decode the word. You have 3 attempts.';form.hidden=false;input.focus();
+ }
+ function finish(){
+  finished=true;form.hidden=true;start.hidden=false;start.textContent='Play again';
+  status.textContent='Cipher complete! Score: '+score+' / 100. '+(score>=60?'Nice decoding!':'Practice and try again.');
+  saveScore('cipher',score);if(score>0)JMBMusic.win();else JMBMusic.lose();
+ }
+ form.addEventListener('submit',e=>{
+  e.preventDefault();if(finished)return;
+  const guess=input.value.trim().toUpperCase();
+  if(!/^[A-Z]{3,12}$/.test(guess)){status.textContent='Enter letters only.';return}
+  if(guess===answer){score+=20;round++;status.textContent='Correct! +20 points.';JMBMusic.win();trackedTimeout(next,650);return}
+  attempts++;
+  if(attempts>=3){round++;status.textContent='The answer was '+answer+'. Moving on…';JMBMusic.lose();trackedTimeout(next,900)}
+  else status.textContent='Not quite. '+(3-attempts)+' attempts left.';
+ });
+ start.onclick=()=>{round=0;score=0;attempts=0;finished=false;start.hidden=true;next()};
+}
 function pattern(){
  stage.innerHTML='<div class="game-view"><h2 class="game-title">🧩 Pattern Sprint</h2><p class="muted">Watch the sequence, then tap the tiles in the same order. Each round adds one step.</p><div class="big-number" id="patternRound">Round 1</div><div id="patternGrid" style="display:grid;grid-template-columns:repeat(2,minmax(90px,150px));gap:12px;justify-content:center;margin:18px auto"></div><p id="patternStatus" class="result-box" role="status">Press Start when ready.</p><button id="patternStart" class="btn btn-primary">Start game</button></div>';
  const grid=$('#patternGrid'),status=$('#patternStatus'),roundOut=$('#patternRound');const colors=['#7c5cff','#00c6ea','#35e6a2','#ffb84d'];let seq=[],input=[],round=0,playing=false,watching=false,score=0;
@@ -244,6 +275,6 @@ function wordle(){
  render();input.focus();
 }
 
-const render={pattern,snake,wordle,click:clickRush,reaction,target,dodge,tap,number,math,mathdash,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
+const render={pattern,snake,wordle,cipher,click:clickRush,reaction,target,dodge,tap,number,math,mathdash,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid')};
 function switchGame(name){stopGameWork();current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
 (async()=>{user=await guard();renderLibrary();})();
