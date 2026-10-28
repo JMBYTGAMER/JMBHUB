@@ -5,7 +5,7 @@ let user=null,mode='normal',queue=[],timer=null,ready=false;
 const key='jmb-telemetry-mode';
 function cleanText(v){return String(v||'').replace(/\s+/g,' ').trim().slice(0,80)}
 async function loadMode(){
-  try{const cached=sessionStorage.getItem(key);if(cached)mode=cached}catch{}
+  try{const cached=sessionStorage.getItem(key);if(['low','normal','extreme'].includes(cached))mode=cached}catch{}
   if(!backendReady||!db)return;
   try{const snap=await getDoc(doc(db,'settings','telemetry'));if(snap.exists()){const m=snap.data().mode;if(['low','normal','extreme'].includes(m))mode=m;sessionStorage.setItem(key,mode)}}catch{}
 }
