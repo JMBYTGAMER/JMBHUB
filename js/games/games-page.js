@@ -2,7 +2,7 @@ import {guard} from '../core/auth-guard.js';
 import {db,backendReady} from '../core/firebase.js';
 import {collection,query,orderBy,limit,getDocs,addDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {$,toast} from '../core/ui.js';
-import {openWorkspace} from '../core/workspace-window.js';
+import {openWorkspace,closeWorkspace} from '../core/workspace-window.js';
 import {JMBMusic} from '../core/sound.js';
 import {app} from '../core/firebase.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js';
@@ -280,5 +280,5 @@ function guesscolor(){
  $('#guessColorBox').style.background='rgb('+target.r+','+target.g+','+target.b+')';const button=$('#colorGuessBtn');button.onclick=()=>{const fields=[$('#gr').value,$('#gg').value,$('#gb').value];if(fields.some(v=>v.trim()==='')||fields.some(v=>!Number.isInteger(Number(v))||Number(v)<0||Number(v)>255)){$('#colorGuessMsg').textContent='Enter whole-number RGB values from 0 to 255.';return}const diff=Math.abs(Number(fields[0])-target.r)+Math.abs(Number(fields[1])-target.g)+Math.abs(Number(fields[2])-target.b),score=Math.max(1,100-Math.floor(diff/8));button.disabled=true;$('#colorGuessMsg').textContent='Score: '+score+'/100 · Target RGB: '+target.r+', '+target.g+', '+target.b;saveScore('guesscolor',score)}
 }
 const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid'),tilesprint:tileSprint,wordrush:wordRush,patternlock:patternLock};
-function switchGame(name){clearGameRuntime();current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
+function switchGame(name){closeWorkspace();clearGameRuntime();current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3],onClose:clearGameRuntime})}
 (async()=>{user=await guard();renderLibrary();})();
