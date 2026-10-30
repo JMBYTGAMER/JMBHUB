@@ -62,35 +62,40 @@ function makeNav(){
 }
 function particles(){
   if(document.getElementById('jmbParticleCanvas'))return;
-  const c=document.createElement('canvas');c.id='jmbParticleCanvas';document.body.prepend(c);
-  const ctx=c.getContext('2d');let w=innerWidth,h=innerHeight,dpr=1,px=-9999,py=-9999,power=0,lastMove=0;const pts=[];
+  const c=document.createElement('canvas');c.id='jmbParticleCanvas';c.setAttribute('aria-hidden','true');document.body.prepend(c);
+  const ctx=c.getContext('2d');if(!ctx)return;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let w=innerWidth,h=innerHeight,dpr=1,px=-9999,py=-9999,power=0,lastMove=0,raf=0,visible=!document.hidden;const pts=[];
   function resize(){
     w=innerWidth;h=innerHeight;dpr=Math.min(devicePixelRatio||1,2);
-    c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
-    const count=Math.min(95,Math.max(32,Math.floor(w*h/17000)));
-    while(pts.length<count)pts.push({x:20+Math.random()*Math.max(1,w-40),y:20+Math.random()*Math.max(1,h-40),vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.6+.55});
+    c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);c.style.width=w+'px';c.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
+    const count=reduced?0:Math.min(72,Math.max(24,Math.floor(w*h/23000)));
+    while(pts.length<count)pts.push({x:20+Math.random()*Math.max(1,w-40),y:20+Math.random()*Math.max(1,h-40),vx:(Math.random()-.5)*.18,vy:(Math.random()-.5)*.18,r:Math.random()*1.5+.5});
     pts.length=Math.min(pts.length,count);
+    if(reduced){ctx.clearRect(0,0,w,h);return}
+    if(visible&&!raf)raf=requestAnimationFrame(frame);
   }
-  function attract(x,y){px=Math.max(18,Math.min(w-18,x));py=Math.max(18,Math.min(h-18,y));power=1}
-  addEventListener('resize',resize,{passive:true});
-  addEventListener('pointerdown',e=>attract(e.clientX,e.clientY),{passive:true});
-  addEventListener('touchstart',e=>{const t=e.touches[0];if(t)attract(t.clientX,t.clientY)},{passive:true});
-  addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&Date.now()-lastMove>90){lastMove=Date.now();px=e.clientX;py=e.clientY;power=Math.max(power,.08)}},{passive:true});
-  resize();
+  function attract(x,y){if(reduced)return;px=Math.max(18,Math.min(w-18,x));py=Math.max(18,Math.min(h-18,y));power=1}
   function frame(){
+    raf=0;if(!visible||reduced)return;
     ctx.clearRect(0,0,w,h);
     for(const p of pts){
-      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy)||1,force=Math.max(0,1-dist/360)*.75*power;p.vx+=dx/dist*force*.045;p.vy+=dy/dist*force*.045}
-      p.vx*=.987;p.vy*=.987;p.x+=p.vx;p.y+=p.vy;
-      if(p.x<8){p.x=8;p.vx=Math.abs(p.vx)*.8} if(p.x>w-8){p.x=w-8;p.vx=-Math.abs(p.vx)*.8}
-      if(p.y<8){p.y=8;p.vy=Math.abs(p.vy)*.8} if(p.y>h-8){p.y=h-8;p.vy=-Math.abs(p.vy)*.8}
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(142,128,255,.72)';ctx.fill();
-      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy);if(dist<105){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(px,py);ctx.strokeStyle='rgba(100,215,255,'+(0.1*(1-dist/105)*power)+')';ctx.stroke()}}
+      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy)||1,force=Math.max(0,1-dist/360)*.65*power;p.vx+=dx/dist*force*.04;p.vy+=dy/dist*force*.04}
+      p.vx*=.988;p.vy*=.988;p.x+=p.vx;p.y+=p.vy;
+      if(p.x<8){p.x=8;p.vx=Math.abs(p.vx)*.8}if(p.x>w-8){p.x=w-8;p.vx=-Math.abs(p.vx)*.8}
+      if(p.y<8){p.y=8;p.vy=Math.abs(p.vy)*.8}if(p.y>h-8){p.y=h-8;p.vy=-Math.abs(p.vy)*.8}
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(142,128,255,.62)';ctx.fill();
+      if(power>0){const dx=px-p.x,dy=py-p.y,dist=Math.hypot(dx,dy);if(dist<105){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(px,py);ctx.strokeStyle='rgba(100,215,255,'+(.09*(1-dist/105)*power)+')';ctx.stroke()}}
     }
-    if(power>0){power*=.955;if(power<.02)power=0;ctx.beginPath();ctx.arc(px,py,12+20*power,0,Math.PI*2);ctx.strokeStyle='rgba(124,92,255,'+.28*power+')';ctx.stroke()}
-    requestAnimationFrame(frame);
+    if(power>0){power*=.95;if(power<.02)power=0}
+    raf=requestAnimationFrame(frame);
   }
-  frame();
+  function onVisibility(){visible=!document.hidden;if(!visible&&raf){cancelAnimationFrame(raf);raf=0}else if(visible&&!reduced&&!raf)raf=requestAnimationFrame(frame)}
+  addEventListener('resize',resize,{passive:true});
+  addEventListener('pointerdown',e=>attract(e.clientX,e.clientY),{passive:true});
+  addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&Date.now()-lastMove>100){lastMove=Date.now();px=e.clientX;py=e.clientY;power=Math.max(power,.06)}},{passive:true});
+  document.addEventListener('visibilitychange',onVisibility);
+  resize();
 }
 async function applyMaintenance(){
   if(location.pathname.endsWith('/admin.html')||location.pathname.endsWith('admin.html'))return;
