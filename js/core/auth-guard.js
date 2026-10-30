@@ -7,8 +7,11 @@ import {$,setText} from './ui.js';
 async function applyUser(u){
   let claims={};
   try{claims=(await u.getIdTokenResult(true)).claims||{}}catch{}
-  const owner=u.email?.toLowerCase()===APP_CONFIG.OWNER_EMAIL.toLowerCase();
-  const admin=Boolean(claims.admin===true||claims.role==='admin'||owner);
+  // A visible admin menu is only a UI convenience. Firestore Rules and Cloud
+  // Functions independently verify the identity on the server.
+  const verified=Boolean(u.emailVerified);
+  const owner=verified && u.email?.toLowerCase()===APP_CONFIG.OWNER_EMAIL.toLowerCase();
+  const admin=verified && Boolean(claims.admin===true||claims.role==='admin'||owner);
 
   setText('userName',u.displayName||u.email?.split('@')[0]||'JMB User');
   setText('userEmail',u.email||'');
@@ -18,8 +21,6 @@ async function applyUser(u){
   document.querySelectorAll('[data-owner-only]').forEach(e=>e.classList.toggle('hide',!owner));
   document.querySelectorAll('[data-admin-only]').forEach(e=>e.classList.toggle('hide',!admin));
 
-  /* Keep a minimal portal profile for the owner/admin account directory.
-     The Firestore rules prevent normal users from writing role/admin fields. */
   if(db){
     setDoc(doc(db,'profiles',u.uid),{
       uid:u.uid,

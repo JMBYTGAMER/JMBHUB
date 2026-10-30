@@ -7,7 +7,10 @@ export const firebaseConfig = {
   storageBucket: "jmb-hub.firebasestorage.app",
   messagingSenderId: "59308977494",
   appId: "1:59308977494:web:f5149968e5ae94d5903af7",
-  measurementId: "G-ED3Z0XQY5T"
+  measurementId: "G-ED3Z0XQY5T",
+  // Add the public reCAPTCHA Enterprise site key after registering App Check.
+  // Never place the matching reCAPTCHA secret key in this file or GitHub.
+  appCheckSiteKey: ""
 };
 
 // Backwards-compatible export for older JMBHUB modules.

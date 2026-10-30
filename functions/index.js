@@ -8,8 +8,8 @@ setGlobalOptions({region:'asia-south1',maxInstances:10});
 initializeApp();
 const db=getFirestore();
 
-function owner(auth){return auth?.token?.email?.toLowerCase()==='jobinmathewbiju@gmail.com'}
-function admin(auth){return owner(auth)||auth?.token?.admin===true||auth?.token?.role==='admin'}
+function owner(auth){return auth?.token?.email_verified===true && auth?.token?.email?.toLowerCase()==='jobinmathewbiju@gmail.com'}
+function admin(auth){return auth?.token?.email_verified===true && (owner(auth)||auth?.token?.admin===true||auth?.token?.role==='admin')}
 function requireAuth(auth){if(!auth?.uid)throw new HttpsError('unauthenticated','Please sign in first.')}
 function cleanCoins(n){return Math.round(Number(n)*100000000)/100000000}
 function walletRef(uid){return db.collection('wallets').doc(uid)}
@@ -17,9 +17,12 @@ function txRef(){return db.collection('coinTransactions').doc()}
 
 exports.listUsers=onCall(async request=>{
  if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
- let users=[],token;
- do { const result=await getAuth().listUsers(1000,token); users=users.concat(result.users); token=result.pageToken; } while(token);
- return {users:users.map(u=>({uid:u.uid,email:u.email||'',displayName:u.displayName||'',photoURL:u.photoURL||'',disabled:u.disabled,emailVerified:u.emailVerified,createdAt:u.metadata.creationTime||'',lastSignInAt:u.metadata.lastSignInTime||'',providerIds:u.providerData.map(p=>p.providerId),role:u.customClaims?.role||'',admin:u.customClaims?.admin===true}))};
+ // Return one bounded page per request instead of scanning the entire Auth directory.
+ const result=await getAuth().listUsers(1000);
+ return {
+   users:result.users.map(u=>({uid:u.uid,email:u.email||'',displayName:u.displayName||'',photoURL:u.photoURL||'',disabled:u.disabled,emailVerified:u.emailVerified,createdAt:u.metadata.creationTime||'',lastSignInAt:u.metadata.lastSignInTime||'',providerIds:u.providerData.map(p=>p.providerId),role:u.customClaims?.role||'',admin:u.customClaims?.admin===true})),
+   nextPageToken:result.pageToken||null
+ };
 });
 
 exports.setUserRole=onCall(async request=>{
@@ -277,7 +280,7 @@ exports.listMyAdCampaigns = onCall(async request => {
 
 exports.listPendingAds = onCall(async request => {
   if (!admin(request.auth)) throw new HttpsError('permission-denied','Admin access required.');
-  const snap = await db.collection('adCampaigns').where('status','==','pending').get();
+  const snap = await db.collection('adCampaigns').where('status','==','pending').limit(100).get();
   return {campaigns:snap.docs.map(d=>{const x=d.data();return {id:d.id,uid:x.uid,title:x.title,description:x.description,targetUrl:x.targetUrl,placement:x.placement,budgetCoins:x.budgetCoins,status:x.status,createdAt:x.createdAt?.toDate?.()?.toISOString?.()||''};})};
 });
 
@@ -306,7 +309,7 @@ exports.reviewAdCampaign = onCall(async request => {
 exports.listActiveAds = onCall(async request => {
   const placement = String(request.data?.placement || 'dashboard');
   if (!AD_PLACEMENTS.has(placement) && placement !== 'sitewide') throw new HttpsError('invalid-argument','Unsupported placement.');
-  const snap = await db.collection('adCampaigns').where('status','==','approved').get();
+  const snap = await db.collection('adCampaigns').where('status','==','approved').limit(100).get();
   const now = Date.now();
   const ads = snap.docs.map(d=>({id:d.id,...d.data()})).filter(a=>
     (!a.expiresAt?.toMillis || a.expiresAt.toMillis() > now) &&
