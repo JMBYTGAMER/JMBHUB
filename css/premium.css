@@ -150,3 +150,111 @@ a,button{-webkit-tap-highlight-color:transparent}
 .skip-link{position:fixed;left:14px;top:12px;z-index:200000;transform:translateY(-160%);padding:11px 15px;border-radius:12px;background:#fff;color:#15132b;font-weight:850;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .skip-link:focus{transform:translateY(0)}
 @media(max-width:560px){.skip-link{left:8px;top:8px}}
+
+
+/* ═══════════ JMB HUB • MOBILE EXPERIENCE PASS ═══════════ */
+html{max-width:100%;overflow-x:clip;scrollbar-gutter:stable}
+body{max-width:100%;overflow-x:clip}
+img,video,canvas,svg{max-width:100%}
+.container,.page,.app-shell,.main{min-width:0}
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline-offset:3px}
+@media(max-width:700px){
+  html{scroll-padding-top:76px}
+  .mobile-head{position:sticky;top:0;padding-top:max(9px,env(safe-area-inset-top));min-height:60px;gap:8px}
+  .mobile-head .brand{min-width:0;gap:8px}
+  .mobile-head .brand b{font-size:14px}
+  .mobile-head .brand small{letter-spacing:2px}
+  .mobile-head .portal-top-actions{display:flex;align-items:center;gap:6px}
+  .mobile-head .portal-top-actions .btn{min-height:40px;padding:8px 11px;font-size:12px}
+  .page{width:100%;max-width:100%;padding:16px 12px max(26px,env(safe-area-inset-bottom))}
+  .page-brand{margin:3px 0 16px}
+  .page-head{display:flex;align-items:flex-start;flex-direction:column;gap:12px}
+  .page-head h1{font-size:clamp(27px,8vw,36px);line-height:1.08;letter-spacing:-1.2px;overflow-wrap:anywhere}
+  .page-head p{font-size:13px;line-height:1.65}
+  .page-head>.btn{width:100%}
+  .grid{gap:10px}
+  .grid-3,.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat{min-width:0;gap:8px;padding:13px!important;align-items:flex-start}
+  .stat strong{font-size:clamp(20px,6vw,27px);overflow-wrap:anywhere}
+  .stat span{font-size:10px}
+  .card{min-width:0;padding:14px;border-radius:17px}
+  .section-title{display:flex;flex-direction:column;align-items:stretch;gap:10px}
+  .section-title>.btn{width:100%}
+  .admin-tabs{top:calc(env(safe-area-inset-top) + 60px);gap:6px!important;margin:12px 0!important;padding:6px;scrollbar-width:none}
+  .admin-tabs::-webkit-scrollbar{display:none}
+  .admin-tabs .btn{min-height:42px;padding:9px 12px;font-size:12px}
+  .form-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .field.full{grid-column:auto}
+  .field input,.field textarea,.field select,.tool-input,.tool-area{min-height:46px;font-size:16px;max-width:100%}
+  .field textarea,.tool-area{min-height:108px}
+  .actions{gap:8px}
+  .actions .btn{flex:1 1 145px;min-height:44px}
+  .table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table{min-width:640px}
+  .table th,.table td{padding:10px 9px;font-size:12px}
+  .log-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .log-toolbar .tool-input,.log-toolbar .btn{width:100%;max-width:none;min-height:44px}
+  .replay-box{max-width:100%;overflow:hidden}
+  .modal-backdrop{padding:10px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  .modal{width:100%;max-height:calc(100dvh - 20px);padding:15px;border-radius:19px}
+  .toast-wrap{left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom))}
+  .toast{min-width:0;width:100%}
+  .quick-grid,.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .game-library{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero-actions{display:grid;grid-template-columns:1fr 1fr}
+  .hero-actions .btn{min-width:0}
+  .cta-card{gap:14px}
+  .cta-card>.btn{width:100%}
+}
+@media(max-width:420px){
+  .container{width:calc(100% - 20px)}
+  .grid-3,.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat{padding:11px!important}
+  .stat strong{font-size:21px}
+  .admin-tabs .btn{padding:8px 10px;font-size:11px}
+  .quick-link{gap:7px}
+  .feature-card{padding:16px}
+  .hero-actions{grid-template-columns:1fr}
+  .mobile-head .portal-top-actions .btn{padding:8px 9px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+}
+
+/* Owner-only birthday music controls */
+.birthday-admin-hero{display:flex;align-items:center;gap:16px;padding:17px;border:1px solid rgba(191,164,255,.18);border-radius:18px;background:radial-gradient(circle at 0 0,rgba(246,104,188,.13),transparent 44%),linear-gradient(110deg,rgba(124,92,255,.11),rgba(0,212,255,.045))}
+.birthday-admin-hero h3{margin:4px 0;font-size:clamp(20px,4vw,27px)}
+.birthday-admin-hero p{margin:0}
+.birthday-admin-art{display:grid;place-items:center;flex:0 0 62px;width:62px;height:62px;border-radius:19px;font-size:31px;background:linear-gradient(145deg,rgba(253,113,184,.2),rgba(124,92,255,.19));border:1px solid rgba(255,255,255,.11)}
+.birthday-admin-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:13px;margin-top:14px}
+.birthday-volume-card,.birthday-play-card{min-width:0;padding:18px;border:1px solid rgba(184,196,255,.13);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012))}
+.birthday-volume-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.birthday-volume-heading>div{display:flex;align-items:center;gap:14px}
+.birthday-control-label{font-size:10px;letter-spacing:1.8px;font-weight:900;color:#9da9ce}
+.birthday-volume-heading strong{font-size:30px;letter-spacing:-1px}
+.birthday-volume-icon{font-size:25px}
+.birthday-range{display:block;width:100%;height:32px;margin:16px 0 2px;accent-color:#9b7dff;cursor:pointer}
+.birthday-volume-scale{display:flex;justify-content:space-between;color:#7884a6;font-size:11px}
+.birthday-preset-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:15px}
+.birthday-preset{min-height:38px;padding:6px;border:1px solid rgba(184,196,255,.13);border-radius:11px;background:rgba(255,255,255,.035);color:#dfe4fb;font-size:12px;font-weight:800;cursor:pointer}
+.birthday-preset:hover{background:rgba(124,92,255,.14);border-color:rgba(155,125,255,.42)}
+.birthday-volume-stepper{display:flex;gap:8px;margin-top:11px}
+.birthday-volume-stepper .btn{flex:1;min-height:39px;padding:8px 10px;font-size:12px}
+.birthday-play-card{position:relative;overflow:hidden;background:radial-gradient(circle at 85% 5%,rgba(0,212,255,.1),transparent 42%),linear-gradient(145deg,rgba(124,92,255,.08),rgba(255,255,255,.012))}
+.birthday-note-art{display:grid;place-items:center;width:54px;height:54px;margin:15px 0 7px;border:1px solid rgba(181,158,255,.2);border-radius:17px;background:linear-gradient(145deg,rgba(124,92,255,.23),rgba(0,212,255,.09));font-size:32px}
+.birthday-play-card h4{font-size:20px;margin:8px 0 4px}
+.birthday-play-card p{font-size:12px;line-height:1.6;margin:0}
+.birthday-player-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.birthday-player-actions .btn{min-height:42px;padding:9px 12px;font-size:12px}
+.birthday-sound-status{margin-top:13px}
+.birthday-local-note{margin:10px 2px 0;color:#8994b3;font-size:11px;line-height:1.6}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:700px){
+  .birthday-admin-hero{align-items:flex-start;padding:13px;gap:12px}
+  .birthday-admin-art{flex-basis:48px;width:48px;height:48px;font-size:25px;border-radius:15px}
+  .birthday-admin-layout{grid-template-columns:minmax(0,1fr)}
+  .birthday-volume-card,.birthday-play-card{padding:15px}
+  .birthday-volume-heading strong{font-size:27px}
+  .birthday-player-actions .btn{flex:1 1 115px}
+}

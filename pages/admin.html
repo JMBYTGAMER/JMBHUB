@@ -14,7 +14,7 @@
 <div class="card stat"><div><span>USERS</span><strong id="userCount">—</strong></div><span>Accounts</span></div>
 </div>
 <div class="admin-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
-<button class="btn btn-primary admin-tab" data-tab="tickets">🎫 Tickets</button><button class="btn btn-ghost admin-tab" data-tab="suggestions">💡 Suggestions</button><button class="btn btn-ghost admin-tab" data-tab="logs">📋 Logs</button><button class="btn btn-ghost admin-tab" data-tab="users">👥 Users</button><button class="btn btn-ghost admin-tab" data-tab="services" data-owner-tab>⚙️ Services</button><button class="btn btn-ghost admin-tab" data-tab="security" data-owner-tab>🛡️ Security</button><button class="btn btn-ghost admin-tab" data-tab="coins">🪙 Coins</button>
+<button class="btn btn-primary admin-tab" data-tab="tickets">🎫 Tickets</button><button class="btn btn-ghost admin-tab" data-tab="suggestions">💡 Suggestions</button><button class="btn btn-ghost admin-tab" data-tab="logs">📋 Logs</button><button class="btn btn-ghost admin-tab" data-tab="users">👥 Users</button><button class="btn btn-ghost admin-tab" data-tab="services" data-owner-tab>⚙️ Services</button><button class="btn btn-ghost admin-tab" data-tab="security" data-owner-tab>🛡️ Security</button><button class="btn btn-ghost admin-tab" data-tab="coins">🪙 Coins</button><button class="btn btn-ghost admin-tab" data-tab="birthday" data-owner-tab>🎂 Birthday</button>
 </div>
 <section id="adminTickets" class="card admin-section"><div class="section-title"><div><div class="eyebrow">SUPPORT QUEUE</div><h3>All tickets</h3><p class="muted">Open, update and reply to user requests.</p></div><button class="btn btn-ghost" id="refreshTickets">Refresh</button></div><div class="table-wrap"><table class="table"><thead><tr><th>Ticket</th><th>User</th><th>Subject</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody id="adminTicketRows"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div></section>
 <section id="adminSuggestions" class="card admin-section hide"><div class="section-title"><div><div class="eyebrow">IDEAS</div><h3>Suggestion box</h3><p class="muted">Review ideas sent from the dashboard.</p></div><button class="btn btn-ghost" id="refreshSuggestions">Refresh</button></div><div id="suggestionRows" class="admin-list"></div></section>
@@ -44,5 +44,51 @@
   <div class="actions"><button id="saveCoinPerk" class="btn btn-ghost" type="button">Save special perk</button></div>
   <div id="coinAdminToolStatus" class="notice hide" role="status"></div>
  </div>
-</section><div id="adminModal" class="modal-backdrop hide"><div class="modal"><div class="modal-head"><div><div class="eyebrow">TICKET</div><h3 id="modalTitle">Ticket</h3></div><button class="close" id="closeModal">×</button></div><div id="modalBody"></div></div></div>
+</section>
+<section id="adminBirthday" class="card admin-section hide">
+  <div class="birthday-admin-hero">
+    <div class="birthday-admin-art" aria-hidden="true">🎂</div>
+    <div>
+      <div class="eyebrow">JMB CELEBRATION STUDIO</div>
+      <h3>Birthday sound controls</h3>
+      <p class="muted">Preview the Happy Birthday melody, adjust its volume, and stop it whenever you need.</p>
+    </div>
+  </div>
+  <div class="birthday-admin-layout">
+    <div class="birthday-volume-card">
+      <div class="birthday-volume-heading">
+        <div><span class="birthday-control-label">MASTER VOLUME</span><strong id="birthdayVolumeValue">72%</strong></div>
+        <span class="birthday-volume-icon" aria-hidden="true">🔊</span>
+      </div>
+      <label class="sr-only" for="birthdayVolume">Birthday music volume</label>
+      <input id="birthdayVolume" class="birthday-range" type="range" min="0" max="100" step="1" value="72">
+      <div class="birthday-volume-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+      <div class="birthday-preset-row" aria-label="Volume presets">
+        <button class="birthday-preset" type="button" data-volume-preset="0">Mute</button>
+        <button class="birthday-preset" type="button" data-volume-preset="25">25%</button>
+        <button class="birthday-preset" type="button" data-volume-preset="50">50%</button>
+        <button class="birthday-preset" type="button" data-volume-preset="75">75%</button>
+        <button class="birthday-preset" type="button" data-volume-preset="100">100%</button>
+      </div>
+      <div class="birthday-volume-stepper">
+        <button class="btn btn-ghost" type="button" id="birthdayVolumeDown" aria-label="Decrease volume">− 5%</button>
+        <button class="btn btn-ghost" type="button" id="birthdayVolumeUp" aria-label="Increase volume">+ 5%</button>
+      </div>
+    </div>
+    <div class="birthday-play-card">
+      <span class="birthday-control-label">MUSIC PLAYER</span>
+      <div class="birthday-note-art" aria-hidden="true">♫</div>
+      <h4>Happy Birthday</h4>
+      <p class="muted">A cheerful instrumental melody generated in your browser.</p>
+      <div class="birthday-player-actions">
+        <button class="btn btn-primary" type="button" id="birthdayPlay">▶ Play song</button>
+        <button class="btn btn-ghost" type="button" id="birthdayStop">■ Stop</button>
+        <button class="btn btn-ghost" type="button" id="birthdayTest">♫ Test sound</button>
+      </div>
+    </div>
+  </div>
+  <div id="birthdaySoundStatus" class="notice birthday-sound-status" role="status" aria-live="polite">Ready. Press Play song to preview the melody.</div>
+  <p class="birthday-local-note">Volume is saved on this device and controls this browser’s JMB sound output. Music starts only after you press Play.</p>
+</section>
+<div id="adminModal" class="modal-backdrop hide"><div class="modal"><div class="modal-head"><div><div class="eyebrow">TICKET</div><h3 id="modalTitle">Ticket</h3></div><button class="close" id="closeModal">×</button></div><div id="modalBody"></div></div></div>
 </main><script type="module" src="../js/core/portal.js"></script><script type="module" src="../js/admin/admin-page.js"></script><script type="module" src="../js/admin/coin-management.js"></script></body></html>

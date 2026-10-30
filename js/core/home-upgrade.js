@@ -134,6 +134,7 @@ document.querySelectorAll('[data-jmb-copy-link]').forEach(button => {
   const celebrateButton = section.querySelector('[data-birthday-celebrate]');
   if (celebrateButton) celebrateButton.addEventListener('click', () => {
     burstConfetti(72);
+    window.JMBMusic?.birthdaySong?.();
     const original = celebrateButton.innerHTML;
     celebrateButton.innerHTML = '<span aria-hidden="true">🎊</span> LET’S GOOO! <span aria-hidden="true">✨</span>';
     window.setTimeout(() => { celebrateButton.innerHTML = original; }, 2200);

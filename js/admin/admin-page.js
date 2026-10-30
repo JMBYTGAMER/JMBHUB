@@ -75,11 +75,12 @@ function bindUI(){
   $('#saveTelemetry')?.addEventListener('click', saveTelemetry);
   $('#save')?.addEventListener('click', saveServices);
   $('#giveCoins')?.addEventListener('click', giveCoins);
+  bindBirthdayControls();
 
   $$('.admin-tab').forEach(button => {
     button.addEventListener('click', async () => {
       const tab = button.dataset.tab;
-      if((tab === 'services' || tab === 'security') && !owner){
+      if((tab === 'services' || tab === 'security' || tab === 'birthday') && !owner){
         toast('Owner access required');
         return;
       }
@@ -96,7 +97,8 @@ function bindUI(){
         users:'#adminUsers',
         services:'#adminServices',
         security:'#adminSecurity',
-        coins:'#adminCoins'
+        coins:'#adminCoins',
+        birthday:'#adminBirthday'
       };
       showSection(map[tab]);
 
@@ -106,6 +108,48 @@ function bindUI(){
       if(tab === 'services') await loadServices();
     });
   });
+}
+
+function bindBirthdayControls(){
+  const music=window.JMBMusic;
+  const slider=$('#birthdayVolume');
+  const value=$('#birthdayVolumeValue');
+  const status=$('#birthdaySoundStatus');
+  if(!slider||!music)return;
+
+  const renderVolume=()=>{
+    const percent=Math.round(music.volume*100);
+    slider.value=String(percent);
+    if(value)value.textContent=percent+'%';
+  };
+  const setVolume=percent=>{
+    music.setVolume(Math.max(0,Math.min(100,Number(percent)))/100);
+    renderVolume();
+    if(status)status.textContent='Volume set to '+Math.round(music.volume*100)+'% on this device.';
+  };
+
+  slider.addEventListener('input',()=>setVolume(slider.value));
+  $('[data-volume-preset]').forEach(button=>{
+    button.addEventListener('click',()=>setVolume(button.dataset.volumePreset));
+  });
+  $('#birthdayVolumeDown')?.addEventListener('click',()=>setVolume(Math.round(music.volume*100)-5));
+  $('#birthdayVolumeUp')?.addEventListener('click',()=>setVolume(Math.round(music.volume*100)+5));
+
+  $('#birthdayPlay')?.addEventListener('click',()=>{
+    const started=music.birthdaySong();
+    if(status)status.textContent=started
+      ?'🎶 Happy Birthday is playing. Use Stop whenever you want to end it.'
+      :'This browser could not start audio. Check its sound settings and try again.';
+  });
+  $('#birthdayStop')?.addEventListener('click',()=>{
+    music.stopBirthday();
+    if(status)status.textContent='Birthday music stopped.';
+  });
+  $('#birthdayTest')?.addEventListener('click',()=>{
+    music.notify();
+    if(status)status.textContent='Sound test played at '+Math.round(music.volume*100)+'% volume.';
+  });
+  renderVolume();
 }
 
 async function loadTickets(){
