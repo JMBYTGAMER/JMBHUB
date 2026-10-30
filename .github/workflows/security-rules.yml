@@ -21,6 +21,6 @@ jobs:
         with:
           node-version: 22
       - name: Install Firebase emulator test dependencies
-        run: npm install --no-save --package-lock=false firebase-tools@latest firebase@12.1.0 @firebase/rules-unit-testing@latest
+        run: npm install --no-save --package-lock=false firebase-tools@latest firebase@latest @firebase/rules-unit-testing@latest
       - name: Test Firebase rules in local emulators
         run: npx firebase emulators:exec --only firestore,storage --project demo-jmbhub "node --test tests/security-rules.test.cjs"
