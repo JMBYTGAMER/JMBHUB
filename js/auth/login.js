@@ -103,7 +103,7 @@ forgot.onclick=async()=>{
   if(!backendReady)return showError('Firebase is not configured.');
   const e=email.value.trim();
   if(!e)return showError('Enter your email address first.');
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(e))return showError('Enter a valid email address.');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))return showError('Enter a valid email address.');
   const key=await resetStorageKey(e);
   const now=Date.now();
   const attempts=readResetAttempts(key);

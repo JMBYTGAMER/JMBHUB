@@ -129,7 +129,7 @@ function bindBirthdayControls(){
   };
 
   slider.addEventListener('input',()=>setVolume(slider.value));
-  $('[data-volume-preset]').forEach(button=>{
+  $$('[data-volume-preset]').forEach(button=>{
     button.addEventListener('click',()=>setVolume(button.dataset.volumePreset));
   });
   $('#birthdayVolumeDown')?.addEventListener('click',()=>setVolume(Math.round(music.volume*100)-5));
