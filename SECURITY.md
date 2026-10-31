@@ -90,3 +90,27 @@ JMB HUB accounts and data you own. Avoid password guessing or disruptive load te
 Repository changes cannot activate Firebase Console enforcement, Google account MFA,
 Cloudflare WAF rules, GitHub settings or a live Firebase deployment; complete those
 console steps separately.
+
+
+## Password-reset abuse protection
+
+The sign-in page applies a local safety throttle to password-reset requests: one request
+per email per 60 seconds and up to three requests per email per rolling 24-hour period
+on the same browser profile. This reduces accidental repeated taps and basic client-side
+automation, but it is **not a server-side bot barrier**; clearing browser storage or using
+another device can bypass it.
+
+The reset request is sent directly to Firebase Authentication and does not create
+Firestore documents, so repeated requests do not consume Firestore document writes.
+Firebase Authentication applies its own service quotas and abuse protections. In Firebase
+Console:
+
+1. Authentication → Settings: enable **Email enumeration protection**.
+2. Review the supported reCAPTCHA Enterprise / bot-protection controls for Authentication
+   in this project's Firebase Console and enable them if offered.
+3. Authentication → Templates: customize the password-reset email and action URL.
+4. Monitor Authentication usage and quota alerts in Google Cloud Console.
+
+The browser throttle is an extra convenience layer, not a replacement for Firebase's
+server-side abuse controls. Never expose SMTP passwords, reCAPTCHA secret keys or service
+account credentials in frontend files.

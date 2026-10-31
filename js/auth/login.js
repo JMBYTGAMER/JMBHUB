@@ -74,15 +74,57 @@ $('#discordBtn').onclick=()=>{
   location.href=APP_CONFIG.DISCORD_OAUTH_URL;
 };
 
+const RESET_LIMIT_KEY='jmb-reset-requests-v1';
+const RESET_COOLDOWN_MS=60*1000;
+const RESET_WINDOW_MS=24*60*60*1000;
+const RESET_MAX_PER_WINDOW=3;
+async function resetStorageKey(value){
+  const normalized=value.trim().toLowerCase();
+  try{
+    if(globalThis.crypto?.subtle){
+      const bytes=new TextEncoder().encode(normalized);
+      const digest=await crypto.subtle.digest('SHA-256',bytes);
+      return RESET_LIMIT_KEY+':'+Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+    }
+  }catch{}
+  return RESET_LIMIT_KEY+':session';
+}
+function readResetAttempts(key){
+  try{
+    const data=JSON.parse(localStorage.getItem(key)||'[]');
+    return Array.isArray(data)?data.filter(n=>Number.isFinite(n)&&n>Date.now()-RESET_WINDOW_MS):[];
+  }catch{return []}
+}
+function saveResetAttempt(key,attempts){
+  try{localStorage.setItem(key,JSON.stringify(attempts.slice(-RESET_MAX_PER_WINDOW)))}catch{}
+}
 forgot.onclick=async()=>{
   clearError();
   if(!backendReady)return showError('Firebase is not configured.');
   const e=email.value.trim();
   if(!e)return showError('Enter your email address first.');
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(e))return showError('Enter a valid email address.');
+  const key=await resetStorageKey(e);
+  const now=Date.now();
+  const attempts=readResetAttempts(key);
+  const wait=attempts.length?RESET_COOLDOWN_MS-(now-attempts[attempts.length-1]):0;
+  if(wait>0)return showError('Please wait '+Math.ceil(wait/1000)+' seconds before requesting another reset email.');
+  if(attempts.length>=RESET_MAX_PER_WINDOW){
+    const remaining=Math.max(1,Math.ceil((attempts[0]+RESET_WINDOW_MS-now)/60000));
+    return showError('Reset request limit reached on this device. Try again in about '+remaining+' minutes.');
+  }
+  attempts.push(now);saveResetAttempt(key,attempts);
   forgot.disabled=true;const oldText=forgot.textContent;forgot.textContent='Sending…';
-  try{await sendPasswordResetEmail(auth,e);toast('If an account exists for that email, reset instructions have been sent.','good')}
-  catch(err){console.error('[JMBHUB] Password reset failed:',err);showError(friendly(err))}
-  finally{forgot.disabled=false;forgot.textContent=oldText}
+  try{
+    await sendPasswordResetEmail(auth,e);
+    toast('If an account exists for that email, reset instructions have been sent.','good');
+  }catch(err){
+    console.error('[JMBHUB] Password reset failed:',err);
+    if(err?.code==='auth/too-many-requests')showError('Firebase temporarily limited password reset requests. Please wait before trying again.');
+    else showError(friendly(err));
+  }finally{
+    forgot.disabled=false;forgot.textContent=oldText;
+  }
 };
 
 $('#authForm').onsubmit=async(ev)=>{

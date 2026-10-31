@@ -154,3 +154,33 @@
 .mobile-head .jmb-nav-search{margin:0 0 0 6px;min-height:38px}
 .jmb-nav-search:hover{background:rgba(139,92,246,.16);border-color:rgba(168,157,255,.45)}
 @media(max-width:700px){.mobile-head .jmb-nav-search{width:39px;padding:7px 8px;font-size:0}.mobile-head .jmb-nav-search::first-letter{font-size:19px}}
+
+
+/* Mobile-first admin console usability and safer touch targets */
+@media(max-width:760px){
+  body.app-body:has(#adminTickets) .page{padding:12px 10px 34px}
+  body.app-body:has(#adminTickets) .page-head{display:grid;gap:12px;align-items:start}
+  body.app-body:has(#adminTickets) .page-head>.btn{justify-self:start}
+  body.app-body:has(#adminTickets) .grid-4{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  body.app-body:has(#adminTickets) .stat{padding:13px;min-width:0}
+  body.app-body:has(#adminTickets) .stat strong{font-size:clamp(19px,6vw,27px)}
+  body.app-body:has(#adminTickets) .admin-tabs{top:6px;gap:6px!important;padding:7px;margin:12px 0;scrollbar-width:thin}
+  body.app-body:has(#adminTickets) .admin-tabs .btn{flex:0 0 auto;min-height:42px;padding:10px 12px;font-size:12px}
+  body.app-body:has(#adminTickets) .admin-section{padding:14px;min-width:0}
+  body.app-body:has(#adminTickets) .section-title{align-items:flex-start;gap:10px;flex-wrap:wrap}
+  body.app-body:has(#adminTickets) .table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body.app-body:has(#adminTickets) .table{min-width:680px}
+  body.app-body:has(#adminTickets) #adminUsers .table,
+  body.app-body:has(#adminTickets) #adminLogs .table{min-width:760px}
+  body.app-body:has(#adminTickets) #adminServices .grid-3{grid-template-columns:1fr}
+  body.app-body:has(#adminTickets) #adminServices .card{grid-column:auto!important;padding:15px}
+  body.app-body:has(#adminTickets) .form-grid,
+  body.app-body:has(#adminTickets) .admin-coin-grid,
+  body.app-body:has(#adminTickets) .admin-wallet-tools{grid-template-columns:1fr}
+  body.app-body:has(#adminTickets) .log-toolbar>*{width:100%;max-width:none!important}
+  body.app-body:has(#adminTickets) .modal-backdrop{padding:10px;align-items:end}
+  body.app-body:has(#adminTickets) .modal{width:100%;max-height:88dvh;overflow:auto;border-radius:22px 22px 12px 12px}
+}
+@media(prefers-reduced-motion:reduce){
+  body.app-body:has(#adminTickets) *,body.app-body:has(#adminTickets) *:before,body.app-body:has(#adminTickets) *:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
