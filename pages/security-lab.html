@@ -19,6 +19,8 @@
 <button class="security-tool" data-security-tool="random"><span>🎲</span><b>Secure Random Generator</b><small>Cryptographic random bytes</small></button>
 <button class="security-tool" data-security-tool="rsa"><span>🗝️</span><b>RSA Key Pair</b><small>Public/private key generation</small></button>
 <button class="security-tool" data-security-tool="password"><span>🔑</span><b>Password Generator</b><small>Strong random passwords</small></button>
+<button class="security-tool" data-security-tool="breach"><span>🧯</span><b>Breached Password Check</b><small>Private hash-range lookup</small></button>
+<button class="security-tool" data-security-tool="ssl"><span>🌐</span><b>Website SSL Checker</b><small>HTTPS, TLS and certificate grade</small></button>
 </div>
 <div class="card security-workspace">
 <div class="section-title"><div><div class="eyebrow">TOOL WORKSPACE</div><h2 id="securityTitle">Password Encryption</h2><p id="securityDescription" class="muted">Encrypt text with a passphrase; keep that passphrase safe.</p></div><span class="pill">Runs locally</span></div>
@@ -63,6 +65,22 @@
 <div class="tool-actions"><button id="passwordGenerate" class="btn btn-primary">Generate password</button><button id="passwordClear" class="btn btn-ghost">Clear</button></div>
 <label for="passwordOutput">Generated password</label><textarea id="passwordOutput" class="tool-area mono" rows="3" readonly></textarea><div class="tool-actions"><button class="btn btn-ghost copy-output" data-copy="passwordOutput">Copy password</button></div>
 <div id="passwordStatus" class="security-status" role="status" aria-live="polite"></div><p class="security-help">This generator uses browser cryptographic randomness. Save generated passwords in a reputable password manager.</p>
+</section>
+<section class="security-panel" data-security-panel="breach" hidden>
+<p class="security-help">Check only a password you own or are authorised to manage. The password is hashed in this browser. JMB HUB sends only the first 5 characters of its SHA-1 hash to the Have I Been Pwned Pwned Passwords range service; the full password and full hash are never sent. The service receives normal request metadata such as your IP address.</p>
+<label for="breachPassword">Password to check</label><input id="breachPassword" class="tool-input" type="password" autocomplete="off" maxlength="1024" placeholder="Enter a password to check">
+<div class="tool-actions"><button id="breachCheck" class="btn btn-primary" type="button">Check breach database</button><button id="breachClear" class="btn btn-ghost" type="button">Clear</button></div>
+<div id="breachResult" class="security-result-card" aria-live="polite">Your result will appear here.</div>
+<div id="breachStatus" class="security-status" role="status" aria-live="polite"></div>
+<p class="security-help">A match means the password appeared in the dataset. Change it anywhere you use it, and never reuse it. No match does not guarantee a password is safe. This check is not an account or email breach lookup.</p>
+</section>
+<section class="security-panel" data-security-panel="ssl" hidden>
+<p class="security-help">Run a public SSL/TLS assessment for a website you own or have permission to test. The detailed scan opens the official Qualys SSL Labs service in a new tab; the assessment is performed by that service, not inside JMB HUB.</p>
+<label for="sslHost">Your website domain or URL</label><input id="sslHost" class="tool-input" type="text" inputmode="url" autocomplete="url" maxlength="253" placeholder="example.com or https://example.com">
+<div class="tool-actions"><button id="sslCheck" class="btn btn-primary" type="button">Open SSL/TLS assessment</button><button id="sslClear" class="btn btn-ghost" type="button">Clear</button></div>
+<div id="sslResult" class="security-result-card" aria-live="polite">Enter a public domain name to prepare the SSL Labs assessment.</div>
+<div id="sslStatus" class="security-status" role="status" aria-live="polite"></div>
+<p class="security-help">The external report can include certificate validity, supported TLS versions, key exchange and configuration findings. A browser padlock alone is not a full security audit. Assessments may take a while and can be subject to the service's usage limits.</p>
 </section>
 </div>
 </section></main></div>
