@@ -5,7 +5,7 @@ const {
   assertSucceeds,
   assertFails
 } = require('@firebase/rules-unit-testing');
-const {doc,setDoc,updateDoc,getDoc,serverTimestamp} = require('firebase/firestore');
+const {doc,collection,setDoc,updateDoc,getDoc,getDocs,serverTimestamp,Timestamp} = require('firebase/firestore');
 const {ref,uploadBytes} = require('firebase/storage');
 
 let env;
@@ -98,6 +98,71 @@ test('clients cannot write wallets or coin transactions', async () => {
   }));
   await assertFails(setDoc(doc(db,'coinTransactions/fake-transaction'),{
     uid:'wallet-owner',amount:999999,type:'game_reward'
+  }));
+});
+
+test('private calls are verified-account only, unlistable and single-guest', async () => {
+  const creator=userDb('call-creator','creator@example.com');
+  const guest=userDb('call-guest','guest@example.com');
+  const stranger=userDb('call-stranger','stranger@example.com');
+  const unverified=env.authenticatedContext('call-unverified',{
+    email:'unverified@example.com',email_verified:false
+  }).firestore();
+  const roomId='private-call-rules-test';
+  const room=doc(creator,'calls',roomId);
+
+  await assertFails(setDoc(doc(unverified,'calls/unverified-room'),{
+    creatorUid:'call-unverified',joinerUid:null,status:'waiting',
+    createdAt:serverTimestamp(),expiresAt:Timestamp.fromMillis(Date.now()+600000)
+  }));
+  await assertSucceeds(setDoc(room,{
+    creatorUid:'call-creator',joinerUid:null,status:'waiting',
+    createdAt:serverTimestamp(),expiresAt:Timestamp.fromMillis(Date.now()+600000)
+  }));
+  await assertSucceeds(getDoc(doc(guest,'calls',roomId)));
+  await assertFails(getDocs(collection(guest,'calls')));
+  await assertFails(updateDoc(room,{
+    joinerUid:'call-creator',status:'active',joinedAt:serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(guest,'calls',roomId),{
+    joinerUid:'call-guest',status:'active',joinedAt:serverTimestamp()
+  }));
+  await assertFails(getDoc(doc(stranger,'calls',roomId)));
+  await assertFails(updateDoc(doc(stranger,'calls',roomId),{
+    status:'ended',endedAt:serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(room,{
+    status:'ended',endedAt:serverTimestamp()
+  }));
+});
+
+test('private call signals are visible only to the two call participants', async () => {
+  const creator=userDb('signal-creator','creator-signal@example.com');
+  const guest=userDb('signal-guest','guest-signal@example.com');
+  const stranger=userDb('signal-stranger','stranger-signal@example.com');
+  const roomId='private-call-signals-test';
+  const room=doc(creator,'calls',roomId);
+  await assertSucceeds(setDoc(room,{
+    creatorUid:'signal-creator',joinerUid:null,status:'waiting',
+    createdAt:serverTimestamp(),expiresAt:Timestamp.fromMillis(Date.now()+600000)
+  }));
+  await assertSucceeds(updateDoc(doc(guest,'calls',roomId),{
+    joinerUid:'signal-guest',status:'active',joinedAt:serverTimestamp()
+  }));
+
+  const offer=doc(creator,'calls',roomId,'signals','offer');
+  await assertSucceeds(setDoc(offer,{
+    fromUid:'signal-creator',kind:'offer',sdp:'test SDP offer',createdAt:serverTimestamp()
+  }));
+  await assertSucceeds(getDoc(doc(guest,'calls',roomId,'signals','offer')));
+  await assertFails(getDoc(doc(stranger,'calls',roomId,'signals','offer')));
+  await assertFails(setDoc(doc(stranger,'calls',roomId,'signals','forged'),{
+    fromUid:'signal-stranger',kind:'ice',candidate:'candidate',
+    sdpMid:null,sdpMLineIndex:null,createdAt:serverTimestamp()
+  }));
+  await assertFails(updateDoc(offer,{sdp:'tampered SDP'}));
+  await assertSucceeds(setDoc(doc(guest,'calls',roomId,'signals','answer'),{
+    fromUid:'signal-guest',kind:'answer',sdp:'test SDP answer',createdAt:serverTimestamp()
   }));
 });
 
