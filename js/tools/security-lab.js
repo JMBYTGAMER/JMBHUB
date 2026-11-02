@@ -58,9 +58,66 @@ function setupPassword(){
  $('#passwordGenerate').addEventListener('click',()=>{try{const length=Number($('#passwordLength').value);if(!Number.isInteger(length)||length<12||length>128)throw new Error('Choose a length between 12 and 128.');let sets='';if($('#pwLower').checked)sets+='abcdefghijklmnopqrstuvwxyz';if($('#pwUpper').checked)sets+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';if($('#pwDigits').checked)sets+='0123456789';if($('#pwSymbols').checked)sets+='!#$%&()*+,-./:;=?@[]^_{|}~';if(!sets)throw new Error('Choose at least one character group.');let out='';if($('#pwLower').checked)out+=randomFromCharset(1,'abcdefghijklmnopqrstuvwxyz');if($('#pwUpper').checked)out+=randomFromCharset(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');if($('#pwDigits').checked)out+=randomFromCharset(1,'0123456789');if($('#pwSymbols').checked)out+=randomFromCharset(1,'!#$%&()*+,-./:;=?@[]^_{|}~');out+=randomFromCharset(length-out.length,sets);const chars=Array.from(out);for(let i=chars.length-1;i>0;i--){const j=bytesToBigRandomIndex(i+1);[chars[i],chars[j]]=[chars[j],chars[i]]}$('#passwordOutput').value=chars.join('');status('passwordStatus','Generated '+length+' characters locally.')}catch(e){status('passwordStatus',e.message||'Generation failed.',true)}});
  $('#passwordClear').addEventListener('click',()=>{$('#passwordOutput').value='';status('passwordStatus','')});
 }
-const labels={aes:['Password Encryption','Encrypt text with a passphrase; keep that passphrase safe.'],hash:['Hash & File Checksum','Create SHA-2 fingerprints to verify files or compare content.'],hmac:['HMAC Sign & Verify','Create a keyed signature or verify one locally.'],random:['Secure Random Generator','Generate cryptographically random bytes in your browser.'],rsa:['RSA Key Pair','Generate an RSA-OAEP public/private key pair locally.'],password:['Password Generator','Generate a strong random password using browser cryptography.']};
+async function setupBreachCheck(){
+ const input=$('#breachPassword'),button=$('#breachCheck'),result=$('#breachResult');
+ button.addEventListener('click',async()=>{
+  const password=input.value;
+  if(!password){status('breachStatus','Enter a password to check.',true);return}
+  if(!crypto?.subtle){status('breachStatus','Secure hashing is unavailable. Open JMB HUB over HTTPS.',true);return}
+  button.disabled=true;result.textContent='Checking the breach password database…';result.classList.remove('found','clear');
+  try{
+   const digest=new Uint8Array(await crypto.subtle.digest('SHA-1',encoder.encode(password)));
+   const hash=toHex(digest).toUpperCase(),prefix=hash.slice(0,5),suffix=hash.slice(5);
+   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
+   let response;
+   try{response=await fetch('https://api.pwnedpasswords.com/range/'+prefix,{method:'GET',headers:{'Add-Padding':'true'},cache:'no-store',signal:controller.signal})}
+   finally{clearTimeout(timeout)}
+   if(!response.ok)throw new Error('Breach database request failed (HTTP '+response.status+'). Try again later.');
+   const lines=(await response.text()).split(/\\r?\\n/);
+   const match=lines.find(line=>line.slice(0,line.indexOf(':')).trim().toUpperCase()===suffix);
+   const count=match?Number(match.slice(match.indexOf(':')+1).trim()):0;
+   if(Number.isFinite(count)&&count>0){
+    result.textContent='⚠️ Found in known breached-password data. Occurrence count: '+count.toLocaleString('en-US')+'. Do not use this password. Change it anywhere you have used it.';
+    result.classList.add('found');
+    status('breachStatus','Match found. The full password and full hash were compared locally.');
+   }else{
+    result.textContent='✓ No match found in the current Pwned Passwords dataset.';
+    result.classList.add('clear');
+    status('breachStatus','No dataset match. This does not guarantee the password is safe.');
+   }
+  }catch(e){
+   result.textContent='Could not complete the check.';
+   status('breachStatus',e.name==='AbortError'?'The request timed out. Try again.':(e.message||'Breach check failed.'),true);
+  }finally{
+   input.value='';
+   button.disabled=false;
+  }
+ });
+ $('#breachClear').addEventListener('click',()=>{input.value='';result.textContent='Your result will appear here.';result.classList.remove('found','clear');status('breachStatus','')});
+}
+function setupSslChecker(){
+ const input=$('#sslHost'),result=$('#sslResult');
+ $('#sslCheck').addEventListener('click',()=>{
+  try{
+   const raw=input.value.trim();if(!raw)throw new Error('Enter a public domain name first.');
+   const candidate=/^https?:\\/\\//i.test(raw)?raw:'https://'+raw;
+   const url=new URL(candidate);
+   if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw new Error('Enter a normal public website URL without sign-in details.');
+   const host=url.hostname.toLowerCase();
+   if(!host.includes('.')||host==='localhost'||host.endsWith('.local')||host.endsWith('.internal')||/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(host))throw new Error('Enter a public domain name, not a local address or IP address.');
+   const scanUrl='https://www.ssllabs.com/ssltest/analyze.html?d='+encodeURIComponent(host)+'&latest';
+   result.textContent='Assessment link prepared for '+host+'. The official SSL Labs service will perform the test.';
+   const link=document.createElement('a');link.href=scanUrl;link.target='_blank';link.rel='noopener noreferrer';link.className='ssl-result-link';link.textContent='Open SSL Labs report for '+host;
+   result.append(document.createElement('br'),link);
+   window.open(scanUrl,'_blank','noopener,noreferrer');
+   status('sslStatus','External assessment requested. If a new tab was blocked, use the report link above.');
+  }catch(e){result.textContent='Enter a valid public domain name.';status('sslStatus',e.message||'Could not prepare SSL assessment.',true)}
+ });
+ $('#sslClear').addEventListener('click',()=>{input.value='';result.textContent='Enter a public domain name to prepare the SSL Labs assessment.';status('sslStatus','')});
+}
+const labels={aes:['Password Encryption','Encrypt text with a passphrase; keep that passphrase safe.'],hash:['Hash & File Checksum','Create SHA-2 fingerprints to verify files or compare content.'],hmac:['HMAC Sign & Verify','Create a keyed signature or verify one locally.'],random:['Secure Random Generator','Generate cryptographically random bytes in your browser.'],rsa:['RSA Key Pair','Generate an RSA-OAEP public/private key pair locally.'],password:['Password Generator','Generate a strong random password using browser cryptography.'],breach:['Breached Password Check','Check a password against known breached-password data using a privacy-preserving hash range.'],ssl:['Website SSL Checker','Prepare an official SSL/TLS assessment for a public website domain.']};
 function initTabs(){document.querySelectorAll('[data-security-tool]').forEach(button=>button.addEventListener('click',()=>{const name=button.dataset.securityTool;document.querySelectorAll('[data-security-tool]').forEach(b=>b.classList.toggle('active',b===button));document.querySelectorAll('[data-security-panel]').forEach(p=>p.hidden=p.dataset.securityPanel!==name);$('#securityTitle').textContent=labels[name][0];$('#securityDescription').textContent=labels[name][1]}))}
 async function copyOutput(id){const el=$('#'+id);if(!el)return;try{await navigator.clipboard.writeText(el.value);const prev=el.value;statusForCopy('Copied to clipboard.')}catch{el.focus();el.select();statusForCopy('Select and copy the highlighted text manually.')}function statusForCopy(message){const panel=el.closest('[data-security-panel]');const s=panel?.querySelector('.security-status');if(s){s.textContent=message;s.classList.remove('error')}}}
 document.querySelectorAll('.copy-output').forEach(b=>b.addEventListener('click',()=>copyOutput(b.dataset.copy)));
 if(!window.isSecureContext)document.querySelectorAll('.security-status').forEach(s=>{s.textContent='Tip: Web Crypto requires a secure context (HTTPS or localhost).'});
-initTabs();setupAes();setupHash();setupHmac();setupRandom();setupRsa();setupPassword();guard();
+initTabs();setupAes();setupHash();setupHmac();setupRandom();setupRsa();setupPassword();setupBreachCheck();setupSslChecker();guard();
