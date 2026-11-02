@@ -313,7 +313,10 @@ service cloud.firestore {
                   && request.resource.data.sdpMLineIndex >= 0
                   && request.resource.data.sdpMLineIndex <= 256)))
           );
-        allow update, delete: if false;
+        allow update: if false;
+        // Participants may remove only their own temporary SDP/ICE signalling data.
+        allow delete: if callParticipant(roomId)
+          && resource.data.fromUid == request.auth.uid;
       }
     }
 
