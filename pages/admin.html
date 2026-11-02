@@ -46,6 +46,17 @@
  </div>
 </section>
 <section id="adminBirthday" class="card admin-section hide">
+  <div class="card" style="margin-bottom:16px">
+    <div class="eyebrow">PUBLIC HOMEPAGE ANNOUNCEMENT</div><h3>🎉 Birthday announcement</h3>
+    <p class="muted">Turn the announcement on or off, choose the India-local date, and add the day's special message. It appears on the homepage only on the selected date.</p>
+    <div class="form-grid">
+      <div class="field"><label>Announcement</label><select id="birthdayAnnouncementEnabled" class="tool-input"><option value="off">Off</option><option value="on">On</option></select></div>
+      <div class="field"><label>Show on (India date)</label><input id="birthdayAnnouncementDate" class="tool-input" type="date" value="2026-10-29"></div>
+      <div class="field"><label>Announcement title</label><input id="birthdayAnnouncementTitle" class="tool-input" maxlength="90" value="Happy Birthday! 🎉"></div>
+      <div class="field"><label>Special details for the day</label><textarea id="birthdayAnnouncementMessage" class="tool-input" maxlength="400" rows="3" placeholder="Add the day's highlights, event details or special message."></textarea></div>
+    </div>
+    <div class="actions"><button id="saveBirthdayAnnouncement" type="button" class="btn btn-primary">Save birthday announcement</button></div>
+  </div>
   <div class="birthday-admin-hero">
     <div class="birthday-admin-art" aria-hidden="true">🎂</div>
     <div>
