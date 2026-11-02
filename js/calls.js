@@ -98,6 +98,8 @@ function stopLocalMedia() {
   if (remotePlaceholder) remotePlaceholder.hidden = false;
   $('#toggleMic').disabled = true;
   $('#toggleCamera').disabled = true;
+  $('#toggleSpeaker').disabled = true;
+  $('#toggleSpeaker').innerHTML = '<span>🔊</span><small>Mute speaker</small>';
 }
 function signalCollection() {
   return collection(db, 'calls', activeCall.roomId, 'signals');
@@ -115,7 +117,8 @@ function setupPeerConnection() {
     }
     remoteVideo.srcObject = stream;
     remotePlaceholder.hidden = true;
-    remoteVideo.play().catch(() => {});
+    $('#toggleSpeaker').disabled = false;
+    remoteVideo.play().catch(() => setCallStatus('Remote video is ready. Tap the speaker control if you cannot hear audio.'));
     setCallStatus('Connected. Your camera and microphone are active.');
   };
   peer.onicecandidate = event => {
@@ -407,6 +410,16 @@ $('#toggleCamera').addEventListener('click', () => {
   const enabled = tracks.some(track => track.enabled);
   tracks.forEach(track => { track.enabled = !enabled; });
   $('#toggleCamera').innerHTML = enabled ? '<span>🚫</span><small>Turn camera on</small>' : '<span>📷</span><small>Turn camera off</small>';
+});
+$('#toggleSpeaker').addEventListener('click', () => {
+  if (!remoteVideo.srcObject) return;
+  remoteVideo.muted = !remoteVideo.muted;
+  $('#toggleSpeaker').innerHTML = remoteVideo.muted
+    ? '<span>🔇</span><small>Enable sound</small>'
+    : '<span>🔊</span><small>Mute speaker</small>';
+  if (!remoteVideo.muted) {
+    remoteVideo.play().catch(() => setCallStatus('Your browser could not start audio playback. Check the device volume and media permissions.'));
+  }
 });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !overlay.hidden) finishCall('You ended the call.');
