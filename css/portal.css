@@ -351,3 +351,6 @@
  .app-body>.mobile-head .brand-mark{width:30px!important;height:30px!important;flex-basis:30px!important}
  .app-body>.mobile-head .brand small{letter-spacing:1.4px}
 }
+
+/* Tool workspaces must sit above the fixed mobile navigation bar. */
+.jmb-workspace-overlay{z-index:10050!important}
