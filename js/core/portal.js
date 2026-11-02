@@ -17,6 +17,7 @@ const links=[
   ['🧑‍💻','Developer Toolbox','dev-toolbox.html'],
   ['🔐','Security Lab','security-lab.html'],
   ['⛏️','Minecraft Area','minecraft.html'],
+  ['📹','Private Calls','calls.html'],
   ['🤖','JMB AI','ai.html'],
   ['🎫','Support','support.html'],
   ['🪙','JMB Coins','coins.html'],
