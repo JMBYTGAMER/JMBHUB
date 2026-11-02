@@ -23,7 +23,13 @@ service cloud.firestore {
     }
 
     match /settings/portal {
-      allow read: if signedIn();
+      // Public service/maintenance status only; do not put private data in this document.
+      allow read: if true;
+      allow write: if owner();
+    }
+
+    match /settings/birthdayAnnouncement {
+      allow read: if true;
       allow write: if owner();
     }
 
