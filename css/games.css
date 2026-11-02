@@ -12,3 +12,28 @@
 
 /* Featured Geometry Dash */
 .game-card.geometry-feature{grid-column:span 2;border-color:rgba(0,198,234,.38);background:radial-gradient(circle at 80% 10%,rgba(0,198,234,.16),transparent 34%),linear-gradient(145deg,rgba(124,92,255,.15),rgba(255,255,255,.025));box-shadow:0 18px 55px rgba(0,0,0,.2)}.game-card.geometry-feature .game-art{background:radial-gradient(circle at 50% 45%,rgba(0,212,255,.3),rgba(124,92,255,.15) 40%,#070b16 80%)}.gd-mini-badge{position:absolute;top:10px;right:10px;padding:5px 8px;border-radius:999px;background:linear-gradient(135deg,#7c5cff,#00c6ea);font-size:9px;font-weight:900;letter-spacing:.08em}.jmb-sound-toggle{white-space:nowrap}@media(max-width:700px){.game-card.geometry-feature{grid-column:span 2}}
+
+/* JMB HUB Arcade visual refresh */
+.game-library{gap:14px}
+.game-card{position:relative;isolation:isolate;overflow:hidden;min-height:208px;padding:15px;border-radius:22px;border-color:rgba(141,157,210,.2);background:linear-gradient(145deg,rgba(31,40,76,.82),rgba(9,13,28,.94));box-shadow:0 12px 30px rgba(0,0,0,.18);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.game-card:before{content:"";position:absolute;z-index:-1;width:180px;height:180px;right:-65px;top:-75px;border-radius:50%;background:radial-gradient(circle,rgba(0,198,234,.24),transparent 68%);opacity:.8;transition:transform .28s ease,opacity .28s ease}
+.game-card:after{content:"";position:absolute;top:0;left:14px;right:14px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(0,198,234,.7),rgba(124,92,255,.7),transparent);opacity:.45}
+.game-card:hover,.game-card:focus-visible{transform:translateY(-5px);border-color:rgba(99,218,255,.65);box-shadow:0 20px 48px rgba(0,0,0,.34),0 0 0 1px rgba(0,198,234,.08)}
+.game-card:hover:before{transform:scale(1.3);opacity:1}
+.game-card.active{border-color:rgba(124,92,255,.85);box-shadow:0 0 0 1px rgba(124,92,255,.24),0 18px 44px rgba(51,38,122,.28)}
+.game-card .game-art{height:106px;margin-bottom:12px;border-radius:17px;border-color:rgba(150,177,255,.16);font-size:48px;background:radial-gradient(circle at 50% 38%,rgba(124,92,255,.27),rgba(0,198,234,.1) 44%,rgba(7,9,18,.92) 82%);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.game-card h3{font-size:15px;letter-spacing:.01em}
+.game-card p{font-size:12px;line-height:1.5}
+.game-card .pill{display:inline-flex;align-items:center;gap:5px;border-color:rgba(124,92,255,.28);background:rgba(124,92,255,.1)}
+.game-stage{position:relative;isolation:isolate;overflow:hidden;border-radius:22px;background:radial-gradient(ellipse at 50% 0%,rgba(124,92,255,.11),transparent 55%),linear-gradient(180deg,rgba(13,18,37,.5),rgba(5,8,18,.12))}
+.game-view{max-width:960px;margin:0 auto;padding:clamp(15px,3vw,28px);border:1px solid rgba(139,159,220,.15);border-radius:22px;background:radial-gradient(circle at 8% 0%,rgba(124,92,255,.13),transparent 40%),linear-gradient(145deg,rgba(20,26,50,.65),rgba(8,12,25,.72));box-shadow:0 14px 40px rgba(0,0,0,.18)}
+.game-view .game-title{font-weight:950;letter-spacing:-.035em;background:linear-gradient(100deg,#fff,#c3caff 56%,#78eaff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.game-view .btn{min-height:44px;border-radius:13px;font-weight:800;transition:transform .16s ease,filter .16s ease}
+.game-view .btn:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.game-view .tool-input{width:min(460px,100%);min-height:46px;padding:12px 14px;border:1px solid rgba(139,159,220,.24);border-radius:13px;background:#0c1225;color:#fff;box-sizing:border-box}
+.sudoku-grid{width:min(320px,100%);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:18px auto;padding:7px;border:1px solid rgba(124,92,255,.35);border-radius:16px;background:#0a1020;box-shadow:0 12px 32px rgba(0,0,0,.25)}
+.sudoku-grid input{width:100%;min-width:0;height:62px;text-align:center;font-size:23px;font-weight:900;color:#fff;border:1px solid rgba(139,159,220,.19);border-radius:10px;background:#131d35;box-sizing:border-box}
+.sudoku-grid input.given{color:#9feeff;background:rgba(0,198,234,.12);border-color:rgba(0,198,234,.22)}
+.sudoku-grid input:focus{outline:2px solid #8e7bff;outline-offset:1px;background:#20254b}
+@media(max-width:700px){.game-library{gap:9px}.game-card{padding:11px;min-height:188px;border-radius:18px}.game-card .game-art{height:82px;font-size:38px}.game-card p{font-size:10px}.game-view{padding:14px;border-radius:17px}.sudoku-grid input{height:57px}}
+@media(prefers-reduced-motion:reduce){.game-card,.game-card:before,.game-view .btn{transition:none}.game-card:hover,.game-view .btn:hover{transform:none}}
