@@ -393,13 +393,13 @@ exports.listMyAdCampaigns = onCall(async request => {
 });
 
 exports.listPendingAds = onCall(async request => {
-  if (!admin(request.auth)) throw new HttpsError('permission-denied','Admin access required.');
+  await requireAdmin(request.auth);
   const snap = await db.collection('adCampaigns').where('status','==','pending').limit(100).get();
   return {campaigns:snap.docs.map(d=>{const x=d.data();return {id:d.id,uid:x.uid,title:x.title,description:x.description,targetUrl:x.targetUrl,placement:x.placement,budgetCoins:x.budgetCoins,status:x.status,createdAt:x.createdAt?.toDate?.()?.toISOString?.()||''};})};
 });
 
 exports.reviewAdCampaign = onCall(async request => {
-  if (!admin(request.auth)) throw new HttpsError('permission-denied','Admin access required.');
+  await requireAdmin(request.auth);
   const id = String(request.data?.id || '');
   const decision = String(request.data?.decision || '');
   if (!id || !['approve','reject'].includes(decision)) throw new HttpsError('invalid-argument','Invalid ad review request.');
