@@ -5,7 +5,7 @@ const {
   assertSucceeds,
   assertFails
 } = require('@firebase/rules-unit-testing');
-const {doc,collection,setDoc,updateDoc,getDoc,getDocs,serverTimestamp,Timestamp} = require('firebase/firestore');
+const {doc,collection,setDoc,updateDoc,getDoc,getDocs,deleteDoc,serverTimestamp,Timestamp} = require('firebase/firestore');
 const {ref,uploadBytes} = require('firebase/storage');
 
 let env;
@@ -164,6 +164,8 @@ test('private call signals are visible only to the two call participants', async
   await assertSucceeds(setDoc(doc(guest,'calls',roomId,'signals','answer'),{
     fromUid:'signal-guest',kind:'answer',sdp:'test SDP answer',createdAt:serverTimestamp()
   }));
+  await assertSucceeds(deleteDoc(offer));
+  await assertFails(deleteDoc(doc(creator,'calls',roomId,'signals','answer')));
 });
 
 test('Firebase Storage uploads are denied by default', async () => {
