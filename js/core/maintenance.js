@@ -1,6 +1,6 @@
 import {auth,db} from './firebase.js';
 import {doc,getDoc} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
-if(db){
+if(db&&!window.__jmbMaintenanceActive){
  try{
   await auth?.authStateReady?.();
   const current=auth?.currentUser;
@@ -11,7 +11,8 @@ if(db){
   }
   const snap=await getDoc(doc(db,'settings','portal'));
   const m=snap.exists()?snap.data().maintenance:null;
-  if(m?.enabled){
+  if(m?.enabled&&!window.__jmbMaintenanceActive){
+   window.__jmbMaintenanceActive=true;
    const box=document.createElement('div');box.className='jmb-maintenance-screen';
    box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label','JMB HUB maintenance');
    box.innerHTML='<div class="jmb-maintenance-card" tabindex="-1"><div class="jmb-maintenance-icon">🛠️</div><div class="eyebrow">JMBHUB MAINTENANCE</div><h1>We’ll be right back</h1><p></p><div class="jmb-maintenance-bar"><span></span></div><small>The portal is temporarily paused while maintenance is in progress.</small></div>';
