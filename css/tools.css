@@ -18,3 +18,47 @@
 .tool-choice-new{border-color:rgba(0,198,234,.3)!important;background:linear-gradient(145deg,rgba(0,198,234,.09),rgba(124,92,255,.07),rgba(8,11,22,.9))!important}
 .tool-choice-new .pill{border-color:rgba(0,198,234,.35);background:rgba(0,198,234,.09);color:#a5edff;font-weight:850;letter-spacing:.2px}
 .tool-choice-new:hover,.tool-choice-new.active{border-color:rgba(0,198,234,.58)!important;box-shadow:0 20px 48px rgba(0,0,0,.26),0 0 22px rgba(0,198,234,.08)}
+
+
+/* JMB Area refresh: compact catalogue cards and a real responsive tool dialog. */
+.tool-library{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch;margin:0 0 22px}
+.tool-choice{min-width:0;min-height:0!important;height:100%;padding:15px!important;display:grid;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto auto;column-gap:12px;align-content:start;align-items:center;border-radius:17px!important;border:1px solid rgba(173,185,230,.14)!important;background:linear-gradient(145deg,rgba(22,27,45,.94),rgba(12,16,30,.96))!important;box-shadow:0 8px 22px rgba(0,0,0,.12);text-align:left;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.tool-choice:before,.tool-choice:after{display:none!important}
+.tool-choice:hover,.tool-choice.active{transform:translateY(-2px)!important;border-color:rgba(139,107,255,.45)!important;background:linear-gradient(145deg,rgba(34,31,65,.96),rgba(12,19,37,.98))!important;box-shadow:0 14px 30px rgba(0,0,0,.22),0 0 20px rgba(124,92,255,.07)!important}
+.tool-art{grid-column:1;grid-row:1/4;width:48px!important;height:48px!important;margin:0!important;border-radius:14px!important;display:grid;place-items:center;font-size:25px!important;background:linear-gradient(145deg,rgba(124,92,255,.19),rgba(0,198,234,.11))!important;border:1px solid rgba(255,255,255,.06)}
+.tool-choice h3{grid-column:2;margin:0 0 4px!important;font-size:14px!important;line-height:1.35;overflow-wrap:anywhere}
+.tool-choice p{grid-column:2;margin:0!important;min-height:0!important;font-size:11px!important;line-height:1.45;color:#aab3ce}
+.tool-choice .pill{grid-column:2;justify-self:start;margin:7px 0 0!important;padding:4px 8px;font-size:10px}
+.tool-choice-new{border-color:rgba(0,198,234,.24)!important;background:linear-gradient(145deg,rgba(16,31,48,.96),rgba(12,16,30,.96))!important}
+.tool-toolbar{margin:12px 0 18px;padding:16px;border-radius:18px;background:linear-gradient(145deg,rgba(20,25,42,.9),rgba(11,15,28,.92))}
+.tool-workspace{display:none!important}
+.tool-workspace.jmb-workspace-placeholder{display:none!important}
+.jmb-workspace-overlay{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:clamp(10px,3vw,28px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
+.jmb-workspace-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
+.jmb-workspace-backdrop{position:absolute;inset:0;background:rgba(2,4,12,.78);backdrop-filter:blur(12px)}
+.jmb-workspace-window{position:relative;z-index:1;width:min(900px,100%);max-height:min(92dvh,920px);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(160,151,255,.25);border-radius:24px;background:linear-gradient(155deg,#151a30 0%,#0b1020 72%);box-shadow:0 35px 110px rgba(0,0,0,.62),0 0 55px rgba(124,92,255,.12);transform:translateY(14px) scale(.985);transition:transform .22s ease}
+.jmb-workspace-overlay.open .jmb-workspace-window{transform:translateY(0) scale(1)}
+.jmb-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.025)}
+.jmb-workspace-heading{display:flex;align-items:center;gap:13px;min-width:0}
+.jmb-window-badge{flex:0 0 auto;padding:8px 10px;border-radius:11px;background:linear-gradient(135deg,#795cff,#397cff);font-size:10px;font-weight:950;letter-spacing:1px}
+.jmb-workspace-heading h2{margin:0;font-size:clamp(17px,3vw,22px);line-height:1.2}
+.jmb-workspace-heading p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+.jmb-workspace-close{flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(255,255,255,.06);color:#fff;font-size:27px;line-height:1;cursor:pointer}
+.jmb-workspace-close:hover{background:rgba(255,85,120,.16);border-color:rgba(255,85,120,.3)}
+.jmb-workspace-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:20px;-webkit-overflow-scrolling:touch}
+.jmb-workspace-body .tool-stage{padding:0}
+.jmb-workspace-body .tool-panel{width:100%;max-width:100%;margin:0;padding:clamp(15px,3vw,24px);border-radius:18px;background:rgba(255,255,255,.025);box-shadow:none}
+body.jmb-window-open{overflow:hidden}
+@media(max-width:900px){.tool-library{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){
+ .tool-library{grid-template-columns:minmax(0,1fr);gap:9px}
+ .tool-choice{grid-template-columns:44px minmax(0,1fr);padding:12px!important;border-radius:15px!important}
+ .tool-art{width:44px!important;height:44px!important;font-size:23px!important}
+ .tool-choice h3{font-size:14px!important}
+ .jmb-workspace-overlay{padding:0;align-items:stretch}
+ .jmb-workspace-window{width:100%;height:100%;max-height:100dvh;border-radius:0;border-left:0;border-right:0}
+ .jmb-workspace-head{padding:calc(12px + env(safe-area-inset-top)) 13px 12px}
+ .jmb-workspace-body{padding:12px 12px calc(18px + env(safe-area-inset-bottom))}
+ .jmb-workspace-body .tool-panel{padding:14px;border-radius:15px}
+}
+@media(prefers-reduced-motion:reduce){.tool-choice,.jmb-workspace-overlay,.jmb-workspace-window{transition:none!important}}
