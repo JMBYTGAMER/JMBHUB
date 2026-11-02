@@ -3,6 +3,7 @@ const {setGlobalOptions}=require('firebase-functions/v2');
 const {initializeApp}=require('firebase-admin/app');
 const {getAuth}=require('firebase-admin/auth');
 const {getFirestore,FieldValue}=require('firebase-admin/firestore');
+const {logger}=require('firebase-functions');
 
 setGlobalOptions({region:'asia-south1',maxInstances:10});
 initializeApp();
@@ -142,7 +143,12 @@ exports.adminGiveCoins=onCall(async request=>{
  let target;
  try{target=await getAuth().getUserByEmail(email)}catch{throw new HttpsError('not-found','No JMBHUB account was found for that email.');}
  const gift=db.collection('coinNotifications').doc();
- await gift.set({uid:target.uid,email:target.email||email,title:'🪙 JMB Admin Reward',message,amount,status:'pending',type:'admin_gift',fromEmail:request.auth.token.email||'',createdAt:FieldValue.serverTimestamp()});
+ try{
+  await gift.set({uid:target.uid,email:target.email||email,title:'🪙 JMB Admin Reward',message,amount,status:'pending',type:'admin_gift',fromEmail:request.auth.token.email||'',createdAt:FieldValue.serverTimestamp()});
+ }catch(error){
+  logger.error('adminGiveCoins failed while saving the reward notification',{uid:target.uid,adminUid:request.auth.uid,code:error?.code||'',message:error?.message||String(error)});
+  throw new HttpsError('internal','The reward notification could not be saved. Check the Cloud Function logs and Firestore status.');
+ }
  return {ok:true,giftId:gift.id,email:target.email||email,amount,status:'pending'};
 });
 
