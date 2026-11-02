@@ -13,7 +13,7 @@ SCENES=[
 {"tag":"STEP 04 • VIRTUAL COINS","title":"UNDERSTAND JMB COINS","body":"JMB Coins are virtual portal credits, not cash. Check the wallet and transaction history. Rewards and gift collection depend on the coin services being available.","points":["Not money or cryptocurrency","Check your transaction history","Do not retry failed claims repeatedly"],"voice":"JMB Coins are virtual portal credits, not cash or cryptocurrency. Check your wallet history. Rewards and admin gifts depend on coin services being online; report failed claims to Support.","active":"Coins"},
 {"tag":"STEP 05 • PROFILE","title":"MAKE YOUR PROFILE YOURS","body":"Update your profile details. Birthday sharing is optional: the public celebration list displays only your chosen display name and day/month, not your birth year.","points":["Keep profile details current","Birthday sharing is optional","Review what is public"],"voice":"Use Profile to update supported details. Birthday sharing is optional; the public list shows your display name and day and month, not your birth year.","active":"Profile"},
 {"tag":"STEP 06 • HELP + SAFETY","title":"NEED HELP? WE'VE GOT A GUIDE","body":"Open Help & Guide for instructions or Support to report a problem. Include the page and exact error — never send passwords, one-time codes or recovery phrases.","points":["Help & Guide for how-to steps","Support for account problems","Sign out on shared devices"],"voice":"Open Help and Guide for instructions or create a Support ticket with the page name and exact error. Never share passwords, sign-in codes, or recovery phrases. Sign out on shared devices.","active":"Support"}]
-NAV=[("Home","⌂"),("Games","✦"),("Tools","▦"),("Coins","◉"),("Profile","◎")]
+NAV=[("Home","H"),("Games","G"),("Tools","T"),("Coins","C"),("Profile","P")]
 C={"bg1":(7,10,25),"bg2":(17,26,52),"text":(246,248,255),"muted":(174,188,216),"purple":(154,126,255),"cyan":(83,224,245),"green":(105,238,183),"gold":(255,215,112)}
 def F(n,b=False):
  for p in (["/usr/share/fonts/opentype/inter/InterDisplay-Bold.otf" if b else "/usr/share/fonts/opentype/inter/InterDisplay-Regular.otf","/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if b else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]):
@@ -44,7 +44,7 @@ def brand(d,x,y,s=1):
 def phone(d,x,y,w,h,active,idx):
  rr(d,(x,y,x+w,y+h),42,(5,8,19),outline=(121,134,173),width=3);rr(d,(x+10,y+10,x+w-10,y+h-10),33,(11,17,34));rr(d,(x+w//2-38,y+14,x+w//2+38,y+25),6,(3,5,12));brand(d,x+28,y+44,.68)
  d.text((x+28,y+113),"Your world. Next level.",font=F(17,True),fill=C["text"]);d.text((x+28,y+140),"Welcome to your dashboard",font=F(10),fill=C["muted"])
- tiles=[("GAMES","✦","Play & compete"),("JMB AREA","▦","Smart tools"),("MINECRAFT","⬡","Build commands"),("JMB AI","✧","Create & explore"),("COINS","◉","Virtual credits"),("SUPPORT","?","Get help")];gap=11;tw=(w-56-gap)//2;th=88
+ tiles=[("GAMES","G","Play & compete"),("JMB AREA","T","Smart tools"),("MINECRAFT","M","Build commands"),("JMB AI","AI","Create & explore"),("COINS","C","Virtual credits"),("SUPPORT","?","Get help")];gap=11;tw=(w-56-gap)//2;th=88
  for i,(a,b,c) in enumerate(tiles):
   col,row=i%2,i//2;xx=x+22+col*(tw+gap);yy=y+177+row*(th+10);rr(d,(xx,yy,xx+tw,yy+th),15,(36,49,83) if a.title()==active or (active=="Dashboard" and i==0) else (22,31,57),outline=(91,104,151))
   d.text((xx+12,yy+10),b,font=F(19,True),fill=C["cyan"] if i%2 else C["purple"]);d.text((xx+12,yy+39),a,font=F(10,True),fill=C["text"]);d.text((xx+12,yy+59),c,font=F(8),fill=C["muted"])
@@ -56,18 +56,18 @@ def desktop(d,x,y,w,h,active):
  rr(d,(x,y,x+w,y+h),22,(7,11,23),outline=(116,131,171),width=2);rr(d,(x+2,y+2,x+w-2,y+44),20,(27,35,59))
  for xx,col in [(17,(255,112,129)),(37,(255,206,107)),(57,(106,226,171))]:d.ellipse((x+xx,y+16,x+xx+10,y+26),fill=col)
  rr(d,(x+116,y+12,x+w-22,y+33),10,(11,17,33));d.text((x+130,y+15),"www.jmbhost.qzz.io",font=F(9),fill=C["muted"]);sw=int(w*.21);rr(d,(x+2,y+46,x+sw,y+h-2),0,(14,21,42));brand(d,x+22,y+67,.65)
- for j,(ico,a) in enumerate([("⌂","Dashboard"),("✦","Games"),("▦","Tools"),("⬡","Minecraft"),("◉","Coins"),("?","Support")]):
+ for j,(ico,a) in enumerate([("H","Dashboard"),("G","Games"),("T","Tools"),("M","Minecraft"),("C","Coins"),("?","Support")]):
   yy=y+133+j*41;sel=a==active or (active=="Dashboard" and a=="Dashboard")
   if sel:rr(d,(x+13,yy-6,x+sw-12,yy+27),9,(48,54,102))
   d.text((x+28,yy),ico,font=F(13,True),fill=C["cyan"] if sel else C["muted"]);d.text((x+50,yy+1),a,font=F(10,True),fill=C["text"] if sel else C["muted"])
  cx=x+sw+24;d.text((cx,y+73),"Welcome to JMB HUB",font=F(22,True),fill=C["text"]);d.text((cx,y+106),"Your games, tools and creator workspace",font=F(10),fill=C["muted"])
- cards=[("GAMES","Play & compete","✦"),("JMB AREA","Smart tools","▦"),("MINECRAFT","Build & explore","⬡"),("JMB AI","AI workspace","✧"),("JMB COINS","Virtual credits","◉"),("SUPPORT","Help centre","?")];gap=12;cw=(w-sw-60-2*gap)//3
+ cards=[("GAMES","Play & compete","G"),("JMB AREA","Smart tools","T"),("MINECRAFT","Build & explore","M"),("JMB AI","AI workspace","AI"),("JMB COINS","Virtual credits","C"),("SUPPORT","Help centre","?")];gap=12;cw=(w-sw-60-2*gap)//3
  for i,(a,b,c) in enumerate(cards):
   col,row=i%3,i//3;xx=cx+col*(cw+gap);yy=y+141+row*99;rr(d,(xx,yy,xx+cw,yy+87),13,(28,39,70),outline=(64,78,124));d.text((xx+12,yy+10),c,font=F(19,True),fill=C["purple"] if i%2==0 else C["cyan"]);d.text((xx+12,yy+40),a,font=F(10,True),fill=C["text"]);d.text((xx+12,yy+59),b,font=F(8),fill=C["muted"])
 def render(scene,idx,mob):
  size=(720,1280) if mob else (1280,720);im=bg(size,idx);d=ImageDraw.Draw(im);w,h=size
  if mob:
-  brand(d,42,40,.88);d.text((42,112),scene["tag"],font=F(15,True),fill=C["cyan"]);d.text((42,150),scene["title"],font=F(30,True),fill=C["text"]);yy=para(d,(42,202),scene["body"],F(18),C["muted"],w-84,10);mx=(w-360)//2;my=min(max(430,yy+28),470);phone(d,mx,my,360,730,scene["active"],idx)
+  brand(d,42,40,.88);d.text((42,112),scene["tag"],font=F(15,True),fill=C["cyan"]);d.text((42,150),scene["title"],font=F(30,True),fill=C["text"]);yy=para(d,(42,202),scene["body"],F(18),C["muted"],w-84,10);mx=(w-320)//2;my=min(max(430,yy+28),470);phone(d,mx,my,320,640,scene["active"],idx)
   py=my+754
   for p in scene["points"]:d.ellipse((47,py+5,60,py+18),fill=C["green"]);d.text((76,py),p,font=F(15,True),fill=C["text"]);py+=32
   d.text((42,h-53),"JMB HUB • ILLUSTRATED WALKTHROUGH",font=F(11,True),fill=C["muted"])
