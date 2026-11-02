@@ -1,4 +1,5 @@
 import {guard} from '../core/auth-guard.js';
+import {openWorkspace,closeWorkspace} from '../core/workspace-window.js';
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const $ = (s) => document.querySelector(s);
@@ -116,7 +117,29 @@ function setupSslChecker(){
  $('#sslClear').addEventListener('click',()=>{input.value='';result.textContent='Enter a public domain name to prepare the SSL Labs assessment.';status('sslStatus','')});
 }
 const labels={aes:['Password Encryption','Encrypt text with a passphrase; keep that passphrase safe.'],hash:['Hash & File Checksum','Create SHA-2 fingerprints to verify files or compare content.'],hmac:['HMAC Sign & Verify','Create a keyed signature or verify one locally.'],random:['Secure Random Generator','Generate cryptographically random bytes in your browser.'],rsa:['RSA Key Pair','Generate an RSA-OAEP public/private key pair locally.'],password:['Password Generator','Generate a strong random password using browser cryptography.'],breach:['Breached Password Check','Check a password against known breached-password data using a privacy-preserving hash range.'],ssl:['Website SSL Checker','Prepare an official SSL/TLS assessment for a public website domain.']};
-function initTabs(){document.querySelectorAll('[data-security-tool]').forEach(button=>button.addEventListener('click',()=>{const name=button.dataset.securityTool;document.querySelectorAll('[data-security-tool]').forEach(b=>b.classList.toggle('active',b===button));document.querySelectorAll('[data-security-panel]').forEach(p=>p.hidden=p.dataset.securityPanel!==name);$('#securityTitle').textContent=labels[name][0];$('#securityDescription').textContent=labels[name][1]}))}
+function initTabs(){
+ const bank=document.querySelector('.security-panel-bank');
+ const stage=$('#securityPopupStage');
+ document.querySelectorAll('[data-security-tool]').forEach(button=>button.addEventListener('click',()=>{
+  const name=button.dataset.securityTool;
+  const panel=bank?.querySelector('[data-security-panel="'+name+'"]');
+  if(!panel||!stage)return;
+  closeWorkspace();
+  document.querySelectorAll('[data-security-tool]').forEach(b=>b.classList.toggle('active',b===button));
+  stage.hidden=false;
+  panel.hidden=false;
+  stage.append(panel);
+  openWorkspace(stage,{
+   title:labels[name][0],
+   description:labels[name][1],
+   onClose:()=>{
+    panel.hidden=true;
+    bank.append(panel);
+    stage.hidden=true;
+   }
+  });
+ }));
+}
 async function copyOutput(id){const el=$('#'+id);if(!el)return;try{await navigator.clipboard.writeText(el.value);const prev=el.value;statusForCopy('Copied to clipboard.')}catch{el.focus();el.select();statusForCopy('Select and copy the highlighted text manually.')}function statusForCopy(message){const panel=el.closest('[data-security-panel]');const s=panel?.querySelector('.security-status');if(s){s.textContent=message;s.classList.remove('error')}}}
 document.querySelectorAll('.copy-output').forEach(b=>b.addEventListener('click',()=>copyOutput(b.dataset.copy)));
 if(!window.isSecureContext)document.querySelectorAll('.security-status').forEach(s=>{s.textContent='Tip: Web Crypto requires a secure context (HTTPS or localhost).'});
