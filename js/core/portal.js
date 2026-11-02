@@ -94,7 +94,7 @@ function particles(){
   frame();
 }
 async function applyMaintenance(){
-  if(!db)return;
+  if(!db||window.__jmbMaintenanceActive)return;
   try{
     if(auth){
       await auth.authStateReady?.();
@@ -108,6 +108,8 @@ async function applyMaintenance(){
     const snap=await getDoc(doc(db,'settings','portal'));
     const m=snap.exists()?snap.data().maintenance:null;
     if(!m?.enabled)return;
+    if(window.__jmbMaintenanceActive)return;
+    window.__jmbMaintenanceActive=true;
     const box=document.createElement('div');
     box.className='jmb-maintenance-screen';
     box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label','JMB HUB maintenance');
