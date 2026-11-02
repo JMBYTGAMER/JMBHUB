@@ -1,4 +1,5 @@
 import {guard} from '../core/auth-guard.js';
+import {openWorkspace,closeWorkspace} from '../core/workspace-window.js';
 const $=s=>document.querySelector(s);
 const setStatus=(id,msg,error=false)=>{const el=$('#'+id);el.textContent=msg;el.classList.toggle('error',error)};
 const encodeBase64=text=>{const bytes=new TextEncoder().encode(text);let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));return btoa(binary)};
@@ -25,4 +26,40 @@ function convertTimestamp(multiplier){const value=$('#timestampInput').value.tri
 $('#timestampSeconds').onclick=()=>convertTimestamp(1000);
 $('#timestampMillis').onclick=()=>convertTimestamp(1);
 document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',async()=>{const el=$('#'+button.dataset.copy);if(!el)return;try{await navigator.clipboard.writeText(el.value);const card=button.closest('.dev-card');const s=card?.querySelector('.dev-status');if(s){s.textContent='Copied to clipboard.';s.classList.remove('error')}}catch{el.focus();el.select();const card=button.closest('.dev-card');const s=card?.querySelector('.dev-status');if(s){s.textContent='Clipboard permission unavailable; text selected for manual copy.';s.classList.remove('error')}}}));
+function initDevToolLibrary(){
+ const library=$('#devToolLibrary'),bank=$('#devToolBank'),stage=$('#devToolStage');
+ if(!library||!bank||!stage)return;
+ const cards=[...bank.querySelectorAll('.dev-card')];
+ cards.forEach((card,index)=>{
+  const icon=card.querySelector('.dev-card-head>span')?.textContent?.trim()||'🧰';
+  const heading=card.querySelector('h2')?.textContent?.trim()||'Developer Tool';
+  const description=card.querySelector('.dev-card-head p')?.textContent?.trim()||'Open this browser-based tool.';
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='dev-tool-tile';
+  button.setAttribute('aria-label','Open '+heading);
+  const art=document.createElement('span');art.className='dev-tool-art';art.textContent=icon;
+  const copy=document.createElement('span');copy.className='dev-tool-copy';
+  const title=document.createElement('strong');title.textContent=heading;
+  const detail=document.createElement('small');detail.textContent=description;
+  const action=document.createElement('span');action.className='dev-tool-open';action.textContent='Open tool →';
+  copy.append(title,detail);
+  button.append(art,copy,action);
+  button.addEventListener('click',()=>{
+   closeWorkspace();
+   stage.hidden=false;
+   stage.replaceChildren(card);
+   openWorkspace(stage,{
+    title:heading,
+    description:description+' Your input stays in this browser.',
+    onClose:()=>{
+     bank.append(card);
+     stage.hidden=true;
+    }
+   });
+  });
+  library.append(button);
+ });
+}
+initDevToolLibrary();
 updateTextStats();guard();
