@@ -213,6 +213,110 @@ service cloud.firestore {
     match /securityEvents/{eventId} {
       allow read, write: if false;
     }
+    // Private one-to-one video calls. Room IDs are unguessable invite links.
+    // Only verified, unblocked accounts may create or join; rooms cannot be listed.
+    function callAccount() {
+      return signedIn()
+        && request.auth.token.get('email_verified', false) == true;
+    }
+
+    function callParticipant(roomId) {
+      let room = get(/databases/$(database)/documents/calls/$(roomId)).data;
+      return callAccount()
+        && (room.creatorUid == request.auth.uid
+          || room.joinerUid == request.auth.uid);
+    }
+
+    match /calls/{roomId} {
+      allow create: if callAccount()
+        && request.resource.data.keys().hasAll([
+          'creatorUid', 'joinerUid', 'status', 'createdAt', 'expiresAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'creatorUid', 'joinerUid', 'status', 'createdAt', 'expiresAt'
+        ])
+        && request.resource.data.creatorUid == request.auth.uid
+        && request.resource.data.joinerUid == null
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(15, 'm');
+
+      // A room may be fetched by its creator or by a verified account holding
+      // the private invite link while the room is still waiting for one guest.
+      allow get: if callAccount()
+        && (resource.data.creatorUid == request.auth.uid
+          || (resource.data.status == 'waiting'
+            && resource.data.joinerUid == null
+            && resource.data.expiresAt > request.time));
+      allow list: if false;
+
+      allow update: if callAccount() && (
+        // The creator or joined participant can end an active/waiting call.
+        ((resource.data.creatorUid == request.auth.uid
+            || resource.data.joinerUid == request.auth.uid)
+          && resource.data.status in ['waiting', 'active']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'endedAt'])
+          && request.resource.data.status == 'ended'
+          && request.resource.data.endedAt == request.time)
+        ||
+        // Exactly one different verified account can claim the waiting invite.
+        (resource.data.creatorUid != request.auth.uid
+          && resource.data.status == 'waiting'
+          && resource.data.joinerUid == null
+          && resource.data.expiresAt > request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['joinerUid', 'status', 'joinedAt'])
+          && request.resource.data.joinerUid == request.auth.uid
+          && request.resource.data.status == 'active'
+          && request.resource.data.joinedAt == request.time)
+      );
+      allow delete: if false;
+
+      match /signals/{signalId} {
+        allow get, list: if callParticipant(roomId);
+
+        allow create: if callParticipant(roomId)
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.createdAt == request.time
+          && (
+            (request.resource.data.kind == 'offer'
+              && get(/databases/$(database)/documents/calls/$(roomId)).data.creatorUid == request.auth.uid
+              && request.resource.data.keys().hasAll(['fromUid', 'kind', 'sdp', 'createdAt'])
+              && request.resource.data.keys().hasOnly(['fromUid', 'kind', 'sdp', 'createdAt'])
+              && request.resource.data.sdp is string
+              && request.resource.data.sdp.size() > 0
+              && request.resource.data.sdp.size() <= 100000)
+            ||
+            (request.resource.data.kind == 'answer'
+              && get(/databases/$(database)/documents/calls/$(roomId)).data.joinerUid == request.auth.uid
+              && request.resource.data.keys().hasAll(['fromUid', 'kind', 'sdp', 'createdAt'])
+              && request.resource.data.keys().hasOnly(['fromUid', 'kind', 'sdp', 'createdAt'])
+              && request.resource.data.sdp is string
+              && request.resource.data.sdp.size() > 0
+              && request.resource.data.sdp.size() <= 100000)
+            ||
+            (request.resource.data.kind == 'ice'
+              && request.resource.data.keys().hasAll([
+                'fromUid', 'kind', 'candidate', 'sdpMid', 'sdpMLineIndex', 'createdAt'
+              ])
+              && request.resource.data.keys().hasOnly([
+                'fromUid', 'kind', 'candidate', 'sdpMid', 'sdpMLineIndex', 'createdAt'
+              ])
+              && request.resource.data.candidate is string
+              && request.resource.data.candidate.size() > 0
+              && request.resource.data.candidate.size() <= 4096
+              && (request.resource.data.sdpMid == null
+                || (request.resource.data.sdpMid is string && request.resource.data.sdpMid.size() <= 256))
+              && (request.resource.data.sdpMLineIndex == null
+                || (request.resource.data.sdpMLineIndex is int
+                  && request.resource.data.sdpMLineIndex >= 0
+                  && request.resource.data.sdpMLineIndex <= 256)))
+          );
+        allow update, delete: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
