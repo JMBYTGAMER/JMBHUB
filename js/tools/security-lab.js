@@ -100,11 +100,11 @@ function setupSslChecker(){
  $('#sslCheck').addEventListener('click',()=>{
   try{
    const raw=input.value.trim();if(!raw)throw new Error('Enter a public domain name first.');
-   const candidate=/^https?:\\/\\//i.test(raw)?raw:'https://'+raw;
+   const lower=raw.toLowerCase();const candidate=(lower.startsWith('https://')||lower.startsWith('http://'))?raw:'https://'+raw;
    const url=new URL(candidate);
    if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw new Error('Enter a normal public website URL without sign-in details.');
    const host=url.hostname.toLowerCase();
-   if(!host.includes('.')||host==='localhost'||host.endsWith('.local')||host.endsWith('.internal')||/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(host))throw new Error('Enter a public domain name, not a local address or IP address.');
+   const ipParts=host.split('.'),isIPv4=ipParts.length===4&&ipParts.every(part=>part!==''&&Number.isInteger(Number(part))&&Number(part)>=0&&Number(part)<=255);if(!host.includes('.')||host==='localhost'||host.endsWith('.local')||host.endsWith('.internal')||isIPv4)throw new Error('Enter a public domain name, not a local address or IP address.');
    const scanUrl='https://www.ssllabs.com/ssltest/analyze.html?d='+encodeURIComponent(host)+'&latest';
    result.textContent='Assessment link prepared for '+host+'. The official SSL Labs service will perform the test.';
    const link=document.createElement('a');link.href=scanUrl;link.target='_blank';link.rel='noopener noreferrer';link.className='ssl-result-link';link.textContent='Open SSL Labs report for '+host;
