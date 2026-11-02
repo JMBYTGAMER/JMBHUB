@@ -50,7 +50,9 @@ const games=[
  ['wordrush','⌨️','Word Rush','Type the target words before time runs out.'],
  ['patternlock','🧩','Pattern Lock','Remember and repeat an expanding tile pattern.'],
  ['bubblepop','🫧','Bubble Pop','Pop floating bubbles before the 20-second round ends.'],
- ['quickquiz','🧠','Quick Quiz','Answer 10 quick questions and build your score.']
+ ['quickquiz','🧠','Quick Quiz','Answer 10 quick questions and build your score.'],
+ ['sudoku4','🔢','Mini Sudoku','Solve a 4×4 Sudoku using row, column and box rules.'],
+ ['binaryblitz','💾','Binary Blitz','Convert decimal numbers to binary in ten quick rounds.']
 ];
 let gameScope=0;
 const gameTimers=new Map(),gameFrames=new Map();
@@ -353,6 +355,21 @@ function quickQuiz(){
  $('#quizRestart').onclick=reset;reset();
 }
 
-const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid'),tilesprint:tileSprint,wordrush:wordRush,patternlock:patternLock,bubblepop:bubblePop,quickquiz:quickQuiz};
+function miniSudoku(){
+ const puzzle=[1,0,0,4,3,0,0,2,2,0,0,3,4,3,2,1];
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">🔢 Mini Sudoku</h2><p class="muted">Fill every blank with 1–4. Each row, column and 2×2 box must contain each number once.</p><div id="sudokuGrid" class="sudoku-grid"></div><div class="tool-actions" style="justify-content:center"><button type="button" class="btn btn-primary" id="sudokuCheck">Check solution</button><button type="button" class="btn btn-ghost" id="sudokuReset">Reset puzzle</button></div><p id="sudokuMsg" class="score-readout" role="status">Ready when you are.</p></div>';
+ const grid=$('#sudokuGrid'),msg=$('#sudokuMsg');let completed=false;
+ function draw(){grid.innerHTML=puzzle.map((n,i)=>'<input type="text" inputmode="numeric" maxlength="1" aria-label="Row '+(Math.floor(i/4)+1)+', column '+((i%4)+1)+'" data-cell="'+i+'" value="'+(n||'')+'" '+(n?'readonly class="given"':'')+'>').join('');grid.querySelectorAll('input:not([readonly])').forEach(el=>el.addEventListener('input',()=>{el.value=el.value.replace(/[^1-4]/g,'').slice(0,1)}));completed=false}
+ function check(){if(completed)return;const values=Array.from(grid.querySelectorAll('input'),el=>Number(el.value));if(values.some(n=>!Number.isInteger(n)||n<1||n>4)){msg.textContent='Fill all empty cells with a number from 1 to 4.';return}const groups=[];for(let r=0;r<4;r++)groups.push(values.slice(r*4,r*4+4));for(let c=0;c<4;c++)groups.push([0,1,2,3].map(r=>values[r*4+c]));for(let br=0;br<4;br+=2)for(let bc=0;bc<4;bc+=2)groups.push([values[br*4+bc],values[br*4+bc+1],values[(br+1)*4+bc],values[(br+1)*4+bc+1]]);const valid=groups.every(g=>new Set(g).size===4&&g.every(n=>n>=1&&n<=4));if(!valid){msg.textContent='Not quite. Check each row, column and 2×2 box.';window.JMBMusic?.lose?.();return}completed=true;msg.textContent='Puzzle solved! +100 points';window.JMBMusic?.win?.();saveScore('sudoku4',100)}
+ $('#sudokuCheck').onclick=check;$('#sudokuReset').onclick=()=>{draw();msg.textContent='Puzzle reset. Try again.'};draw();
+}
+function binaryBlitz(){
+ stage.innerHTML='<div class="game-view"><h2 class="game-title">💾 Binary Blitz</h2><p class="muted">Convert each decimal number into binary. Ten rounds — one point per correct answer.</p><div class="score-readout">Round <b id="binRound">0</b>/10 · Score <b id="binScore">0</b></div><div id="binQuestion" class="big-number">READY</div><label for="binInput">Binary answer</label><input id="binInput" class="tool-input" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Example: 10110" disabled><div class="tool-actions" style="justify-content:center"><button type="button" class="btn btn-primary" id="binCheck" disabled>Check answer</button><button type="button" class="btn btn-ghost" id="binStart">Start game</button></div><p id="binMsg" class="score-readout" role="status">Press Start game to begin.</p></div>';
+ const input=$('#binInput'),check=$('#binCheck'),start=$('#binStart'),msg=$('#binMsg');let round=0,score=0,target=0,active=false;
+ function next(){if(round>=10){active=false;input.disabled=true;check.disabled=true;start.disabled=false;start.textContent='Play again';$('#binQuestion').textContent='COMPLETE';msg.textContent='Final score: '+score+'/10';saveScore('binaryblitz',score*10);window.JMBMusic?.win?.();return}round++;target=Math.floor(Math.random()*64);$('#binRound').textContent=round;$('#binScore').textContent=score;$('#binQuestion').textContent=String(target)+' in decimal';input.value='';input.focus();msg.textContent='Convert the number to binary.'}
+ function submit(){if(!active)return;const answer=input.value.trim();if(!/^[01]{1,6}$/.test(answer)){msg.textContent='Enter a binary number using only 0 and 1.';return}if(answer===target.toString(2)){score++;msg.textContent='Correct! '+target+' = '+answer;window.JMBMusic?.win?.()}else{msg.textContent='The answer was '+target.toString(2)+'. Keep going!';window.JMBMusic?.click?.()}$('#binScore').textContent=score;check.disabled=true;input.disabled=true;trackedTimeout(()=>{if(!active)return;input.disabled=false;check.disabled=false;next()},650)}
+ start.onclick=()=>{round=0;score=0;active=true;input.disabled=false;check.disabled=false;start.disabled=true;$('#binScore').textContent='0';next()};check.onclick=submit;input.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
+}
+const render={snake,click:clickRush,reaction,target,dodge,tap,number,math,color,whack,memory,tic,stack,coin,flappy,'2048':mini2048,rps,coinflip,higher,word,aim,simon,pong,lights,connect,reaction2,guesscolor,jmbdash:()=>arcade('jmbdash'),quickdraw:()=>arcade('quickdraw'),maze:()=>arcade('maze'),typing:()=>arcade('typing'),dice:()=>arcade('dice'),oddone:()=>arcade('oddone'),colormemory:()=>arcade('colormemory'),safegrid:()=>arcade('safegrid'),tilesprint:tileSprint,wordrush:wordRush,patternlock:patternLock,bubblepop:bubblePop,quickquiz:quickQuiz,sudoku4:miniSudoku,binaryblitz:binaryBlitz};
 function switchGame(name){clearGameRuntime();current=name;const info=games.find(x=>x[0]===name)||games[0];setHeader(name);loadBoard(name);stage.innerHTML='';render[name]();openWorkspace(stage,{title:info[2],description:info[3]})}
 (async()=>{user=await guard();renderLibrary();})();
