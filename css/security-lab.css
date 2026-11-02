@@ -7,3 +7,24 @@
 .security-panel button:disabled{opacity:.58;cursor:wait}
 @media(max-width:520px){.security-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.security-result-card{padding:13px;font-size:13px}}
 @media(prefers-reduced-motion:reduce){.security-tool{transition:none}.security-tool:hover,.security-tool.active{transform:none}}
+
+/* Security Lab: tool launcher cards; panels only appear inside the popup. */
+.security-panel-bank[hidden],#securityPopupStage[hidden]{display:none!important}
+.security-tool-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0 24px}
+.security-tool{position:relative;display:grid;grid-template-columns:42px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;gap:4px 11px;min-width:0;min-height:88px;padding:13px;border:1px solid rgba(177,190,255,.13);border-radius:16px;background:linear-gradient(145deg,rgba(22,28,47,.94),rgba(10,15,29,.97));box-shadow:0 8px 20px rgba(0,0,0,.12);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.security-tool>span{grid-column:1;grid-row:1/3;width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:linear-gradient(145deg,rgba(124,92,255,.2),rgba(0,198,234,.09));font-size:22px}
+.security-tool b{grid-column:2;font-size:13px;line-height:1.3}
+.security-tool small{grid-column:2;font-size:10px;line-height:1.4}
+.security-tool:hover,.security-tool.active{transform:translateY(-2px);border-color:rgba(139,107,255,.45);background:linear-gradient(145deg,rgba(34,31,65,.96),rgba(12,19,37,.98));box-shadow:0 14px 28px rgba(0,0,0,.2)}
+.security-panel{max-width:900px;padding:clamp(14px,3vw,24px);border:1px solid rgba(177,190,255,.1);border-radius:18px;background:rgba(255,255,255,.025)}
+.security-panel[hidden]{display:none!important}
+.jmb-workspace-body .security-panel{max-width:100%;margin:0;padding:clamp(14px,3vw,24px);border:0;background:transparent}
+.jmb-workspace-body .security-panel>label{margin-top:12px}
+@media(max-width:1000px){.security-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){
+ .security-tool-grid{grid-template-columns:1fr;gap:9px}
+ .security-tool{min-height:76px;padding:11px 12px;grid-template-columns:42px minmax(0,1fr);border-radius:14px}
+ .security-tool>span{width:42px;height:42px;font-size:22px}
+ .security-tool b{font-size:13px}
+ .security-tool small{font-size:10px}
+}
