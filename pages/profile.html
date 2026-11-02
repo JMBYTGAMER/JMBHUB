@@ -40,7 +40,7 @@
 <script type="module">
 import {guard,logout} from '../js/core/auth-guard.js';import {auth,app} from '../js/core/firebase.js';
 import {updateProfile,updateEmail,sendPasswordResetEmail,reauthenticateWithCredential,EmailAuthProvider} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-import '../js/core/portal.js';import {JMBMusic} from '../js/core/sound.js';
+import '../js/core/portal.js?v=20261102-menu-popups';import {JMBMusic} from '../js/core/sound.js';
 const u=await guard(),q=s=>document.querySelector(s),avatar=q('#avatar');
 const name=u.displayName||u.email?.split('@')[0]||'JMB User';
 q('#heroName').textContent=name;q('#heroEmail').textContent=u.email||'';q('#emailValue').textContent=u.email||'—';q('#editName').value=u.displayName||'';q('#editPhoto').value=u.photoURL||'';
