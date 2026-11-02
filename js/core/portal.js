@@ -15,7 +15,8 @@ const links=[
   ['🤖','JMB AI','ai.html'],
   ['🎫','Support','support.html'],
   ['🪙','JMB Coins','coins.html'],
-  ['◉','Profile','profile.html']
+  ['◉','Profile','profile.html'],
+  ['❔','Help & Guide','manual.html']
 ];
 function currentPage(){return location.pathname.split('/').pop()||'index.html'}
 
@@ -93,19 +94,28 @@ function particles(){
   frame();
 }
 async function applyMaintenance(){
-  if(location.pathname.endsWith('/admin.html')||location.pathname.endsWith('admin.html'))return;
   if(!db)return;
   try{
+    if(auth){
+      await auth.authStateReady?.();
+      const current=auth.currentUser;
+      if(current){
+        const claims=(await current.getIdTokenResult()).claims||{};
+        const verified=Boolean(current.emailVerified);
+        if(verified&&(current.email?.toLowerCase()==='jobinmathewbiju@gmail.com'||claims.admin===true||claims.role==='admin'))return;
+      }
+    }
     const snap=await getDoc(doc(db,'settings','portal'));
     const m=snap.exists()?snap.data().maintenance:null;
     if(!m?.enabled)return;
     const box=document.createElement('div');
     box.className='jmb-maintenance-screen';
-    box.innerHTML='<div class="jmb-maintenance-card"><div class="jmb-maintenance-icon">🛠️</div><div class="eyebrow">JMBHUB MAINTENANCE</div><h1>We’ll be right back</h1><p></p><div class="jmb-maintenance-bar"><span></span></div><small>Admin Console remains available.</small><a class="btn btn-ghost" href="admin.html">Open Admin Console</a></div>';
+    box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label','JMB HUB maintenance');
+    box.innerHTML='<div class="jmb-maintenance-card" tabindex="-1"><div class="jmb-maintenance-icon">🛠️</div><div class="eyebrow">JMBHUB MAINTENANCE</div><h1>We’ll be right back</h1><p></p><div class="jmb-maintenance-bar"><span></span></div><small>The portal is temporarily paused while maintenance is in progress.</small></div>';
     box.querySelector('p').textContent=m.message||'JMBHUB is temporarily in full maintenance mode. Please check back soon.';
-    document.body.append(box);
-    document.body.classList.add('jmb-maintenance-active');
-  }catch{}
+    document.body.append(box);document.body.classList.add('jmb-maintenance-active');
+    [...document.body.children].forEach(el=>{if(el!==box){el.inert=true;el.setAttribute('aria-hidden','true')}});
+  }catch(error){console.warn('[JMBHUB] Maintenance check unavailable:',error?.code||error?.message||error)}
 }
 makeNav();particles();applyMaintenance();
 if(auth)onAuthStateChanged(auth,u=>{if(u)initTelemetry(u)});
