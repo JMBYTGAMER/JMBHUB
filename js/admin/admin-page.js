@@ -464,12 +464,13 @@ async function loadUsers(){
       return;
     }
     rows.innerHTML=users.map(x=>`<tr>
-      <td>${esc(x.email||'—')}</td>
-      <td>${esc(x.displayName||'—')}</td>
-      <td>${x.emailVerified?'✓':'—'}</td>
-      <td>${esc(x.lastSignInAt?new Date(x.lastSignInAt).toLocaleString():'—')}</td>
-      <td><span class="pill">${x.uid===user.uid?'Owner':'Member'}</span></td>
-      <td><span class="pill">Server role controls unavailable</span></td>
+      <td data-label="Email">${esc(x.email||'—')}</td>
+      <td data-label="Name">${esc(x.displayName||'—')}</td>
+      <td data-label="Verified">${x.emailVerified?'✓':'—'}</td>
+      <td data-label="Last sign-in">${esc(x.lastSignInAt?new Date(x.lastSignInAt).toLocaleString():'—')}</td>
+      <td data-label="Role"><span class="pill">${x.uid===user.uid?'Owner':'Member'}</span></td>
+      <td data-label="Status"><span class="pill">Unknown</span></td>
+      <td data-label="Actions"><span class="pill">Server account controls unavailable</span></td>
     </tr>`).join('');
   }catch(e){
     rows.innerHTML=`<tr><td colspan="6" class="empty">Could not load the account directory: ${errorText(e)}</td></tr>`;
@@ -478,24 +479,23 @@ async function loadUsers(){
 }
 
 function renderUsers(users){
-  const rows=$('#userRows');
+  const rows=$('#userRows');if(!rows)return;
   setText('#userCount',String(users.length));
-  rows.innerHTML=users.length
-    ? users.map(x=>`<tr>
-        <td>${esc(x.email||'—')}</td>
-        <td>${esc(x.displayName||'—')}</td>
-        <td>${x.emailVerified?'✓':'—'}</td>
-        <td>${esc(x.lastSignInAt?new Date(x.lastSignInAt).toLocaleString():'—')}</td>
-        <td><span class="pill">${x.uid===user.uid?'Owner':(x.admin?'Admin':'Member')}</span></td>
-        <td>${x.uid===user.uid
-          ? '<span class="pill">Owner</span>'
-          : `<button class="btn btn-ghost role-btn" data-uid="${esc(x.uid)}" data-role="${x.admin?'member':'admin'}">${x.admin?'Remove admin':'Make admin'}</button>`}
-      </tr>`).join('')
-    : '<tr><td colspan="6" class="empty">No accounts returned.</td></tr>';
-
-  $$('.role-btn').forEach(button=>{
-    button.addEventListener('click',()=>setRole(button.dataset.uid,button.dataset.role));
-  });
+  rows.innerHTML=users.length?users.map(x=>{
+   const self=x.uid===user.uid,blocked=x.disabled===true,role=self?'Owner':(x.admin?'Admin':'Member');
+   return `<tr>
+    <td data-label="Email">${esc(x.email||'—')}</td>
+    <td data-label="Name">${esc(x.displayName||'—')}</td>
+    <td data-label="Verified">${x.emailVerified?'✓ Verified':'Not verified'}</td>
+    <td data-label="Last sign-in">${esc(x.lastSignInAt?new Date(x.lastSignInAt).toLocaleString():'—')}</td>
+    <td data-label="Role"><span class="pill">${role}</span></td>
+    <td data-label="Status"><span class="pill ${blocked?'account-blocked':'account-active'}">${blocked?'⛔ Blocked':'● Active'}</span>
+      ${self?'':'<div class="admin-user-actions"><button class="btn btn-ghost role-btn" data-uid="'+esc(x.uid)+'" data-role="'+(x.admin?'member':'admin')+'">'+(x.admin?'Remove admin':'Make admin')+'</button><button class="btn '+(blocked?'btn-primary':'danger-btn')+' block-user-btn" data-uid="'+esc(x.uid)+'" data-blocked="'+(blocked?'false':'true')+'">'+(blocked?'Unblock':'Block account')+'</button></div>'}
+    </td>
+   </tr>`;
+  }).join(''):'<tr><td colspan="6" class="empty">No accounts returned.</td></tr>';
+  $$('.role-btn').forEach(button=>button.addEventListener('click',()=>setRole(button.dataset.uid,button.dataset.role)));
+  $$('.block-user-btn').forEach(button=>button.addEventListener('click',()=>setUserBlocked(button.dataset.uid,button.dataset.blocked==='true')));
 }
 
 async function setRole(uid,role){
@@ -511,6 +511,27 @@ async function setRole(uid,role){
   }catch(e){
     toast('Could not change role: ' + (e?.message || 'Cloud Functions are not deployed.'));
   }
+}
+
+async function setUserBlocked(uid,blocked){
+ if(!owner||!app)return;
+ const message=blocked
+  ?'Block this JMB HUB account? Firebase sign-in will be disabled and Firestore access will be denied.'
+  :'Restore this JMB HUB account? The user will need to sign in again.';
+ if(!confirm(message))return;
+ let reason='Account access updated by the owner.';
+ if(blocked){
+  const entered=prompt('Optional reason for this block (not shown publicly):','Community safety or account protection');
+  if(entered===null)return;
+  reason=entered.trim().slice(0,180)||reason;
+ }
+ try{
+  if(!functionsModule)functionsModule=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
+  const fn=getFunctions(app,'asia-south1');
+  const result=await functionsModule.httpsCallable(fn,'setUserBlocked')({uid,blocked,reason});
+  toast(result.data?.disabled?'Account blocked. Database access is denied too.':'Account restored. The user must sign in again.','good');
+  await loadUsers();
+ }catch(e){toast('Could not update account access: '+(e?.message||'Deploy the latest Firebase Functions and rules.'))}
 }
 
 async function giveCoins(){

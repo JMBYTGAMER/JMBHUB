@@ -111,3 +111,34 @@ test('Firebase Storage uploads are denied by default', async () => {
     {contentType:'image/png'}
   ));
 });
+
+
+test('birthday directory is public read-only while full birth dates remain private', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    const adminDb=context.firestore();
+    await setDoc(doc(adminDb,'birthdayDirectory/public-entry'),{displayName:'JMB Member',month:10,day:29});
+    await setDoc(doc(adminDb,'userBirthdays/member-birthday'),{uid:'member-birthday',birthDate:'2010-10-29',showPublic:true});
+  });
+  const anonymous=env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(anonymous,'birthdayDirectory/public-entry')));
+  await assertFails(getDoc(doc(anonymous,'userBirthdays/member-birthday')));
+  await assertFails(setDoc(doc(anonymous,'birthdayDirectory/forged-entry'),{displayName:'Fake',month:1,day:1}));
+  const owner=userDb('member-birthday','birthday@example.com');
+  await assertSucceeds(getDoc(doc(owner,'userBirthdays/member-birthday')));
+  await assertFails(setDoc(doc(owner,'userBirthdays/member-birthday'),{uid:'member-birthday',birthDate:'2010-10-29',showPublic:true}));
+  const another=userDb('another-member','another@example.com');
+  await assertFails(getDoc(doc(another,'userBirthdays/member-birthday')));
+});
+
+test('blocked accounts cannot read protected Firestore documents', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accountBlocks/blocked-member'),{uid:'blocked-member',reason:'rules test'});
+    await setDoc(doc(context.firestore(),'settings/portal'),{maintenance:{enabled:false}});
+  });
+  const blocked=userDb('blocked-member','blocked@example.com');
+  await assertFails(getDoc(doc(blocked,'settings/portal')));
+  await assertFails(setDoc(doc(blocked,'suggestions/blocked-idea'),{
+    uid:'blocked-member',email:'blocked@example.com',text:'Should fail',
+    status:'new',createdAt:serverTimestamp()
+  }));
+});

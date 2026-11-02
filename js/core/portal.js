@@ -1,4 +1,7 @@
 import {auth,db} from './firebase.js';
+import '../../css/portal-polish.css';
+import '../../css/admin-polish.css';
+import './birthday-wishes.js';
 import './coin-notifications.js';
 import './command-center.js';
 import {startGlobalCoin} from '../coin.js';

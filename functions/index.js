@@ -13,6 +13,14 @@ function owner(auth){return auth?.token?.email_verified===true && auth?.token?.e
 function admin(auth){return auth?.token?.email_verified===true && (owner(auth)||auth?.token?.admin===true||auth?.token?.role==='admin')}
 async function requireAuth(auth){
  if(!auth?.uid)throw new HttpsError('unauthenticated','Please sign in first.');
+ try{
+  const account=await getAuth().getUser(auth.uid);
+  const block=await db.collection('accountBlocks').doc(auth.uid).get();
+  if(account.disabled||block.exists)throw new HttpsError('permission-denied','This JMB HUB account is blocked. Contact the site owner.');
+ }catch(error){
+  if(error instanceof HttpsError)throw error;
+  throw new HttpsError('unauthenticated','This account is no longer available. Please sign in again.');
+ }
  const portal=await db.collection('settings').doc('portal').get();
  if(portal.exists&&portal.data()?.maintenance?.enabled===true&&!admin(auth))throw new HttpsError('unavailable','JMBHUB is in full maintenance mode. Please try again later.');
 }
@@ -42,6 +50,89 @@ exports.setUserRole=onCall(async request=>{
  await getAuth().setCustomUserClaims(uid,claims);
  await getAuth().revokeRefreshTokens(uid);
  return {ok:true,uid,role};
+});
+
+exports.getMyAccountStatus=onCall(async request=>{
+ if(!request.auth?.uid)throw new HttpsError('unauthenticated','Please sign in first.');
+ try{
+  const [account,block]=await Promise.all([
+   getAuth().getUser(request.auth.uid),
+   db.collection('accountBlocks').doc(request.auth.uid).get()
+  ]);
+  return {disabled:account.disabled===true||block.exists,emailVerified:account.emailVerified===true};
+ }catch{throw new HttpsError('unauthenticated','This account is no longer available.');}
+});
+
+exports.setUserBlocked=onCall(async request=>{
+ if(!owner(request.auth))throw new HttpsError('permission-denied','Verified owner access required.');
+ const uid=String(request.data?.uid||'').trim();
+ const blocked=request.data?.blocked===true;
+ const reason=String(request.data?.reason||'Account access updated by the owner.').trim().slice(0,180);
+ if(!uid)throw new HttpsError('invalid-argument','Choose a valid account.');
+ if(uid===request.auth.uid)throw new HttpsError('failed-precondition','The owner account cannot be blocked here.');
+ let target;
+ try{target=await getAuth().getUser(uid)}catch{throw new HttpsError('not-found','That account was not found.');}
+ if(target.email?.toLowerCase()==='jobinmathewbiju@gmail.com')throw new HttpsError('failed-precondition','The owner account is protected.');
+ const blockRef=db.collection('accountBlocks').doc(uid);
+ if(blocked)await blockRef.set({uid,reason,blockedBy:request.auth.uid,blockedAt:FieldValue.serverTimestamp()});
+ try{
+  await getAuth().updateUser(uid,{disabled:blocked});
+  await getAuth().revokeRefreshTokens(uid);
+ }catch(error){
+  if(blocked)await blockRef.delete().catch(()=>{});
+  throw new HttpsError('internal','Firebase Authentication could not update this account.');
+ }
+ if(!blocked)await blockRef.delete();
+ await db.collection('securityEvents').add({
+  type:blocked?'account_blocked':'account_unblocked',targetUid:uid,targetEmail:target.email||'',
+  actorUid:request.auth.uid,reason,createdAt:FieldValue.serverTimestamp()
+ });
+ logger.warn('JMB HUB account access changed',{targetUid:uid,actorUid:request.auth.uid,blocked,reason});
+ return {ok:true,uid,disabled:blocked};
+});
+
+// Full date of birth is private; the public directory contains display name and month/day only.
+exports.getMyBirthday=onCall(async request=>{
+ await requireAuth(request.auth);
+ const snap=await db.collection('userBirthdays').doc(request.auth.uid).get();
+ if(!snap.exists)return {birthDate:'',showPublic:false};
+ const data=snap.data();
+ return {birthDate:String(data.birthDate||''),showPublic:data.showPublic===true};
+});
+
+exports.saveMyBirthday=onCall(async request=>{
+ await requireAuth(request.auth);
+ const uid=request.auth.uid,birthDate=String(request.data?.birthDate||'').trim(),showPublic=request.data?.showPublic===true;
+ const privateRef=db.collection('userBirthdays').doc(uid);
+ const current=await privateRef.get();
+ const oldId=current.exists?String(current.data()?.directoryId||''):'';
+ if(!birthDate){
+  const batch=db.batch();
+  if(oldId)batch.delete(db.collection('birthdayDirectory').doc(oldId));
+  if(current.exists)batch.delete(privateRef);
+  await batch.commit();
+  return {ok:true,showPublic:false,removed:true};
+ }
+ const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+ if(!match)throw new HttpsError('invalid-argument','Choose a valid date of birth.');
+ const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
+ const parsed=new Date(Date.UTC(year,month-1,day));
+ const valid=parsed.getUTCFullYear()===year&&parsed.getUTCMonth()+1===month&&parsed.getUTCDate()===day;
+ const todayIndia=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ if(!valid||year<1900||birthDate>todayIndia)throw new HttpsError('invalid-argument','Choose a real date that is not in the future.');
+ const account=await getAuth().getUser(uid);
+ const displayName=String(account.displayName||'JMB HUB member').trim().slice(0,50)||'JMB HUB member';
+ let publicId='';
+ await db.runTransaction(async transaction=>{
+  const privateSnap=await transaction.get(privateRef);
+  const previousId=privateSnap.exists?String(privateSnap.data()?.directoryId||''):'';
+  publicId=showPublic?(previousId||db.collection('birthdayDirectory').doc().id):'';
+  transaction.set(privateRef,{uid,birthDate,showPublic,directoryId:publicId,updatedAt:FieldValue.serverTimestamp()});
+  if(showPublic){
+   transaction.set(db.collection('birthdayDirectory').doc(publicId),{displayName,month,day,updatedAt:FieldValue.serverTimestamp()});
+  }else if(previousId){transaction.delete(db.collection('birthdayDirectory').doc(previousId))}
+ });
+ return {ok:true,showPublic,month,day};
 });
 
 exports.getCoinWallet=onCall(async request=>{

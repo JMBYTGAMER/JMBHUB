@@ -1,0 +1,47 @@
+/* JMB HUB admin console: phone-first layouts and concise account controls. */
+.admin-console-page{max-width:1500px;padding-top:25px}
+.admin-console-page>.page-brand{margin-bottom:20px}
+.admin-console-page .page-head{align-items:center;padding:23px 25px;border:1px solid rgba(124,92,255,.22);border-radius:24px;background:radial-gradient(circle at 95% 0%,rgba(0,198,234,.12),transparent 38%),linear-gradient(135deg,rgba(124,92,255,.12),rgba(255,255,255,.025))}
+.admin-console-page .page-head h1{font-size:clamp(27px,4vw,40px);line-height:1.08}.admin-console-page .page-head p{max-width:720px;line-height:1.6}
+.admin-console-page .stat{min-height:92px;align-items:center}.admin-console-page .stat strong{font-size:clamp(22px,3vw,30px)}
+.admin-console-page .admin-tabs{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;padding:7px;position:sticky;top:8px;z-index:30;backdrop-filter:blur(18px)}
+.admin-console-page .admin-tabs .btn{flex:0 0 auto;min-height:44px;padding-inline:14px;white-space:nowrap}
+.admin-console-page .admin-section{border-radius:22px;padding:clamp(14px,2.5vw,22px)}.admin-console-page .section-title{align-items:center;gap:12px;flex-wrap:wrap}
+.admin-console-page .table-wrap{max-width:100%;border:1px solid rgba(255,255,255,.06);border-radius:15px}
+.admin-console-page .table{min-width:760px}.admin-console-page #adminUsers .table{min-width:900px}
+.admin-console-page .admin-user-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:7px}
+.admin-console-page .admin-user-actions .btn{min-height:38px;padding:8px 10px;font-size:12px}
+.admin-console-page .account-active{color:#72e8b2;border-color:rgba(70,230,160,.3)}
+.admin-console-page .account-blocked{color:#ff9aae;border-color:rgba(255,90,120,.35);background:rgba(255,90,120,.08)}
+.admin-console-page .danger-btn{background:rgba(255,85,120,.1);color:#ff9bad;border:1px solid rgba(255,85,120,.25)}
+.admin-console-page .log-toolbar{align-items:center}.admin-console-page .replay-box{overflow:hidden}
+@media(max-width:760px){
+ .admin-console-page{padding:12px 10px calc(30px + env(safe-area-inset-bottom))}
+ .admin-console-page>.page-brand{display:none}
+ .admin-console-page .page-head{display:flex;align-items:flex-start;gap:12px;padding:17px;border-radius:18px}
+ .admin-console-page .page-head .btn{flex:0 0 auto;padding:9px 10px;font-size:12px}
+ .admin-console-page .page-head h1{font-size:clamp(25px,7vw,33px);letter-spacing:-1px}
+ .admin-console-page .page-head p{font-size:13px}
+ .admin-console-page>.grid.grid-4{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .admin-console-page .stat{padding:13px;min-height:78px}.admin-console-page .stat strong{font-size:22px}
+ .admin-console-page .admin-tabs{top:65px;margin:12px -2px;padding:6px;border-radius:14px}
+ .admin-console-page .admin-tabs .btn{min-height:42px;padding:9px 12px;font-size:12px}
+ .admin-console-page .admin-section{padding:14px;border-radius:18px}
+ .admin-console-page .section-title{display:flex;align-items:flex-start}.admin-console-page .section-title>.btn{width:100%}
+ .admin-console-page .form-grid{grid-template-columns:1fr}.admin-console-page .field.full{grid-column:auto}
+ .admin-console-page .table-wrap{overflow-x:auto}
+ .admin-console-page #adminUsers .table-wrap{overflow:visible;border:0}
+ .admin-console-page #adminUsers .table{display:block;min-width:0;width:100%}
+ .admin-console-page #adminUsers .table thead{display:none}
+ .admin-console-page #adminUsers .table tbody{display:grid;gap:11px}
+ .admin-console-page #adminUsers .table tr{display:grid;gap:0;padding:13px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018))}
+ .admin-console-page #adminUsers .table td{display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:normal;text-align:right;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.055);font-size:12px;overflow-wrap:anywhere}
+ .admin-console-page #adminUsers .table td:before{content:attr(data-label);color:#858eaa;font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;text-align:left;flex:0 0 84px}
+ .admin-console-page #adminUsers .table td:last-child{display:block;text-align:left;border:0;padding-bottom:0}
+ .admin-console-page #adminUsers .admin-user-actions{display:grid;grid-template-columns:1fr;gap:7px}
+ .admin-console-page #adminUsers .admin-user-actions .btn{width:100%;min-height:42px}
+ .admin-console-page .table th,.admin-console-page .table td{padding:9px 7px}
+ .admin-console-page .log-toolbar{display:grid;grid-template-columns:1fr}
+ .admin-console-page .log-toolbar>*{max-width:none!important;width:100%}
+}
+@media(max-width:380px){.admin-console-page .page-head{display:block}.admin-console-page .page-head>.btn{margin-top:12px}}

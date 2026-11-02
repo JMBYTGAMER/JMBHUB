@@ -10,13 +10,14 @@ service cloud.firestore {
     // Privileged access requires an authenticated, verified email identity.
     // Admin checks intentionally do not call signedIn(), avoiding maintenance recursion.
     function owner() {
-      return request.auth != null
+      return signedIn()
         && request.auth.token.email == 'jobinmathewbiju@gmail.com'
         && request.auth.token.get('email_verified', false) == true;
     }
 
     function admin() {
       return request.auth != null
+        && !exists(/databases/$(database)/documents/accountBlocks/$(request.auth.uid))
         && request.auth.token.get('email_verified', false) == true
         && (
           request.auth.token.get('admin', false) == true
@@ -27,7 +28,9 @@ service cloud.firestore {
 
     // Full maintenance blocks regular signed-in users at the database rules layer.
     function signedIn() {
-      return request.auth != null && (admin() || portalOnline());
+      return request.auth != null
+        && !exists(/databases/$(database)/documents/accountBlocks/$(request.auth.uid))
+        && (admin() || portalOnline());
     }
 
     match /settings/portal {
@@ -212,6 +215,20 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    match /birthdayDirectory/{entryId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    match /userBirthdays/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+    match /accountBlocks/{uid} {
+      allow read, write: if false;
+    }
+    match /securityEvents/{eventId} {
+      allow read, write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

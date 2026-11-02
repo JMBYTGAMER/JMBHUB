@@ -1,10 +1,17 @@
-import {auth,backendReady,db} from './firebase.js';
+import {auth,app,backendReady,db} from './firebase.js';
 import {onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import {doc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 import {APP_CONFIG} from '../config/app-config.js';
 import {$,setText} from './ui.js';
 
 async function applyUser(u){
+  if(app){
+    try{
+      const {getFunctions,httpsCallable}=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
+      const status=(await httpsCallable(getFunctions(app,'asia-south1'),'getMyAccountStatus')({})).data||{};
+      if(status.disabled===true){await signOut(auth);location.replace('login.html?blocked=1');return null;}
+    }catch(error){console.warn('[JMBHUB] Account status check unavailable.',error?.code||error?.message||error)}
+  }
   let claims={};
   try{claims=(await u.getIdTokenResult(true)).claims||{}}catch{}
   // A visible admin menu is only a UI convenience. Firestore Rules and Cloud
@@ -43,7 +50,8 @@ export function guard(){
   return new Promise(resolve=>{
     onAuthStateChanged(auth,async u=>{
       if(!u){location.href='login.html';return}
-      resolve(await applyUser(u));
+      const result=await applyUser(u);
+      if(result)resolve(result);
     });
   });
 }

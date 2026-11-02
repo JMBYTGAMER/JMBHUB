@@ -2,7 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
-      return request.auth != null;
+      return request.auth != null
+        && !exists(/databases/$(database)/documents/accountBlocks/$(request.auth.uid));
     }
 
     // Privileged access requires an authenticated, verified email identity.
@@ -198,6 +199,20 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    match /birthdayDirectory/{entryId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    match /userBirthdays/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+    match /accountBlocks/{uid} {
+      allow read, write: if false;
+    }
+    match /securityEvents/{eventId} {
+      allow read, write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }
