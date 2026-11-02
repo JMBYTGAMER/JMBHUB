@@ -76,7 +76,11 @@ def render(scene,idx,mob):
   for p in scene["points"]:d.ellipse((58,py+5,72,py+19),fill=C["green"]);d.text((90,py),p,font=F(16,True),fill=C["text"]);py+=40
   desktop(d,535,116,690,490,scene["active"]);d.text((54,h-44),"JMB HUB • ILLUSTRATED WALKTHROUGH",font=F(12,True),fill=C["muted"])
  rr(d,(w-122,44,w-48,54),5,(255,255,255,45));rr(d,(w-122,44,w-122+int(74*(idx+1)/len(SCENES)),54),5,C["cyan"]);return im
-def run(cmd):subprocess.run(cmd,check=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+def run(cmd):
+ p=subprocess.run(cmd,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
+ if p.returncode:
+  print(p.stderr[-12000:])
+  raise subprocess.CalledProcessError(p.returncode,cmd)
 def synth(text,path):
  run(["espeak","-v","en-us+f3","-s","148","-p","48","-a","165","-w",str(path),text])
  with wave.open(str(path),"rb") as wf:return wf.getnframes()/wf.getframerate()
@@ -87,7 +91,7 @@ def build(mob,filename):
   tmp=Path(tmp);parts=[];cues=[];timeline=0.0
   for i,scene in enumerate(SCENES):
    img=tmp/f"s{i}.png";wav=tmp/f"a{i}.wav";part=tmp/f"p{i}.mp4";render(scene,i,mob).save(img,optimize=True);vlen=synth(scene["voice"],wav);duration=vlen+.65;fade=max(.1,duration-.45);cues += [f"{stamp(timeline)} --> {stamp(timeline+vlen)}",scene["voice"],""];timeline+=duration
-   vf=f"scale={'540:960' if mob else '960:540'},fps=12,fade=t=in:st=0:d=.28,fade=t=out:st={fade:.3f}:d=.42,format=yuv420p";af=f"afade=t=in:st=0:d=.15,afade=t=out:st={fade:.3f}:d=.4,apad"
+   vf=f"scale={'540:960' if mob else '960:540'},fps=12,fade=t=in:st=0:d=0.28,fade=t=out:st={fade:.3f}:d=0.42,format=yuv420p";af=f"afade=t=in:st=0:d=0.15,afade=t=out:st={fade:.3f}:d=0.4,apad"
    run(["ffmpeg","-y","-loop","1","-framerate","12","-i",str(img),"-i",str(wav),"-t",f"{duration:.3f}","-vf",vf,"-af",af,"-c:v","libx264","-preset","ultrafast","-crf","34","-tune","stillimage","-pix_fmt","yuv420p","-r","12","-c:a","aac","-b:a","96k","-ar","44100","-ac","2","-shortest",str(part)]);parts.append(part)
   cat=tmp/"concat.txt";cat.write_text("\n".join(f"file '{p.as_posix()}'" for p in parts)+"\n",encoding="utf-8");(OUT/("jmb-hub-mobile-captions.vtt" if mob else "jmb-hub-desktop-captions.vtt")).write_text("WEBVTT\n\n"+"\n".join(cues),encoding="utf-8");render(SCENES[0],0,mob).save(OUT/("jmb-hub-mobile-poster.png" if mob else "jmb-hub-desktop-poster.png"),optimize=True)
   out=OUT/filename;run(["ffmpeg","-y","-f","concat","-safe","0","-i",str(cat),"-c","copy","-movflags","+faststart",str(out)]);print(f"Created {out} ({out.stat().st_size:,} bytes)")
