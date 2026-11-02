@@ -274,3 +274,7 @@
  .jmb-mobile-menu,.jmb-drawer-backdrop{transition:none}
 }
 .jmb-mobile-menu .menu-arrow{color:#7785a9;font-size:20px;line-height:1;text-align:right}
+@media(max-width:700px){
+ body.app-body{padding-top:calc(60px + env(safe-area-inset-top))}
+ .app-body>.mobile-head{position:fixed!important;top:0;left:0;right:0;width:100%;height:calc(60px + env(safe-area-inset-top));min-height:0;padding-top:env(safe-area-inset-top);box-sizing:border-box}
+}
