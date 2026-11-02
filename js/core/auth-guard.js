@@ -5,6 +5,9 @@ import {APP_CONFIG} from '../config/app-config.js';
 import {$,setText} from './ui.js';
 
 async function applyUser(u){
+  // Refresh the Firebase profile first. A user may have verified their email
+  // after signing in, in which case the cached User object can be stale.
+  try{await u.reload()}catch(error){console.warn('[JMBHUB] Could not refresh account profile.',error?.code||error?.message||error)}
   if(app){
     try{
       const {getFunctions,httpsCallable}=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
@@ -16,9 +19,12 @@ async function applyUser(u){
   try{claims=(await u.getIdTokenResult(true)).claims||{}}catch{}
   // A visible admin menu is only a UI convenience. Firestore Rules and Cloud
   // Functions independently verify the identity on the server.
-  const verified=Boolean(u.emailVerified);
-  const owner=verified && u.email?.toLowerCase()===APP_CONFIG.OWNER_EMAIL.toLowerCase();
-  const admin=verified && Boolean(claims.admin===true||claims.role==='admin'||owner);
+  const actualEmail=String(u.email||'').trim().toLowerCase();
+  const configuredOwnerEmail=String(APP_CONFIG.OWNER_EMAIL||'').trim().toLowerCase();
+  const emailMatchesOwner=Boolean(actualEmail&&configuredOwnerEmail&&actualEmail===configuredOwnerEmail);
+  const verified=Boolean(u.emailVerified||claims.email_verified===true);
+  const owner=emailMatchesOwner&&verified;
+  const admin=verified&&Boolean(claims.admin===true||claims.role==='admin'||owner);
 
   setText('userName',u.displayName||u.email?.split('@')[0]||'JMB User');
   setText('userEmail',u.email||'');
@@ -39,7 +45,7 @@ async function applyUser(u){
     },{merge:true}).catch(()=>{});
   }
 
-  return {...u,owner,admin,claims};
+  return {...u,owner,admin,claims,emailMatchesOwner,emailVerified:verified,configuredOwnerEmail};
 }
 
 export function guard(){
