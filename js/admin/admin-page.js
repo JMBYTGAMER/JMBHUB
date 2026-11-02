@@ -38,6 +38,13 @@ async function init(){
   owner = Boolean(user?.owner);
 
   if(!user?.admin){
+    if(user?.emailMatchesOwner&&!user?.emailVerified){
+      alert('JMB HUB recognised the owner email, but Firebase says it is not verified yet. Open Firebase Authentication, verify jobinmathewbiju@gmail.com, then sign out and sign in again.');
+    }else if(!user?.emailMatchesOwner){
+      alert('Owner access was not detected. The account currently signed in is: '+(user?.email||'unknown')+'. Sign out and choose '+(user?.configuredOwnerEmail||'the configured owner email')+' when signing in.');
+    }else{
+      alert('This account does not currently have JMB HUB admin permissions.');
+    }
     location.replace('dashboard.html');
     return;
   }
