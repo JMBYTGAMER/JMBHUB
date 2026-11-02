@@ -1,25 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
+    function portalOnline() {
+      let portalPath = /databases/$(database)/documents/settings/portal;
+      return !exists(portalPath)
+        || get(portalPath).data.get('maintenance', {}).get('enabled', false) != true;
     }
 
     // Privileged access requires an authenticated, verified email identity.
+    // Admin checks intentionally do not call signedIn(), avoiding maintenance recursion.
     function owner() {
-      return signedIn()
+      return request.auth != null
         && request.auth.token.email == 'jobinmathewbiju@gmail.com'
         && request.auth.token.get('email_verified', false) == true;
     }
 
     function admin() {
-      return signedIn()
+      return request.auth != null
         && request.auth.token.get('email_verified', false) == true
         && (
           request.auth.token.get('admin', false) == true
           || request.auth.token.get('role', '') == 'admin'
           || owner()
         );
+    }
+
+    // Full maintenance blocks regular signed-in users at the database rules layer.
+    function signedIn() {
+      return request.auth != null && (admin() || portalOnline());
     }
 
     match /settings/portal {
