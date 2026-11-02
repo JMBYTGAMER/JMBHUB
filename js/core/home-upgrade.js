@@ -1,3 +1,5 @@
+import {db} from './firebase.js';
+import {doc,getDoc} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 /* JMB HUB home experience: personalized greeting and safe local quick actions. */
 const $ = (selector, root=document) => root.querySelector(selector);
 const greeting = $('#jmbHomeGreeting');
@@ -141,4 +143,28 @@ document.querySelectorAll('[data-jmb-copy-link]').forEach(button => {
   });
 
   if (birthdayToday) burstConfetti(48);
+})();
+
+
+/* Owner-controlled birthday announcement. The homepage shows it only on the selected India-local date. */
+(async()=>{
+ const section=document.getElementById('jmbBirthday');
+ if(!section||!db)return;
+ try{
+  const snap=await getDoc(doc(db,'settings','birthdayAnnouncement'));
+  if(!snap.exists())return;
+  const cfg=snap.data();
+  if(cfg.enabled!==true){section.hidden=true;return}
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  if(cfg.date!==today){section.hidden=true;return}
+  section.hidden=false;
+  const headline=document.getElementById('birthdayHeadline');
+  const kicker=document.getElementById('birthdayKicker');
+  const subtitle=document.getElementById('birthdaySubtitle');
+  const status=document.getElementById('birthdayStatus');
+  if(headline)headline.textContent=String(cfg.title||'Happy Birthday! 🎉').slice(0,90);
+  if(kicker)kicker.textContent='TODAY’S SPECIAL ANNOUNCEMENT';
+  if(subtitle)subtitle.textContent=String(cfg.message||'Wishing you a wonderful day from JMB HUB!').slice(0,400);
+  if(status)status.textContent='🎉 ANNOUNCEMENT LIVE TODAY';
+ }catch(error){console.warn('[JMBHUB] Birthday announcement unavailable:',error?.code||error?.message||error)}
 })();
