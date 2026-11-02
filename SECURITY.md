@@ -28,6 +28,16 @@ repository in your Codespace, run:
 firebase use jmb-hub
 firebase deploy --only firestore:rules,storage
 firebase deploy --only functions
+
+On the Firebase Spark (free) plan, deploy only the Rules with:
+
+```bash
+firebase deploy --only firestore:rules --project jmb-hub
+```
+
+Cloud Functions deployment can require the Blaze billing plan because Google Cloud
+Build and Artifact Registry are needed. Do not enable billing unless the project owner
+understands the possible usage charges and has approved the billing setup.
 ```
 
 Before deployment, sign into the owner account and confirm its Firebase Auth email is
