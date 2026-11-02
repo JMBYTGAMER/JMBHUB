@@ -9,6 +9,7 @@ const cards=[
  ['games','🎮','JMB Games','Play 28+ mini-games, chase scores and climb the leaderboard.','games.html'],
  ['area','🧰','JMB Area','Calculator, QR, code, developer tools, converters and more.','jmb-area.html'],
  ['minecraft','⛏️','Minecraft Area','Command builders, kits, effects, gamerules, chat and world tools.','minecraft.html'],
+ ['calls','📹','Private Calls','Start a private one-to-one video call with a verified JMB HUB member.','calls.html'],
  ['ai','🤖','JMB AI','Open your JMB AI service in one click.','ai.html'],
  ['support','🎫','Support','Create and track support tickets.','support.html']
 ];
