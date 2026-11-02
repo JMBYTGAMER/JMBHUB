@@ -581,7 +581,7 @@ async function loadServices(){
     select.value=item?.enabled === false ? 'off' : 'on';
   });
 
-  $( '.service-message').forEach(input=>{
+  $$('.service-message').forEach(input=>{
     const item=cachedServices[input.dataset.key];
     if(item?.message) input.value=item.message;
   });
