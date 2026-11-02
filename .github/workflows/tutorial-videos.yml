@@ -1,0 +1,44 @@
+name: Build JMB HUB tutorial videos
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build_tutorial_videos.py"
+      - ".github/workflows/tutorial-videos.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-tutorials:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out JMB HUB
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install video and narration tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg espeak fonts-dejavu-core
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install image library
+        run: python -m pip install --upgrade Pillow
+      - name: Build mobile and desktop tutorials
+        run: python scripts/build_tutorial_videos.py
+      - name: Publish generated tutorial media
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/tutorials/*.mp4 assets/tutorials/*.vtt assets/tutorials/*-poster.png
+          if git diff --cached --quiet; then
+            echo "Tutorial media is already current."
+            exit 0
+          fi
+          git commit -m "Publish mobile and desktop JMB HUB tutorials"
+          git push origin HEAD:main
