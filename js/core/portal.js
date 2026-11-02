@@ -50,6 +50,11 @@ function makeNav(){
   }
   const active=currentPage();
   const sidebar=document.querySelector('.sidebar');
+  if(sidebar && !sidebar.querySelector('a[href="calls.html"]')){
+    const connect=document.createElement('div');connect.className='side-section';connect.setAttribute('data-global-calls','');
+    connect.innerHTML='<div class="side-label">CONNECT</div><a class="nav-link" href="calls.html"><span>📹</span><span>Private Calls</span></a>';
+    sidebar.append(connect);
+  }
   if(sidebar && !sidebar.querySelector('a[href="profile.html"]')){
     const section=document.createElement('div');section.className='side-section';section.setAttribute('data-global-account','');
     section.innerHTML='<div class="side-label">ACCOUNT</div><a class="nav-link" href="profile.html"><span>◉</span><span>Profile</span></a><a class="nav-link" data-admin-only href="admin.html"><span>⚙️</span><span>Admin Console</span></a><a class="nav-link" href="#" data-menu-logout><span>↪</span><span>Logout</span></a>';
