@@ -7,7 +7,7 @@ import {
 import {toast,esc} from '../core/ui.js';
 
 const $ = s => document.querySelector(s);
-const $ = s => [...document.querySelectorAll(s)];
+const $$ = s => [...document.querySelectorAll(s)];
 document.querySelector('main.page')?.classList.add('admin-console-page');
 
 let user;
