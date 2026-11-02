@@ -51,10 +51,12 @@ const tools=[
  ['urlparse','🌐','URL Inspector','Inspect URL parts and query parameters.'],
  ['datecalc','📅','Date Difference','Calculate the time between two dates.']
 ];
+const newToolIds=new Set(['entities','contrast','shadow','clamp','slug','jsoncsv','og','sitemap','robots','mdtable','cssvars','urlparse','datecalc']);
 function render(filter=''){
  const q=String(filter||'').trim().toLowerCase();
- const visible=tools.filter(([id,icon,name,desc])=>!q||(id+' '+name+' '+desc).toLowerCase().includes(q));
- library.innerHTML=visible.length?visible.map(([id,icon,name,desc])=>'<button type="button" class="tool-choice" data-tool="'+id+'"><div class="tool-art">'+icon+'</div><h3>'+name+'</h3><p>'+desc+'</p><span class="pill">Open →</span></button>').join(''):'<div class="empty">No tools match that search. Try “hash”, “encrypt” or “QR”.</div>';
+ const matching=tools.filter(([id,icon,name,desc])=>!q||(id+' '+name+' '+desc).toLowerCase().includes(q));
+ const visible=q?matching:[...matching.filter(x=>newToolIds.has(x[0])),...matching.filter(x=>!newToolIds.has(x[0]))];
+ library.innerHTML=visible.length?visible.map(([id,icon,name,desc])=>'<button type="button" class="tool-choice'+(newToolIds.has(id)?' tool-choice-new':'')+'" data-tool="'+id+'"><div class="tool-art">'+icon+'</div><h3>'+name+'</h3><p>'+desc+'</p><span class="pill">'+(newToolIds.has(id)?'NEW • Open →':'Open →')+'</span></button>').join(''):'<div class="empty">No tools match that search. Try “hash”, “encrypt” or “QR”.</div>';
  const count=document.querySelector('#toolCount');if(count)count.textContent=visible.length+' of '+tools.length+' tools';
  library.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>openTool(b.dataset.tool));
 }
