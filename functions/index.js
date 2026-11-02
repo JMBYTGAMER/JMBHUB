@@ -11,16 +11,29 @@ const db=getFirestore();
 
 function owner(auth){return auth?.token?.email_verified===true && auth?.token?.email?.toLowerCase()==='jobinmathewbiju@gmail.com'}
 function admin(auth){return auth?.token?.email_verified===true && (owner(auth)||auth?.token?.admin===true||auth?.token?.role==='admin')}
-async function requireAuth(auth){
+async function requireActiveAccount(auth){
  if(!auth?.uid)throw new HttpsError('unauthenticated','Please sign in first.');
  try{
-  const account=await getAuth().getUser(auth.uid);
-  const block=await db.collection('accountBlocks').doc(auth.uid).get();
+  const [account,block]=await Promise.all([
+   getAuth().getUser(auth.uid),
+   db.collection('accountBlocks').doc(auth.uid).get()
+  ]);
   if(account.disabled||block.exists)throw new HttpsError('permission-denied','This JMB HUB account is blocked. Contact the site owner.');
  }catch(error){
   if(error instanceof HttpsError)throw error;
   throw new HttpsError('unauthenticated','This account is no longer available. Please sign in again.');
  }
+}
+async function requireAdmin(auth){
+ if(!admin(auth))throw new HttpsError('permission-denied','Admin access required.');
+ await requireActiveAccount(auth);
+}
+async function requireOwner(auth){
+ if(!owner(auth))throw new HttpsError('permission-denied','Owner access required.');
+ await requireActiveAccount(auth);
+}
+async function requireAuth(auth){
+ await requireActiveAccount(auth);
  const portal=await db.collection('settings').doc('portal').get();
  if(portal.exists&&portal.data()?.maintenance?.enabled===true&&!admin(auth))throw new HttpsError('unavailable','JMBHUB is in full maintenance mode. Please try again later.');
 }
@@ -29,7 +42,7 @@ function walletRef(uid){return db.collection('wallets').doc(uid)}
 function txRef(){return db.collection('coinTransactions').doc()}
 
 exports.listUsers=onCall(async request=>{
- if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
+ await requireAdmin(request.auth);
  // Return one bounded page per request instead of scanning the entire Auth directory.
  const result=await getAuth().listUsers(1000);
  return {
@@ -39,7 +52,7 @@ exports.listUsers=onCall(async request=>{
 });
 
 exports.setUserRole=onCall(async request=>{
- if(!owner(request.auth))throw new HttpsError('permission-denied','Owner access required.');
+ await requireOwner(request.auth);
  const uid=String(request.data?.uid||'');
  const role=String(request.data?.role||'member');
  if(!uid||!['member','admin'].includes(role))throw new HttpsError('invalid-argument','Invalid user or role.');
@@ -64,7 +77,7 @@ exports.getMyAccountStatus=onCall(async request=>{
 });
 
 exports.setUserBlocked=onCall(async request=>{
- if(!owner(request.auth))throw new HttpsError('permission-denied','Verified owner access required.');
+ await requireOwner(request.auth);
  const uid=String(request.data?.uid||'').trim();
  const blocked=request.data?.blocked===true;
  const reason=String(request.data?.reason||'Account access updated by the owner.').trim().slice(0,180);
@@ -229,7 +242,7 @@ exports.awardGameCoins=onCall(async request=>{
 });
 
 exports.adminGiveCoins=onCall(async request=>{
- if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
+ await requireAdmin(request.auth);
  const email=String(request.data?.email||'').trim().toLowerCase();
  const amount=cleanCoins(request.data?.amount);
  const message=String(request.data?.reason||'A JMB HUB admin sent you a reward!').trim().slice(0,300)||'A JMB HUB admin sent you a reward!';
@@ -272,7 +285,7 @@ exports.claimCoinGift=onCall(async request=>{
 });
 
 exports.adminAdjustCoins=onCall(async request=>{
- if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
+ await requireAdmin(request.auth);
  const email=String(request.data?.email||'').trim().toLowerCase();
  const amount=cleanCoins(request.data?.amount);
  const reason=String(request.data?.reason||'Admin balance adjustment').trim().slice(0,180)||'Admin balance adjustment';
@@ -295,7 +308,7 @@ exports.adminAdjustCoins=onCall(async request=>{
 });
 
 exports.adminGetCoinAccount=onCall(async request=>{
- if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
+ await requireAdmin(request.auth);
  const email=String(request.data?.email||'').trim().toLowerCase();
  if(!email||!email.includes('@'))throw new HttpsError('invalid-argument','Enter a valid account email.');
  let target;
@@ -311,7 +324,7 @@ exports.adminGetCoinAccount=onCall(async request=>{
 
 const ADMIN_PERKS=new Set(['supporter','profile-glow','name-highlight','vip-dashboard','creator-pack']);
 exports.adminSetUserPerk=onCall(async request=>{
- if(!admin(request.auth))throw new HttpsError('permission-denied','Admin access required.');
+ await requireAdmin(request.auth);
  const email=String(request.data?.email||'').trim().toLowerCase();
  const perk=String(request.data?.perk||'');
  const enabled=request.data?.enabled===true;

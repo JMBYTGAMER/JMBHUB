@@ -7,7 +7,8 @@ import {
 import {toast,esc} from '../core/ui.js';
 
 const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
+const $ = s => [...document.querySelectorAll(s)];
+document.querySelector('main.page')?.classList.add('admin-console-page');
 
 let user;
 let owner = false;
@@ -469,8 +470,7 @@ async function loadUsers(){
       <td data-label="Verified">${x.emailVerified?'✓':'—'}</td>
       <td data-label="Last sign-in">${esc(x.lastSignInAt?new Date(x.lastSignInAt).toLocaleString():'—')}</td>
       <td data-label="Role"><span class="pill">${x.uid===user.uid?'Owner':'Member'}</span></td>
-      <td data-label="Status"><span class="pill">Unknown</span></td>
-      <td data-label="Actions"><span class="pill">Server account controls unavailable</span></td>
+      <td data-label="Status"><span class="pill">Unknown</span><span class="pill">Server account controls unavailable</span></td>
     </tr>`).join('');
   }catch(e){
     rows.innerHTML=`<tr><td colspan="6" class="empty">Could not load the account directory: ${errorText(e)}</td></tr>`;
@@ -527,7 +527,7 @@ async function setUserBlocked(uid,blocked){
  }
  try{
   if(!functionsModule)functionsModule=await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js');
-  const fn=getFunctions(app,'asia-south1');
+  const fn=functionsModule.getFunctions(app,'asia-south1');
   const result=await functionsModule.httpsCallable(fn,'setUserBlocked')({uid,blocked,reason});
   toast(result.data?.disabled?'Account blocked. Database access is denied too.':'Account restored. The user must sign in again.','good');
   await loadUsers();

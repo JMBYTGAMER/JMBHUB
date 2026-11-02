@@ -10,7 +10,8 @@ service cloud.firestore {
     // Privileged access requires an authenticated, verified email identity.
     // Admin checks intentionally do not call signedIn(), avoiding maintenance recursion.
     function owner() {
-      return signedIn()
+      return request.auth != null
+        && !exists(/databases/$(database)/documents/accountBlocks/$(request.auth.uid))
         && request.auth.token.email == 'jobinmathewbiju@gmail.com'
         && request.auth.token.get('email_verified', false) == true;
     }
