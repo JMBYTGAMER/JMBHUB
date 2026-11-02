@@ -258,3 +258,12 @@ button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
   .birthday-volume-heading strong{font-size:27px}
   .birthday-player-actions .btn{flex:1 1 115px}
 }
+
+
+/* Help Centre shortcut on the member dashboard */
+.guide-shortcut{position:relative;overflow:hidden;margin-top:18px!important;padding:22px!important;border:1px solid rgba(143,173,255,.23)!important;background:radial-gradient(ellipse at 96% 0,rgba(69,214,236,.12),transparent 38%),linear-gradient(120deg,rgba(91,77,172,.13),rgba(22,32,58,.68))!important}
+.guide-shortcut:after{content:"?";position:absolute;right:24px;top:8px;font-size:100px;line-height:1;font-weight:900;color:rgba(178,166,255,.07);pointer-events:none}
+.guide-shortcut .eyebrow,.guide-shortcut h3,.guide-shortcut p,.guide-shortcut .actions{position:relative;z-index:1}
+.guide-shortcut h3{margin:8px 0;font-size:clamp(18px,2.4vw,23px)}
+.guide-shortcut p{max-width:760px;line-height:1.7}
+@media(max-width:600px){.guide-shortcut{padding:16px!important}.guide-shortcut:after{right:8px;top:6px;font-size:78px}}
