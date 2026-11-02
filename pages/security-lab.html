@@ -22,8 +22,7 @@
 <button class="security-tool" data-security-tool="breach"><span>🧯</span><b>Breached Password Check</b><small>Private hash-range lookup</small></button>
 <button class="security-tool" data-security-tool="ssl"><span>🌐</span><b>Website SSL Checker</b><small>HTTPS, TLS and certificate grade</small></button>
 </div>
-<div class="card security-workspace">
-<div class="section-title"><div><div class="eyebrow">TOOL WORKSPACE</div><h2 id="securityTitle">Password Encryption</h2><p id="securityDescription" class="muted">Encrypt text with a passphrase; keep that passphrase safe.</p></div><span class="pill">Runs locally</span></div>
+<div class="security-panel-bank" hidden>
 <section class="security-panel" data-security-panel="aes">
 <label for="aesText">Text to encrypt or encrypted JSON</label><textarea id="aesText" class="tool-area" rows="5" maxlength="100000" placeholder="Type a message, or paste an encrypted JSON package to decrypt."></textarea>
 <label for="aesPass">Passphrase</label><input id="aesPass" class="tool-input" type="password" autocomplete="new-password" maxlength="1024" placeholder="Use a long, unique passphrase">
@@ -83,6 +82,7 @@
 <p class="security-help">The external report can include certificate validity, supported TLS versions, key exchange and configuration findings. A browser padlock alone is not a full security audit. Assessments may take a while and can be subject to the service's usage limits.</p>
 </section>
 </div>
+<div id="securityPopupStage" class="security-popup-stage" hidden></div>
 </section></main></div>
 <script type="module" src="../js/core/portal.js"></script><script type="module" src="../js/tools/security-lab.js"></script>
 </body></html>
