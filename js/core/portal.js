@@ -14,12 +14,15 @@ const links=[
   ['⌂','Dashboard','dashboard.html'],
   ['🎮','JMB Games','games.html'],
   ['🧰','JMB Area','jmb-area.html'],
-  ['⛏️','Minecraft','minecraft.html'],
+  ['🧑‍💻','Developer Toolbox','dev-toolbox.html'],
+  ['🔐','Security Lab','security-lab.html'],
+  ['⛏️','Minecraft Area','minecraft.html'],
   ['🤖','JMB AI','ai.html'],
   ['🎫','Support','support.html'],
   ['🪙','JMB Coins','coins.html'],
+  ['📢','Ad Network','ads.html'],
   ['◉','Profile','profile.html'],
-  ['❔','Help & Guide','manual.html']
+  ['❔','Help & Tutorials','manual.html']
 ];
 function currentPage(){return location.pathname.split('/').pop()||'index.html'}
 
@@ -28,10 +31,20 @@ function makeNav(){
   let drawer=document.querySelector('.jmb-mobile-menu');
   let backdrop=document.querySelector('.jmb-drawer-backdrop');
   if(!drawer){
-    backdrop=document.createElement('div');backdrop.className='jmb-drawer-backdrop';document.body.append(backdrop);
-    drawer=document.createElement('aside');drawer.className='jmb-mobile-menu';drawer.setAttribute('aria-label','JMBHUB navigation');
-    drawer.innerHTML='<div class="menu-title">JMBHUB • PORTAL</div>'+links.map(([i,n,u])=>'<a href="'+u+'" data-nav="'+u+'"><span class="menu-icon">'+i+'</span><span>'+n+'</span></a>').join('')+
-      '<div class="menu-title" style="margin-top:22px">MANAGE</div><a href="admin.html" data-admin-only class="hide"><span class="menu-icon">⚙️</span><span>Admin Console</span></a><a href="#" data-menu-logout><span class="menu-icon">↪</span><span>Logout</span></a>';
+    backdrop=document.createElement('div');
+    backdrop.className='jmb-drawer-backdrop';
+    backdrop.setAttribute('aria-hidden','true');
+    document.body.append(backdrop);
+    drawer=document.createElement('aside');
+    drawer.className='jmb-mobile-menu';
+    drawer.id='jmbMobileMenu';
+    drawer.setAttribute('role','dialog');
+    drawer.setAttribute('aria-modal','true');
+    drawer.setAttribute('aria-label','JMB HUB navigation');
+    drawer.setAttribute('aria-hidden','true');
+    drawer.inert=true;
+    const mainLinks=links.map(([icon,label,url])=>'<a href="'+url+'" data-nav="'+url+'"><span class="menu-icon" aria-hidden="true">'+icon+'</span><span>'+label+'</span><span class="menu-arrow" aria-hidden="true">›</span></a>').join('');
+    drawer.innerHTML='<div class="jmb-menu-head"><div><span class="menu-title">JMB HUB • NAVIGATION</span><strong>Where do you want to go?</strong><small>Choose a section to open</small></div><button class="jmb-menu-close" type="button" aria-label="Close navigation">×</button></div><div class="jmb-menu-group-label">EXPLORE</div><nav class="jmb-menu-links" aria-label="Main sections">'+mainLinks+'</nav><div class="jmb-menu-group-label jmb-menu-account-label">ACCOUNT &amp; MANAGEMENT</div><nav class="jmb-menu-links" aria-label="Account sections"><a href="admin.html" data-admin-only class="hide"><span class="menu-icon" aria-hidden="true">⚙️</span><span>Admin Console</span><span class="menu-arrow" aria-hidden="true">›</span></a><a href="#" data-menu-logout><span class="menu-icon" aria-hidden="true">↪</span><span>Logout</span><span class="menu-arrow" aria-hidden="true">›</span></a></nav><div class="jmb-menu-foot">JMB HUB <span>•</span> One portal, many experiences</div>';
     document.body.append(drawer);
   }
   const active=currentPage();
@@ -41,10 +54,43 @@ function makeNav(){
     section.innerHTML='<div class="side-label">ACCOUNT</div><a class="nav-link" href="profile.html"><span>◉</span><span>Profile</span></a><a class="nav-link" data-admin-only href="admin.html"><span>⚙️</span><span>Admin Console</span></a><a class="nav-link" href="#" data-menu-logout><span>↪</span><span>Logout</span></a>';
     sidebar.append(section);
   }
-  drawer.querySelectorAll('[data-nav]').forEach(a=>{if(a.getAttribute('data-nav')===active)a.classList.add('active')});
-  const close=()=>{drawer.classList.remove('open');backdrop.classList.remove('open');document.body.classList.remove('menu-open')};
-  const open=()=>{drawer.classList.add('open');backdrop.classList.add('open');document.body.classList.add('menu-open')};
-  backdrop.onclick=close;
+  drawer.querySelectorAll('[data-nav]').forEach(a=>{
+    const isActive=a.getAttribute('data-nav')===active;
+    a.classList.toggle('active',isActive);
+    if(isActive)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+  });
+  const buttonSelector='.mobile-menu-btn';
+  let button;
+  const close=(restoreFocus=true)=>{
+    drawer.classList.remove('open');
+    backdrop.classList.remove('open');
+    drawer.inert=true;
+    drawer.setAttribute('aria-hidden','true');
+    backdrop.setAttribute('aria-hidden','true');
+    document.body.classList.remove('menu-open');
+    button?.setAttribute('aria-expanded','false');
+    button?.setAttribute('aria-label','Open navigation');
+    if(button)button.innerHTML='<span aria-hidden="true">☰</span><span>Menu</span>';
+    if(restoreFocus)button?.focus({preventScroll:true});
+  };
+  const open=()=>{
+    drawer.inert=false;
+    drawer.setAttribute('aria-hidden','false');
+    backdrop.setAttribute('aria-hidden','false');
+    drawer.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.classList.add('menu-open');
+    button?.setAttribute('aria-expanded','true');
+    button?.setAttribute('aria-label','Close navigation');
+    if(button)button.innerHTML='<span aria-hidden="true">×</span><span>Close</span>';
+    drawer.querySelector('[data-nav].active')?.focus({preventScroll:true});
+  };
+  backdrop.onclick=()=>close();
+  drawer.querySelector('.jmb-menu-close')?.addEventListener('click',()=>close());
+  drawer.querySelectorAll('[data-nav]').forEach(a=>a.addEventListener('click',()=>close(false)));
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&drawer.classList.contains('open')){event.preventDefault();close()}
+  });
   document.querySelectorAll('.sidebar [data-menu-logout]').forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();try{const m=await import('./auth-guard.js');await m.logout()}catch{location.href='login.html'}}));
   drawer.querySelector('[data-menu-logout]')?.addEventListener('click',async e=>{
     e.preventDefault();
@@ -58,11 +104,18 @@ function makeNav(){
   }
   let left=head.querySelector('.mobile-head-left');
   if(!left){left=document.createElement('div');left.className='mobile-head-left';head.prepend(left)}
-  let button=head.querySelector('.mobile-menu-btn');
+  button=head.querySelector(buttonSelector);
   if(!button){
-    button=document.createElement('button');button.className='btn btn-ghost mobile-menu-btn';button.type='button';button.setAttribute('aria-label','Open navigation');button.textContent='☰';left.prepend(button);
+    button=document.createElement('button');
+    button.className='btn btn-ghost mobile-menu-btn';
+    button.type='button';
+    button.setAttribute('aria-label','Open navigation');
+    button.setAttribute('aria-controls','jmbMobileMenu');
+    button.setAttribute('aria-expanded','false');
+    button.innerHTML='<span aria-hidden="true">☰</span><span>Menu</span>';
+    left.prepend(button);
   }
-  button.onclick=open;
+  button.onclick=()=>drawer.classList.contains('open')?close():open();
 }
 function particles(){
   if(document.getElementById('jmbParticleCanvas'))return;
