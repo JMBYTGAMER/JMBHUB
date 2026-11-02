@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080a18"><title>Security Lab — JMB HUB</title>
 <link rel="icon" href="../assets/icons/favicon.png">
-<link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/app.css"><link rel="stylesheet" href="../css/portal.css"><link rel="stylesheet" href="../css/premium.css"><link rel="stylesheet" href="../css/security-lab.css">
+<link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/app.css"><link rel="stylesheet" href="../css/portal.css"><link rel="stylesheet" href="../css/premium.css"><link rel="stylesheet" href="../css/security-lab.css?v=20261102-popup>
 </head>
 <body class="app-body">
 <div class="mobile-head"><div class="mobile-head-left"><a class="brand" href="dashboard.html"><span class="brand-mark"><img src="../assets/jmbhub-logo.png" alt="JMB HUB"></span><span><b>JMB</b><small>SECURITY LAB</small></span></a></div><div class="portal-top-actions"><a class="btn btn-ghost" href="jmb-area.html">All tools</a></div></div>
@@ -12,8 +12,8 @@
 <main class="main"><section class="page">
 <div class="page-head"><div><div class="eyebrow">LOCAL-FIRST CRYPTO TOOLS</div><h1>🔐 Security Lab</h1><p>Hash, encrypt, sign and generate keys using your browser's Web Crypto API.</p></div></div>
 <div class="security-notice"><b>Privacy by design</b><span>These tools process your inputs in this browser and do not upload them to JMB HUB. Never paste a real password, recovery phrase or private key into a website you do not trust. Keep a backup of data encrypted with your own passphrase.</span></div>
-<div class="security-tool-grid">
-<button class="security-tool active" data-security-tool="aes"><span>🔒</span><b>Password Encryption</b><small>AES-256-GCM + PBKDF2</small></button>
+<p class="muted security-launch-hint">Choose a tool below. It opens in a separate workspace, keeping this page tidy.</p><div class="security-tool-grid">
+<button class="security-tool" data-security-tool="aes"><span>🔒</span><b>Password Encryption</b><small>AES-256-GCM + PBKDF2</small></button>
 <button class="security-tool" data-security-tool="hash"><span>#️⃣</span><b>Hash & File Checksum</b><small>SHA-256 / 384 / 512</small></button>
 <button class="security-tool" data-security-tool="hmac"><span>🛡️</span><b>HMAC Sign & Verify</b><small>Keyed message authentication</small></button>
 <button class="security-tool" data-security-tool="random"><span>🎲</span><b>Secure Random Generator</b><small>Cryptographic random bytes</small></button>
@@ -84,5 +84,5 @@
 </div>
 <div id="securityPopupStage" class="security-popup-stage" hidden></div>
 </section></main></div>
-<script type="module" src="../js/core/portal.js"></script><script type="module" src="../js/tools/security-lab.js"></script>
+<script type="module" src="../js/core/portal.js"></script><script type="module" src="../js/tools/security-lab.js?v=20261102-popup></script>
 </body></html>
