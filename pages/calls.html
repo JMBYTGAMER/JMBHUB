@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080a18">
+<meta name="description" content="Private one-to-one video calls for signed-in JMB HUB members.">
+<title>Private Calls — JMB HUB</title>
+<link rel="icon" href="../assets/icons/favicon.png">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/portal.css?v=20261102-calls">
+<link rel="stylesheet" href="../css/premium.css">
+<link rel="stylesheet" href="../css/calls.css?v=20261102-calls">
+</head>
+<body class="app-body">
+<div class="mobile-head">
+  <div class="mobile-head-left">
+    <button class="btn btn-ghost mobile-menu-btn" type="button" aria-label="Open navigation" aria-controls="jmbMobileMenu" aria-expanded="false"><span aria-hidden="true">☰</span><span>Menu</span></button>
+    <a class="brand" href="dashboard.html"><span class="brand-mark"><img src="../assets/jmbhub-logo.png" alt="JMB HUB"></span><span><b>JMB</b><small>PRIVATE CALLS</small></span></a>
+  </div>
+  <div class="portal-top-actions"><a class="btn btn-ghost" href="dashboard.html">Dashboard</a></div>
+</div>
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="side-brand"><a class="brand" href="dashboard.html"><span class="brand-mark"><img src="../assets/jmbhub-logo.png" alt="JMB HUB"></span><span><b>JMB</b><small>HUB</small></span></a></div>
+  <div class="side-section"><div class="side-label">PORTAL</div>
+    <a class="nav-link" href="dashboard.html"><span>⌂</span><span>Dashboard</span></a>
+    <a class="nav-link" href="games.html"><span>🎮</span><span>Games</span></a>
+    <a class="nav-link" href="jmb-area.html"><span>🧰</span><span>JMB Area</span></a>
+    <a class="nav-link" href="minecraft.html"><span>⛏️</span><span>Minecraft Area</span></a>
+    <a class="nav-link" href="calls.html"><span>📹</span><span>Private Calls</span></a>
+    <a class="nav-link" href="support.html"><span>🎫</span><span>Support</span></a>
+    <a class="nav-link" href="coins.html"><span>🪙</span><span>JMB Coins</span></a>
+  </div>
+</aside>
+<main class="main">
+<section class="page calls-page">
+  <section class="calls-hero">
+    <div class="calls-hero-copy">
+      <div class="eyebrow">JMB HUB • PRIVATE CONNECTION</div>
+      <h1>📹 A little face-to-face time.</h1>
+      <p>Start a private one-to-one video call with a verified JMB HUB member you personally know and trust.</p>
+      <div class="calls-hero-tags"><span>🔒 Invite link</span><span>👥 One guest</span><span>🎥 Camera + mic</span></div>
+    </div>
+    <div class="calls-hero-art" aria-hidden="true"><span>📹</span><i>✦</i><b>JMB</b></div>
+  </section>
+
+  <div class="calls-launch-grid">
+    <section class="call-action-card call-create-card">
+      <div class="call-card-icon">📞</div>
+      <div class="eyebrow">START A CALL</div>
+      <h2>Create a private room</h2>
+      <p>Generate a one-time invitation link. The first verified member with the link can join.</p>
+      <button id="createCall" class="btn btn-primary call-main-button" type="button">Create video call <span aria-hidden="true">→</span></button>
+      <small>Invite expires if nobody joins within 15 minutes.</small>
+    </section>
+    <section class="call-action-card">
+      <div class="call-card-icon">🔗</div>
+      <div class="eyebrow">JOIN A CALL</div>
+      <h2>Use an invitation</h2>
+      <p>Paste the private call link shared directly with you.</p>
+      <label for="inviteInput">Invitation link</label>
+      <input id="inviteInput" class="tool-input" type="text" inputmode="url" autocomplete="off" placeholder="Paste your JMB HUB call link">
+      <button id="joinCall" class="btn btn-ghost call-main-button" type="button">Join video call <span aria-hidden="true">→</span></button>
+      <small>Only one guest can claim an invitation.</small>
+    </section>
+  </div>
+
+  <div class="call-status-banner" id="pageStatus" role="status" aria-live="polite">
+    <span class="status-pulse" aria-hidden="true"></span>
+    <span>Ready. Create a room or paste an invitation link.</span>
+  </div>
+
+  <section class="call-safety-card">
+    <div class="call-safety-icon">🛡️</div>
+    <div>
+      <h3>Keep calls private and comfortable</h3>
+      <p>Only call people you already know and trust. Do not post invitation links publicly or share your address, school, passwords or other private details. You can end a call at any time.</p>
+      <p class="call-privacy-small">JMB HUB does not provide call recording. Other participants may still capture content with their own devices. Camera and microphone access are requested only when you start or join a call.</p>
+    </div>
+  </section>
+  <p class="call-network-note">Connection note: this first version uses direct browser-to-browser media. Some mobile or restricted networks may block direct connections; reliable relay support (TURN) has not yet been configured.</p>
+</section>
+</main>
+</div>
+
+<div id="callOverlay" class="call-overlay" hidden>
+  <div class="call-overlay-backdrop"></div>
+  <section class="call-dialog" role="dialog" aria-modal="true" aria-labelledby="callDialogTitle">
+    <header class="call-dialog-head">
+      <div>
+        <div class="eyebrow">JMB HUB • PRIVATE CALL</div>
+        <h2 id="callDialogTitle">Your call</h2>
+        <p id="callConnectionStatus" role="status" aria-live="polite">Preparing your connection…</p>
+      </div>
+      <button id="closeCall" class="call-close" type="button" aria-label="End call">×</button>
+    </header>
+    <div class="call-video-grid">
+      <div class="call-video-tile">
+        <video id="localVideo" autoplay muted playsinline></video>
+        <span class="video-caption">You</span>
+        <span id="localPlaceholder" class="video-placeholder">Camera preview</span>
+      </div>
+      <div class="call-video-tile">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <span class="video-caption">Guest</span>
+        <span id="remotePlaceholder" class="video-placeholder">Waiting for the other person…</span>
+      </div>
+    </div>
+    <section id="inviteShare" class="call-invite-share" hidden>
+      <b>Send this private invitation</b>
+      <p>Share it directly with the one person you invited. Anyone who gets this link may be able to claim the waiting room.</p>
+      <div class="call-link-row"><input id="inviteOutput" class="tool-input" type="text" readonly aria-label="Private call invitation link"><button id="copyInvite" class="btn btn-primary" type="button">Copy link</button></div>
+      <button id="shareInvite" class="btn btn-ghost" type="button" hidden>Share invitation…</button>
+      <small id="inviteCopyStatus" role="status" aria-live="polite"></small>
+    </section>
+    <div class="call-controls">
+      <button id="toggleMic" class="call-control" type="button" disabled><span>🎙️</span><small>Mute mic</small></button>
+      <button id="toggleCamera" class="call-control" type="button" disabled><span>📷</span><small>Turn camera off</small></button>
+      <button id="endCall" class="call-control call-end" type="button"><span>📴</span><small>End call</small></button>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="../js/core/portal.js?v=20261102-calls"></script>
+<script type="module" src="../js/calls.js?v=20261102-calls"></script>
+<script type="module" src="../js/ads/auto-render.js"></script>
+</body>
+</html>
