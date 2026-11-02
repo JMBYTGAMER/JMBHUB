@@ -11,7 +11,11 @@ const db=getFirestore();
 
 function owner(auth){return auth?.token?.email_verified===true && auth?.token?.email?.toLowerCase()==='jobinmathewbiju@gmail.com'}
 function admin(auth){return auth?.token?.email_verified===true && (owner(auth)||auth?.token?.admin===true||auth?.token?.role==='admin')}
-function requireAuth(auth){if(!auth?.uid)throw new HttpsError('unauthenticated','Please sign in first.')}
+async function requireAuth(auth){
+ if(!auth?.uid)throw new HttpsError('unauthenticated','Please sign in first.');
+ const portal=await db.collection('settings').doc('portal').get();
+ if(portal.exists&&portal.data()?.maintenance?.enabled===true&&!admin(auth))throw new HttpsError('unavailable','JMBHUB is in full maintenance mode. Please try again later.');
+}
 function cleanCoins(n){return Math.round(Number(n)*100000000)/100000000}
 function walletRef(uid){return db.collection('wallets').doc(uid)}
 function txRef(){return db.collection('coinTransactions').doc()}
@@ -41,7 +45,7 @@ exports.setUserRole=onCall(async request=>{
 });
 
 exports.getCoinWallet=onCall(async request=>{
- requireAuth(request.auth);
+ await requireAuth(request.auth);
  const uid=request.auth.uid;
  const [snap,txSnap,perkSnap]=await Promise.all([
    walletRef(uid).get(),
@@ -66,7 +70,7 @@ const STORE={
 };
 
 exports.purchaseCoinItem=onCall(async request=>{
- requireAuth(request.auth);
+ await requireAuth(request.auth);
  const uid=request.auth.uid;
  const itemId=String(request.data?.itemId||'');
  const item=STORE[itemId];
@@ -101,7 +105,7 @@ const SKILL_GAMES=new Set([
 ]);
 
 exports.awardGameCoins=onCall(async request=>{
- requireAuth(request.auth);
+ await requireAuth(request.auth);
  const uid=request.auth.uid;
  const gameId=String(request.data?.gameId||'');
  const score=Number(request.data?.score);
@@ -153,7 +157,7 @@ exports.adminGiveCoins=onCall(async request=>{
 });
 
 exports.claimCoinGift=onCall(async request=>{
- requireAuth(request.auth);
+ await requireAuth(request.auth);
  const uid=request.auth.uid;
  const id=String(request.data?.giftId||'');
  if(!/^[A-Za-z0-9_-]{10,150}$/.test(id))throw new HttpsError('invalid-argument','Invalid reward notification.');
@@ -250,7 +254,7 @@ const validHttpsUrl = value => {
 };
 
 exports.createAdCampaign = onCall(async request => {
-  requireAuth(request.auth);
+  await requireAuth(request.auth);
   const uid = request.auth.uid;
   const title = adClean(request.data?.title);
   const description = String(request.data?.description || '').trim().slice(0, 220);
@@ -279,7 +283,7 @@ exports.createAdCampaign = onCall(async request => {
 });
 
 exports.listMyAdCampaigns = onCall(async request => {
-  requireAuth(request.auth);
+  await requireAuth(request.auth);
   const snap = await db.collection('adCampaigns').where('uid','==',request.auth.uid).get();
   return {campaigns:snap.docs.map(d=>{const x=d.data();return {id:d.id,title:x.title,description:x.description,targetUrl:x.targetUrl,placement:x.placement,budgetCoins:x.budgetCoins,status:x.status,createdAt:x.createdAt?.toDate?.()?.toISOString?.()||'',expiresAt:x.expiresAt?.toDate?.()?.toISOString?.()||''};}).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))};
 });
