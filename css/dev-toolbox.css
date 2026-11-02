@@ -1,1 +1,26 @@
 .dev-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}.dev-card{min-width:0;padding:18px}.dev-card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}.dev-card-head>span{font-size:30px}.dev-card-head h2{font-size:18px;margin:2px 0 5px}.dev-card-head p,.dev-note{font-size:12px;line-height:1.6;color:var(--muted);margin:0}.dev-card>label{display:block;margin:12px 0 5px;font-size:13px;font-weight:750}.dev-card .tool-area,.dev-card .tool-input{width:100%;min-width:0;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0c1020;color:#fff;margin:4px 0 8px}.dev-card .tool-area{resize:vertical}.dev-card .mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.dev-actions{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}.dev-actions .btn,.dev-card>.btn{min-height:40px}.dev-status{min-height:20px;color:#6be8b3;font-size:12px;overflow-wrap:anywhere}.dev-status.error{color:#ff9aab}.dev-note{margin:8px 0}.dev-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}.dev-stats>div{border:1px solid var(--line);border-radius:12px;padding:10px 5px;text-align:center;min-width:0}.dev-stats b,.dev-stats span{display:block}.dev-stats b{font-size:19px;overflow-wrap:anywhere}.dev-stats span{font-size:10px;color:var(--muted)}.dev-card button:focus-visible{outline:2px solid #8c7bff;outline-offset:3px}@media(max-width:760px){.dev-grid{grid-template-columns:1fr}.dev-card{padding:14px}}
+/* Developer Toolbox: compact launcher cards, with each tool in its own popup. */
+.dev-grid[hidden],#devToolStage[hidden]{display:none!important}
+.dev-library{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 24px}
+.dev-tool-tile{display:grid;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;gap:4px 12px;min-width:0;min-height:92px;padding:14px;border:1px solid rgba(177,190,255,.13);border-radius:17px;background:linear-gradient(145deg,rgba(23,29,49,.94),rgba(11,15,29,.96));color:var(--text);text-align:left;cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.dev-tool-tile:hover,.dev-tool-tile:focus-visible{transform:translateY(-2px);border-color:rgba(139,107,255,.45);background:linear-gradient(145deg,rgba(34,31,65,.96),rgba(12,19,37,.98));box-shadow:0 14px 30px rgba(0,0,0,.22)}
+.dev-tool-art{grid-column:1;grid-row:1/3;width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,rgba(124,92,255,.2),rgba(0,198,234,.1));border:1px solid rgba(255,255,255,.07);font-size:25px}
+.dev-tool-copy{display:grid;gap:4px;min-width:0}
+.dev-tool-copy strong{font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+.dev-tool-copy small{font-size:11px;line-height:1.45;color:var(--muted);overflow-wrap:anywhere}
+.dev-tool-open{grid-column:2;justify-self:start;margin-top:3px;padding:4px 8px;border:1px solid rgba(139,107,255,.25);border-radius:999px;background:rgba(124,92,255,.1);color:#c7bcff;font-size:10px;font-weight:850}
+.jmb-workspace-body .dev-card{width:100%;max-width:900px;margin:0 auto;padding:clamp(15px,3vw,24px);border:1px solid rgba(177,190,255,.1);border-radius:18px;background:rgba(255,255,255,.025);box-shadow:none}
+.jmb-workspace-body .dev-card .tool-area{min-height:110px}
+@media(max-width:900px){.dev-library{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media(max-width:560px){
+ .dev-library{grid-template-columns:1fr;gap:9px;margin:14px 0 20px}
+ .dev-tool-tile{min-height:78px;padding:11px 12px;grid-template-columns:42px minmax(0,1fr);gap:3px 10px;border-radius:14px}
+ .dev-tool-art{width:42px;height:42px;font-size:22px;border-radius:12px}
+ .dev-tool-copy strong{font-size:13px}
+ .dev-tool-copy small{font-size:10px}
+ .jmb-workspace-overlay{padding:0!important;align-items:stretch!important}
+ .jmb-workspace-window{width:100%!important;height:100%!important;max-height:100dvh!important;border-radius:0!important;border-left:0!important;border-right:0!important}
+ .jmb-workspace-head{padding:calc(12px + env(safe-area-inset-top)) 13px 12px!important}
+ .jmb-workspace-body{padding:12px 12px calc(18px + env(safe-area-inset-bottom))!important}
+ .jmb-workspace-body .dev-card{padding:14px;border-radius:15px}
+}
