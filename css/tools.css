@@ -13,3 +13,8 @@
 .tool-toolbar .tool-input:focus-visible,.tool-panel input:focus-visible,.tool-panel textarea:focus-visible,.tool-panel select:focus-visible{outline:2px solid #8c7bff;outline-offset:2px}
 .tool-panel textarea[readonly]{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
 @media(max-width:480px){.tool-toolbar{grid-template-columns:minmax(0,1fr)}#toolCount{grid-column:1;grid-row:auto}.tool-toolbar .tool-input{grid-column:1}}
+
+/* Newly added JMB Area tools are surfaced first and visibly labelled. */
+.tool-choice-new{border-color:rgba(0,198,234,.3)!important;background:linear-gradient(145deg,rgba(0,198,234,.09),rgba(124,92,255,.07),rgba(8,11,22,.9))!important}
+.tool-choice-new .pill{border-color:rgba(0,198,234,.35);background:rgba(0,198,234,.09);color:#a5edff;font-weight:850;letter-spacing:.2px}
+.tool-choice-new:hover,.tool-choice-new.active{border-color:rgba(0,198,234,.58)!important;box-shadow:0 20px 48px rgba(0,0,0,.26),0 0 22px rgba(0,198,234,.08)}
