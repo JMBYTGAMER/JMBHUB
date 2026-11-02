@@ -273,3 +273,4 @@
 @media(prefers-reduced-motion:reduce){
  .jmb-mobile-menu,.jmb-drawer-backdrop{transition:none}
 }
+.jmb-mobile-menu .menu-arrow{color:#7785a9;font-size:20px;line-height:1;text-align:right}
