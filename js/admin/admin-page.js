@@ -56,7 +56,8 @@ async function init(){
   await Promise.allSettled([
     loadTickets(),
     loadSuggestions(),
-    loadServices()
+    loadServices(),
+    loadBirthdayAnnouncement()
   ]);
 }
 
@@ -74,6 +75,7 @@ function bindUI(){
   $('#logFilter')?.addEventListener('change', renderLogs);
   $('#saveTelemetry')?.addEventListener('click', saveTelemetry);
   $('#save')?.addEventListener('click', saveServices);
+  $('#saveBirthdayAnnouncement')?.addEventListener('click', saveBirthdayAnnouncement);
   $('#giveCoins')?.addEventListener('click', giveCoins);
   bindBirthdayControls();
 
@@ -529,7 +531,7 @@ async function giveCoins(){
     window.JMBMusic?.notify?.();
     toast('Reward notification sent','good');
     $('#coinGrantAmount').value='';
-  }catch(e){toast('Could not give coins: '+(e?.message||'Cloud Functions are not deployed.'))}
+  }catch(e){console.error('[JMBHUB] adminGiveCoins failed',e);toast('Could not give coins ('+(e?.code||'unknown')+'): '+(e?.message||'Check Firebase Functions logs.'))}
   finally{button.disabled=false}
 }
 
@@ -589,6 +591,31 @@ async function loadServices(){
     if($('#maintenanceEnabled')) $('#maintenanceEnabled').value=m?.enabled?'on':'off';
     if($('#maintenanceMessage')&&m?.message) $('#maintenanceMessage').value=m.message;
   }catch{}
+}
+
+async function loadBirthdayAnnouncement(){
+  if(!db)return;
+  try{
+    const snap=await getDoc(doc(db,'settings','birthdayAnnouncement'));
+    const x=snap.exists()?snap.data():{};
+    if($('#birthdayAnnouncementEnabled'))$('#birthdayAnnouncementEnabled').value=x.enabled?'on':'off';
+    if($('#birthdayAnnouncementDate'))$('#birthdayAnnouncementDate').value=x.date||'2026-10-29';
+    if($('#birthdayAnnouncementTitle'))$('#birthdayAnnouncementTitle').value=x.title||'Happy Birthday! 🎉';
+    if($('#birthdayAnnouncementMessage'))$('#birthdayAnnouncementMessage').value=x.message||'';
+  }catch(e){console.warn('[JMBHUB] Birthday settings could not load',e?.message||e)}
+}
+
+async function saveBirthdayAnnouncement(){
+  if(!owner||!db)return;
+  const enabled=$('#birthdayAnnouncementEnabled')?.value==='on';
+  const date=$('#birthdayAnnouncementDate')?.value||'';
+  const title=($('#birthdayAnnouncementTitle')?.value||'Happy Birthday! 🎉').trim().slice(0,90);
+  const message=($('#birthdayAnnouncementMessage')?.value||'').trim().slice(0,400);
+  if(enabled&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){toast('Choose a valid announcement date.');return}
+  try{
+    await setDoc(doc(db,'settings','birthdayAnnouncement'),{enabled,date,title,message,updatedBy:user.uid,updatedAt:serverTimestamp()},{merge:true});
+    toast(enabled?'Birthday announcement saved. It will appear on the selected date.':'Birthday announcement turned off.','good');
+  }catch(e){toast('Could not save birthday announcement: '+(e?.message||'Check Firestore rules.'))}
 }
 
 async function saveServices(){
