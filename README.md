@@ -1,5 +1,7 @@
 # JMB HUB — Brand New Edition
 
+Public **Copyright & Policies** page: [`pages/policies.html`](pages/policies.html).
+
 This package is based on the working JMBHUB portal and keeps its existing Firebase/auth/admin/tool architecture while upgrading the public brand presentation.
 
 ## Added
