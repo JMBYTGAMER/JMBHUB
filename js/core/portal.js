@@ -1,9 +1,5 @@
 import {auth,db} from './firebase.js';
-import '../../css/portal-polish.css';
-import '../../css/experience-upgrade.css';
-import '../../css/aurora-finish.css';
 import './experience.js';
-import '../../css/admin-polish.css';
 import './birthday-wishes.js';
 import './coin-notifications.js';
 import './command-center.js';
@@ -26,7 +22,8 @@ const links=[
   ['🪙','JMB Coins','coins.html'],
   ['📢','Ad Network','ads.html'],
   ['◉','Profile','profile.html'],
-  ['❔','Help & Tutorials','manual.html']
+  ['❔','Help & Tutorials','manual.html'],
+  ['⚖️','Copyright & Policies','policies.html']
 ];
 function currentPage(){return location.pathname.split('/').pop()||'index.html'}
 
@@ -62,6 +59,11 @@ function makeNav(){
     const section=document.createElement('div');section.className='side-section';section.setAttribute('data-global-account','');
     section.innerHTML='<div class="side-label">ACCOUNT</div><a class="nav-link" href="profile.html"><span>◉</span><span>Profile</span></a><a class="nav-link" data-admin-only href="admin.html"><span>⚙️</span><span>Admin Console</span></a><a class="nav-link" href="#" data-menu-logout><span>↪</span><span>Logout</span></a>';
     sidebar.append(section);
+  }
+  if(sidebar && !sidebar.querySelector('a[href="policies.html"]')){
+    const policySection=document.createElement('div');policySection.className='side-section';policySection.setAttribute('data-global-policies','');
+    policySection.innerHTML='<div class="side-label">INFORMATION</div><a class="nav-link" href="policies.html"><span>⚖️</span><span>Copyright &amp; Policies</span></a>';
+    sidebar.append(policySection);
   }
   drawer.querySelectorAll('[data-nav]').forEach(a=>{
     const isActive=a.getAttribute('data-nav')===active;
